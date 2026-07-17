@@ -553,6 +553,7 @@ load()
                 description="删除后任务将不再触发。"
                 ok-text="删除"
                 cancel-text="取消"
+                :disabled="record.protectedFlag"
                 @confirm="remove(record)"
               >
                 <a-button type="link" danger size="small" :disabled="record.protectedFlag" :loading="deletingId === record.jobId">删除</a-button>

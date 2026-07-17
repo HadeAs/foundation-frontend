@@ -6,12 +6,12 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import {
-  Alert as AAlert,
   Button as AButton,
   Form as AForm,
   FormItem as AFormItem,
   Input as AInput,
   InputPassword as AInputPassword,
+  message,
 } from 'ant-design-vue'
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -24,12 +24,10 @@ const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 const submitting = ref(false)
-const errorMessage = ref('')
 const form = reactive({ username: '', password: '' })
 const year = new Date().getFullYear()
 
 async function handleSubmit() {
-  errorMessage.value = ''
   submitting.value = true
   try {
     await auth.login(form)
@@ -40,7 +38,7 @@ async function handleSubmit() {
         : getFirstAccessiblePath() || '/403'
     await router.replace(redirect)
   } catch (error) {
-    errorMessage.value = getErrorMessage(error)
+    message.error(getErrorMessage(error))
   } finally {
     submitting.value = false
   }
@@ -109,16 +107,6 @@ async function handleSubmit() {
           <h2>欢迎回来</h2>
           <span>请输入账号信息以进入管理平台</span>
         </div>
-
-        <a-alert
-          v-if="errorMessage"
-          class="login-alert"
-          type="error"
-          show-icon
-          closable
-          :message="errorMessage"
-          @close="errorMessage = ''"
-        />
 
         <a-form
           :model="form"
@@ -491,10 +479,6 @@ async function handleSubmit() {
 .login-heading > span:last-child {
   color: #6d7d7d;
   font-size: 14px;
-}
-
-.login-alert {
-  margin-bottom: 20px;
 }
 
 :deep(.ant-form-item) {

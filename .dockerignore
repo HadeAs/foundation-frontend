@@ -1,13 +1,11 @@
+.git
+.DS_Store
+.env*
 node_modules
 dist
-.env
-.env.local
-.env.*.local
 coverage
 playwright-report
 test-results
 .playwright-cli
-output/playwright
-release
-.DS_Store
+output
 *.log

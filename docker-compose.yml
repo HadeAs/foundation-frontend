@@ -1,0 +1,19 @@
+services:
+  frontend:
+    image: foundation-business-frontend:${FRONTEND_VERSION:-latest}
+    pull_policy: never
+    container_name: foundation-business-frontend
+    ports:
+      - "8088:80"
+    restart: unless-stopped
+    networks:
+      - backend-network
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  backend-network:
+    name: foundation_default
+    external: true

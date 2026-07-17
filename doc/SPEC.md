@@ -381,10 +381,13 @@ Playwright 使用接口拦截提供确定性数据，覆盖：
 ### 15.1 Docker
 
 - Dockerfile 使用 Node 构建、Nginx 运行的多阶段镜像。
+- 前端源码只保存在本地构建机；镜像命名为 `foundation-business-frontend:<版本号>`，导出后传至服务器加载。
+- 服务器端 Compose 只运行已加载的前端镜像，不在服务器构建源码，也不从公共仓库拉取镜像。
+- 提供本地镜像构建导出、服务器升级和服务器版本回滚三个可执行脚本。
 - 前端与后端运行在不同容器中。
-- 两个容器加入同一个外部 Docker 网络。
-- 前端 Nginx 将 `/api` 代理到默认 `http://backend:8080`。
-- 后端地址允许通过 Compose 环境变量覆盖。
+- 两个容器加入后端 Compose 管理的 `foundation_default` 网络；前端 Compose 将其作为外部网络引用。
+- 前端通过宿主机 `8088` 端口提供 HTTP 访问。
+- 前端 Nginx 将 `/api` 代理到 `http://foundation-backend:8080`。
 - Nginx 配置 SPA History 回退：`try_files $uri $uri/ /index.html`。
 - `client_max_body_size` 设置为 `100m`。
 
