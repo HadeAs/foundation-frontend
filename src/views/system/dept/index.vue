@@ -32,6 +32,8 @@ import {
 } from '@/api/dept'
 import { getErrorMessage } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
+import { createLatestRequest } from '@/utils/latest-request'
 
 import { collectExpandableDeptIds, normalizeDeptTree, toDeptOptions, type DeptNode } from './tree'
 
@@ -41,6 +43,7 @@ const keyword = ref('')
 const records = ref<DeptNode[]>([])
 const candidateTree = ref<DeptNode[]>([])
 const loading = ref(false)
+const runLatestLoad = createLatestRequest(loading)
 const expandedKeys = ref<number[]>([])
 const modalOpen = ref(false)
 const modalLoading = ref(false)
@@ -76,6 +79,7 @@ function defaultForm(parentId?: number): DeptForm {
 }
 
 const form = reactive<DeptForm>(defaultForm())
+const { markClean: markFormClean, requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
 const modalTitle = computed(() => editingId.value === undefined ? '新增部门' : '编辑部门')
 const parentOptions = computed(() => toDeptOptions(candidateTree.value, editingId.value))
 const expandableIds = computed(() => collectExpandableDeptIds(records.value))
@@ -96,14 +100,13 @@ const rules: FormProps['rules'] = {
 }
 
 async function load() {
-  loading.value = true
   try {
-    records.value = normalizeDeptTree(await listDeptTree(keyword.value))
+    const result = await runLatestLoad(() => listDeptTree(keyword.value))
+    if (!result) return
+    records.value = normalizeDeptTree(result)
     expandedKeys.value = collectExpandableDeptIds(records.value)
   } catch {
     message.error('数据获取失败，请稍后重试')
-  } finally {
-    loading.value = false
   }
 }
 
@@ -129,7 +132,10 @@ async function refreshModalData(deptId?: number) {
       deptId === undefined ? Promise.resolve(undefined) : getDept(deptId),
     ])
     candidateTree.value = normalizeDeptTree(tree)
-    if (detail) Object.assign(form, defaultForm(), detail, { deptId })
+    if (detail) {
+      Object.assign(form, defaultForm(), detail, { deptId })
+      markFormClean()
+    }
   } catch {
     message.error('部门数据获取失败，请稍后重试')
   } finally {
@@ -292,7 +298,7 @@ load()
     </section>
 
     <a-modal
-      v-model:open="modalOpen"
+      :open="modalOpen"
       :title="modalTitle"
       :width="800"
       :confirm-loading="submitting"
@@ -300,6 +306,7 @@ load()
       ok-text="保存"
       cancel-text="取消"
       @ok="submit"
+      @cancel="requestFormClose"
     >
       <a-spin :spinning="modalLoading">
         <a-form ref="formRef" class="dept-form" layout="vertical" :model="form" :rules="rules">
@@ -348,15 +355,7 @@ load()
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-field { width: min(520px, 58%); }
-.query-actions { display: flex; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; padding: 9px 13px; border-bottom: 1px solid var(--shell-border); }
-.table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
 .table-title { display: flex; align-items: center; gap: 7px; }
 .dept-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .dept-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
@@ -368,8 +367,6 @@ load()
 .empty-value { color: color-mix(in srgb, var(--shell-muted) 55%, transparent); }
 .status-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #28a87d; }
 .status-dot.disabled { background: #9ba8a8; }
-.row-actions { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 5px; }
 .empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
 .empty-table :deep(.anticon) { font-size: 30px; }
 .dept-form { padding-top: 8px; }

@@ -37,9 +37,26 @@ export const apiClient = axios.create({
   timeout: 15_000,
 })
 
+let sessionExpiredHandler: (() => void | Promise<void>) | undefined
+let sessionExpiryHandled = false
+
+export function setSessionExpiredHandler(handler: () => void | Promise<void>) {
+  sessionExpiredHandler = handler
+}
+
+async function notifySessionExpired() {
+  if (sessionExpiryHandled) return
+  sessionExpiryHandled = true
+  clearStoredSession()
+  await sessionExpiredHandler?.()
+}
+
 apiClient.interceptors.request.use((config) => {
   const token = readStoredSession()?.token
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (token) {
+    sessionExpiryHandled = false
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 
@@ -89,7 +106,7 @@ apiClient.interceptors.response.use(
       request.headers.Authorization = `Bearer ${await refreshing}`
       return await apiClient(request)
     } catch (refreshError) {
-      clearStoredSession()
+      await notifySessionExpired()
       return Promise.reject(refreshError)
     }
   },

@@ -7,7 +7,8 @@ import {
   Tag as ATag,
   message,
 } from 'ant-design-vue'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import {
   cancelAsyncTask,
@@ -30,6 +31,7 @@ const props = defineProps<{
 }>()
 
 const auth = useAuthStore()
+const router = useRouter()
 const creating = ref(false)
 const open = ref(false)
 const task = ref<SysAsyncTask>()
@@ -39,6 +41,7 @@ const statusItems = ref<DictItemResponse[]>([])
 
 let pollTimer: number | undefined
 let polling = false
+let notifiedTaskId: number | undefined
 
 const permissions = computed(() => auth.user?.permissions || [])
 const canExport = computed(() => permissions.value.includes('system:async-task:view'))
@@ -69,7 +72,14 @@ async function pollTask() {
   polling = true
   try {
     task.value = await getAsyncTask(task.value.taskId)
-    if (isTerminalTaskStatus(task.value.status)) stopPolling()
+    if (isTerminalTaskStatus(task.value.status)) {
+      stopPolling()
+      if (notifiedTaskId !== task.value.taskId) {
+        notifiedTaskId = task.value.taskId
+        if (task.value.status === 'SUCCESS') message.success('导出已完成，可下载结果文件')
+        if (task.value.status === 'FAILURE') message.error(task.value.failureReason || '导出任务执行失败')
+      }
+    }
   } catch (error) {
     stopPolling()
     message.error(`${getErrorMessage(error)}，请前往异步任务中心查看任务状态`)
@@ -95,6 +105,7 @@ async function startExport() {
       props.resource,
       props.filters,
     ))
+    notifiedTaskId = undefined
     open.value = true
     startPolling()
     message.success('导出任务已创建')
@@ -140,9 +151,10 @@ async function loadStatusItems() {
   }
 }
 
-watch(open, (visible) => {
-  if (!visible) stopPolling()
-})
+async function goToTaskCenter() {
+  open.value = false
+  await router.push('/system/async-task')
+}
 
 onMounted(() => void loadStatusItems())
 onBeforeUnmount(stopPolling)
@@ -192,6 +204,7 @@ onBeforeUnmount(stopPolling)
         </div>
 
         <div class="modal-actions">
+          <a-button @click="goToTaskCenter">前往异步任务</a-button>
           <a-button @click="open = false">关闭</a-button>
           <a-button v-if="isActive" danger :loading="canceling" @click="cancelTask">取消任务</a-button>
           <a-button

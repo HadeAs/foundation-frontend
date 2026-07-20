@@ -16,7 +16,7 @@
   --shell-ink: #172929;
   --shell-muted: #6e7e7e;
   --shell-hover: #f1f6f5;
-  --sider-bg: #f8fbfb;
+  --sider-bg: #fff;
   --sider-border: #dce7e7;
   --sider-ink: #274141;
   --sider-muted: #506868;
@@ -27,6 +27,7 @@
 }
 
 :root[data-theme='dark'] {
+  --brand-deep: #63d7d6;
   --shell-bg: #0d1819;
   --shell-panel: #142223;
   --shell-border: #283839;
@@ -39,6 +40,11 @@
   --sider-muted: #93a4a4;
   --sider-hover: #1b3031;
   --sider-selected: #174041;
+}
+
+:where(button, [role='button'], a, input, textarea, select):focus-visible {
+  outline: 2px solid var(--brand-deep);
+  outline-offset: 2px;
 }
 
 * {
@@ -151,12 +157,79 @@ body:has(.app-sider.ant-layout-sider-collapsed) .ant-message {
   flex: none;
 }
 
+.management-page > .query-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 13px;
+  border: 1px solid var(--shell-border);
+  background: var(--shell-panel);
+}
+
+.management-page .query-actions,
+.management-page .toolbar-actions,
+.management-page .row-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.management-page .query-actions .ant-btn {
+  min-width: 58px;
+}
+
+.management-page .secondary-action {
+  color: var(--shell-ink);
+  background: var(--shell-hover);
+}
+
+.management-page .secondary-action:hover {
+  color: var(--brand-deep) !important;
+  background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important;
+}
+
 .management-page > .table-panel {
   display: flex;
   min-height: 0;
   flex: 1;
   flex-direction: column;
   overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid var(--shell-border);
+  background: var(--shell-panel);
+}
+
+.management-page .table-toolbar {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 13px;
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.management-page .table-toolbar h1 {
+  margin: 0;
+  color: var(--shell-ink);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.management-page .table-toolbar > div:first-child > span {
+  display: block;
+  margin-top: 2px;
+  color: var(--shell-muted);
+  font-size: 12px;
+}
+
+.management-page .row-actions {
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.management-page .row-actions .ant-btn {
+  padding-inline: 5px;
 }
 
 .management-page > .table-panel > .resizable-table-host,
@@ -205,6 +278,24 @@ body:has(.app-sider.ant-layout-sider-collapsed) .ant-message {
 
 .ant-pagination .ant-pagination-options-size-changer {
   width: 108px;
+}
+
+@media (max-width: 1360px) {
+  .management-page > .query-panel {
+    flex-wrap: wrap;
+  }
+
+  .management-page > .query-panel > :is(.query-field, .query-fields) {
+    width: 100% !important;
+  }
+
+  .management-page > .query-panel > .query-fields {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+  }
+
+  .management-page > .query-panel > .query-actions {
+    margin-left: auto;
+  }
 }
 
 ::selection {

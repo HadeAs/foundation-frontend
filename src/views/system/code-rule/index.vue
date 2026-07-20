@@ -18,7 +18,6 @@ import {
   type FormInstance,
   type FormProps,
   type TableColumnsType,
-  type TablePaginationConfig,
   type TableProps,
 } from 'ant-design-vue'
 import { computed, nextTick, reactive, ref } from 'vue'
@@ -37,7 +36,10 @@ import {
 } from '@/api/code-rule'
 import { getErrorMessage } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useTablePagination } from '@/composables/use-table-pagination'
+import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
 import { formatDateTime } from '@/utils/date'
+import { createLatestRequest } from '@/utils/latest-request'
 
 type CodeRuleForm = {
   ruleCode: string
@@ -71,9 +73,8 @@ const keyword = ref('')
 const status = ref<number>()
 const records = ref<SysCodeRule[]>([])
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const runLatestLoad = createLatestRequest(loading)
+const { currentPage, pageSize, total, pagination, handleTableChange } = useTablePagination(load)
 const selectedIds = ref<number[]>([])
 const modalOpen = ref(false)
 const submitting = ref(false)
@@ -114,16 +115,9 @@ function defaultForm(): CodeRuleForm {
 }
 
 const form = reactive<CodeRuleForm>(defaultForm())
+const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
 const modalTitle = computed(() => editingId.value === undefined ? '新增编码规则' : '编辑编码规则')
 const resultTitle = computed(() => resultMode.value === 'preview' ? '编码预览' : '取号结果')
-const pagination = computed<TablePaginationConfig>(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
 const rowSelection = computed<TableProps<SysCodeRule>['rowSelection']>(() => ({
   selectedRowKeys: selectedIds.value,
   fixed: true,
@@ -169,10 +163,10 @@ function formatExpression(record: SysCodeRule) {
 }
 
 async function load() {
-  loading.value = true
   selectedIds.value = []
   try {
-    const result = await pageCodeRules(currentPage.value, pageSize.value, keyword.value, status.value)
+    const result = await runLatestLoad(() => pageCodeRules(currentPage.value, pageSize.value, keyword.value, status.value))
+    if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
@@ -181,8 +175,6 @@ async function load() {
     records.value = []
     total.value = 0
     message.error('编码规则数据获取失败，请稍后重试')
-  } finally {
-    loading.value = false
   }
 }
 
@@ -196,13 +188,6 @@ async function resetQuery() {
   status.value = undefined
   currentPage.value = 1
   await load()
-}
-
-function handleTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || pageSize.value
-  currentPage.value = nextSize === pageSize.value ? next.current || 1 : 1
-  pageSize.value = nextSize
-  void load()
 }
 
 function resetForm() {
@@ -431,7 +416,7 @@ load()
     </section>
 
     <a-modal
-      v-model:open="modalOpen"
+      :open="modalOpen"
       :title="modalTitle"
       :width="820"
       :confirm-loading="submitting"
@@ -439,6 +424,7 @@ load()
       ok-text="保存"
       cancel-text="取消"
       @ok="submit"
+      @cancel="requestFormClose"
     >
       <a-form ref="formRef" class="rule-form" layout="vertical" :model="form" :rules="rules">
         <div class="form-grid">
@@ -502,15 +488,7 @@ load()
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-fields { display: grid; width: min(660px, 64%); grid-template-columns: minmax(280px, 1fr) 140px; gap: 8px; }
-.query-actions, .toolbar-actions { display: flex; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; padding: 9px 13px; border-bottom: 1px solid var(--shell-border); }
-.table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
 .code-rule-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .code-rule-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
 .code-rule-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
@@ -522,8 +500,6 @@ load()
 .status-cell { display: inline-flex; align-items: center; gap: 6px; }
 .status-cell i { width: 7px; height: 7px; border-radius: 50%; background: #26aa80; }
 .status-cell.disabled i { background: #a8b0b0; }
-.row-actions { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 4px; }
 .empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--shell-muted); }
 .rule-form { padding-top: 8px; }
 .form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }

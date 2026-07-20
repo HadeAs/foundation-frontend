@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ReloadOutlined } from '@ant-design/icons-vue'
 import {
   Button as AButton,
   Divider as ADivider,
@@ -62,10 +61,7 @@ const theme = useThemeStore()
     </section>
 
     <a-divider />
-    <a-button block @click="theme.reset()">
-      <template #icon><ReloadOutlined /></template>
-      恢复默认设置
-    </a-button>
+    <a-button block @click="theme.reset()">恢复默认设置</a-button>
   </a-drawer>
 </template>
 

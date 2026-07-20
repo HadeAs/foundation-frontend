@@ -10,7 +10,6 @@ import {
   Tag as ATag,
   message,
   type TableColumnsType,
-  type TablePaginationConfig,
 } from 'ant-design-vue'
 import type { Dayjs } from 'dayjs'
 import { computed, ref } from 'vue'
@@ -25,7 +24,9 @@ import {
   type LifecyclePolicy,
 } from '@/api/lifecycle'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useTablePagination } from '@/composables/use-table-pagination'
 import { formatDateTime } from '@/utils/date'
+import { createLatestRequest } from '@/utils/latest-request'
 
 type ViewMode = 'overview' | 'logs'
 
@@ -49,6 +50,7 @@ const overview = ref<LifecycleOverview>({})
 const policies = ref<LifecyclePolicy[]>([])
 const jobs = ref<LifecycleJob[]>([])
 const overviewLoading = ref(false)
+const runLatestOverview = createLatestRequest(overviewLoading)
 const keyword = ref('')
 const policyCode = ref('')
 const targetName = ref('')
@@ -56,9 +58,8 @@ const status = ref('')
 const timeRange = ref<[Dayjs, Dayjs]>()
 const logRecords = ref<LifecycleCleanupLog[]>([])
 const logLoading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const runLatestLogs = createLatestRequest(logLoading)
+const { currentPage, pageSize, total, pagination, handleTableChange } = useTablePagination(loadLogs)
 const detailOpen = ref(false)
 const detailLog = ref<LifecycleCleanupLog>()
 
@@ -91,15 +92,6 @@ const logColumns: TableColumnsType = [
   { title: '操作', key: 'action', width: 78, align: 'center' },
 ]
 
-const pagination = computed<TablePaginationConfig>(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
-
 const summaryItems = computed(() => {
   const summary = overview.value.summary
   return [
@@ -117,9 +109,9 @@ function statusName(value?: string) {
 }
 
 async function loadOverview() {
-  overviewLoading.value = true
   try {
-    const result = await getLifecycleOverview()
+    const result = await runLatestOverview(getLifecycleOverview)
+    if (!result) return
     overview.value = result
     policies.value = result.policies || []
     jobs.value = result.jobs || []
@@ -128,15 +120,12 @@ async function loadOverview() {
     policies.value = []
     jobs.value = []
     message.error(getErrorMessage(error))
-  } finally {
-    overviewLoading.value = false
   }
 }
 
 async function loadLogs() {
-  logLoading.value = true
   try {
-    const result = await pageLifecycleCleanupLogs(
+    const result = await runLatestLogs(() => pageLifecycleCleanupLogs(
       currentPage.value,
       pageSize.value,
       keyword.value,
@@ -145,7 +134,8 @@ async function loadLogs() {
       status.value,
       timeRange.value?.[0].toISOString(),
       timeRange.value?.[1].toISOString(),
-    )
+    ))
+    if (!result) return
     logRecords.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
@@ -154,8 +144,6 @@ async function loadLogs() {
     logRecords.value = []
     total.value = 0
     message.error(getErrorMessage(error))
-  } finally {
-    logLoading.value = false
   }
 }
 
@@ -182,13 +170,6 @@ async function resetQuery() {
   timeRange.value = undefined
   currentPage.value = 1
   await loadLogs()
-}
-
-function handleTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || pageSize.value
-  currentPage.value = nextSize === pageSize.value ? next.current || 1 : 1
-  pageSize.value = nextSize
-  void loadLogs()
 }
 
 function openDetail(record: LifecycleCleanupLog) {
@@ -367,8 +348,6 @@ loadOverview()
 .page-heading { display: flex; min-height: 58px; flex: none; align-items: center; justify-content: space-between; padding: 8px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .page-heading h1, .overview-panel h2 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
 .page-heading span, .overview-panel header span { display: block; margin-top: 2px; color: var(--shell-muted); font-size: 12px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
 .summary-strip { display: grid; flex: none; margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .summary-strip > div { min-width: 0; padding: 10px 13px; border-right: 1px solid var(--shell-border); }
 .summary-strip > div:last-child { border-right: 0; }
@@ -386,8 +365,7 @@ loadOverview()
 .logs-view { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; }
 .query-panel { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 13px; border-bottom: 1px solid var(--shell-border); }
 .query-fields { display: grid; min-width: 0; flex: 1; grid-template-columns: minmax(220px, 1fr) 150px 145px 120px 320px; gap: 8px; }
-.query-actions { display: flex; flex: none; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
+.query-actions { flex: none; }
 .log-panel { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; }
 .lifecycle-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .lifecycle-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }

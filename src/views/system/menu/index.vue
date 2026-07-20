@@ -36,8 +36,10 @@ import {
 } from '@/api/menu'
 import { getErrorMessage } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
 import { menuIconNames, resolveMenuIcon } from '@/components/layout/menu-icons'
 import { buildMenuTree, type MenuNode } from '@/router/dynamic'
+import { createLatestRequest } from '@/utils/latest-request'
 
 type MenuForm = MenuRequest & { menuId?: number }
 type ParentOption = { value: number; title: string; children?: ParentOption[] }
@@ -46,6 +48,7 @@ type TableMenu = Omit<MenuNode, 'children'> & { children?: TableMenu[] }
 const keyword = ref('')
 const records = ref<SysMenu[]>([])
 const loading = ref(false)
+const runLatestLoad = createLatestRequest(loading)
 const expandedKeys = ref<number[]>([])
 const modalOpen = ref(false)
 const submitting = ref(false)
@@ -83,6 +86,7 @@ function defaultForm(parentId?: number): MenuForm {
 }
 
 const form = reactive<MenuForm>(defaultForm())
+const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
 function toTableRows(nodes: MenuNode[]): TableMenu[] {
   return nodes.map(({ children, ...node }) => ({
     ...node,
@@ -148,16 +152,15 @@ watch(
 )
 
 async function load() {
-  loading.value = true
   try {
-    records.value = await listMenus(keyword.value)
+    const result = await runLatestLoad(() => listMenus(keyword.value))
+    if (!result) return
+    records.value = result
     expandedKeys.value = records.value
       .filter((item) => item.menuType === 'DIR' && item.menuId !== undefined)
       .map((item) => item.menuId as number)
   } catch {
     message.error('数据获取失败，请稍后重试')
-  } finally {
-    loading.value = false
   }
 }
 
@@ -348,7 +351,7 @@ load()
     </section>
 
     <a-modal
-      v-model:open="modalOpen"
+      :open="modalOpen"
       :title="modalTitle"
       :width="800"
       :confirm-loading="submitting"
@@ -356,6 +359,7 @@ load()
       ok-text="保存"
       cancel-text="取消"
       @ok="submit"
+      @cancel="requestFormClose"
     >
       <a-form ref="formRef" class="menu-form" layout="vertical" :model="form" :rules="rules">
           <div class="form-grid">
@@ -427,15 +431,7 @@ load()
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-field { width: min(520px, 58%); }
-.query-actions { display: flex; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; padding: 9px 13px; border-bottom: 1px solid var(--shell-border); }
-.table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
 .menu-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .menu-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
 .menu-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
@@ -447,8 +443,6 @@ load()
 .empty-value { color: color-mix(in srgb, var(--shell-muted) 55%, transparent); }
 .status-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #28a87d; }
 .status-dot.disabled { background: #9ba8a8; }
-.row-actions { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 5px; }
 .empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
 .empty-table :deep(.anticon) { font-size: 30px; }
 .menu-form { padding-top: 8px; }

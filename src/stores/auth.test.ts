@@ -6,6 +6,7 @@ import * as menuApi from '@/api/menu'
 import { readStoredSession } from '@/auth/session'
 
 import { useAuthStore } from './auth'
+import { useTabsStore } from './tabs'
 
 vi.mock('@/api/auth')
 vi.mock('@/api/menu')
@@ -47,5 +48,19 @@ describe('auth store', () => {
     expect(menuApi.listMenus).not.toHaveBeenCalled()
     expect(auth.user?.menus?.[0]?.menuId).toBe(7)
     expect(readStoredSession()?.user?.menus?.[0]?.menuId).toBe(7)
+  })
+
+  it('清除会话时同步清空标签页和内存登录状态', () => {
+    const auth = useAuthStore()
+    const tabs = useTabsStore()
+    auth.token = 'signed-token'
+    tabs.add({ path: '/system/user', title: '用户管理', routeName: 'user' })
+
+    auth.clear()
+
+    expect(auth.isAuthenticated).toBe(false)
+    expect(auth.user).toBeNull()
+    expect(tabs.items).toEqual([])
+    expect(readStoredSession()).toBeNull()
   })
 })

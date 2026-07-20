@@ -35,7 +35,6 @@ export const useThemeStore = defineStore('theme', {
     },
     reset() {
       this.$patch(defaults)
-      this.persist()
     },
   },
 })

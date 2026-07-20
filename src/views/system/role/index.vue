@@ -17,7 +17,6 @@ import {
   type FormInstance,
   type FormProps,
   type TableColumnsType,
-  type TablePaginationConfig,
 } from 'ant-design-vue'
 import { computed, nextTick, reactive, ref } from 'vue'
 
@@ -34,8 +33,11 @@ import {
   type SysRole,
 } from '@/api/role'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useTablePagination } from '@/composables/use-table-pagination'
+import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
 import { buildMenuTree, type MenuNode } from '@/router/dynamic'
 import { formatDateTime } from '@/utils/date'
+import { createLatestRequest } from '@/utils/latest-request'
 
 import { includeAncestorMenuIds } from './permissions'
 
@@ -45,9 +47,8 @@ type MenuTreeOption = { key: number; title: string; disableCheckbox?: boolean; c
 const keyword = ref('')
 const records = ref<SysRole[]>([])
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const runLatestLoad = createLatestRequest(loading)
+const { currentPage, pageSize, total, pagination, handleTableChange } = useTablePagination(load)
 const modalOpen = ref(false)
 const submitting = ref(false)
 const deletingId = ref<number>()
@@ -83,18 +84,11 @@ function defaultForm(): RoleForm {
 }
 
 const form = reactive<RoleForm>(defaultForm())
+const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
 const modalTitle = computed(() => editingId.value === undefined ? '新增角色' : '编辑角色')
 const permissionTitle = computed(() => permissionRole.value?.roleName
   ? `菜单权限 · ${permissionRole.value.roleName}`
   : '菜单权限')
-const pagination = computed<TablePaginationConfig>(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
 
 const rules: FormProps['rules'] = {
   roleName: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
@@ -115,17 +109,15 @@ function toMenuOptions(nodes: MenuNode[]): MenuTreeOption[] {
 }
 
 async function load() {
-  loading.value = true
   try {
-    const result = await pageRoles(currentPage.value, pageSize.value, keyword.value)
+    const result = await runLatestLoad(() => pageRoles(currentPage.value, pageSize.value, keyword.value))
+    if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
     pageSize.value = Number(result.size || pageSize.value)
   } catch {
     message.error('数据获取失败，请稍后重试')
-  } finally {
-    loading.value = false
   }
 }
 
@@ -138,13 +130,6 @@ async function resetQuery() {
   keyword.value = ''
   currentPage.value = 1
   await load()
-}
-
-function handleTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || pageSize.value
-  currentPage.value = nextSize === pageSize.value ? next.current || 1 : 1
-  pageSize.value = nextSize
-  void load()
 }
 
 function resetForm() {
@@ -365,7 +350,7 @@ load()
     </section>
 
     <a-modal
-      v-model:open="modalOpen"
+      :open="modalOpen"
       :title="modalTitle"
       :width="720"
       :confirm-loading="submitting"
@@ -373,6 +358,7 @@ load()
       ok-text="保存"
       cancel-text="取消"
       @ok="submit"
+      @cancel="requestFormClose"
     >
       <a-form ref="formRef" class="role-form" layout="vertical" :model="form" :rules="rules">
         <div class="form-grid">
@@ -423,15 +409,7 @@ load()
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-field { width: min(520px, 58%); }
-.query-actions { display: flex; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; padding: 9px 13px; border-bottom: 1px solid var(--shell-border); }
-.table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
 .role-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .role-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
 .role-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
@@ -441,8 +419,6 @@ load()
 .role-code { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
 .cell-text { display: block; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
 .empty-value { color: color-mix(in srgb, var(--shell-muted) 55%, transparent); }
-.row-actions { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 5px; }
 .empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
 .empty-table :deep(.anticon) { font-size: 30px; }
 .role-form { padding-top: 8px; }

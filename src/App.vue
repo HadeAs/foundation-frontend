@@ -23,7 +23,7 @@ const theme = computed(() => ({
   ],
   token: {
     colorPrimary: themeStore.primaryColor,
-    colorLink: themeStore.primaryColor,
+    colorLink: isDark.value ? '#63d7d6' : '#076f71',
     borderRadius: themeStore.radius,
     controlHeight: themeStore.density === 'compact' ? 34 : 38,
     fontSize: 15,

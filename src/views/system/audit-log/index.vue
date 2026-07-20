@@ -9,15 +9,16 @@ import {
   Tag as ATag,
   message,
   type TableColumnsType,
-  type TablePaginationConfig,
 } from 'ant-design-vue'
 import type { Dayjs } from 'dayjs'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 import { getErrorMessage } from '@/api/http'
 import { pageAuditLogs, type SysAuditLog } from '@/api/log'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useTablePagination } from '@/composables/use-table-pagination'
 import { formatDateTime } from '@/utils/date'
+import { createLatestRequest } from '@/utils/latest-request'
 
 const actionLabels: Record<string, string> = {
   CREATE: '创建',
@@ -41,9 +42,8 @@ const operator = ref('')
 const timeRange = ref<[Dayjs, Dayjs]>()
 const records = ref<SysAuditLog[]>([])
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const runLatestLoad = createLatestRequest(loading)
+const { currentPage, pageSize, total, pagination, handleTableChange } = useTablePagination(load)
 const detailOpen = ref(false)
 const detailLog = ref<SysAuditLog>()
 
@@ -60,23 +60,14 @@ const columns: TableColumnsType = [
   { title: '操作', key: 'action', width: 78, align: 'center' },
 ]
 
-const pagination = computed<TablePaginationConfig>(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
 
 function actionName(value?: string) {
   return actionLabels[value || ''] || value || '未知'
 }
 
 async function load() {
-  loading.value = true
   try {
-    const result = await pageAuditLogs(
+    const result = await runLatestLoad(() => pageAuditLogs(
       currentPage.value,
       pageSize.value,
       keyword.value,
@@ -85,7 +76,8 @@ async function load() {
       operator.value,
       timeRange.value?.[0].toISOString(),
       timeRange.value?.[1].toISOString(),
-    )
+    ))
+    if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
@@ -94,8 +86,6 @@ async function load() {
     records.value = []
     total.value = 0
     message.error(getErrorMessage(error))
-  } finally {
-    loading.value = false
   }
 }
 
@@ -112,13 +102,6 @@ async function resetQuery() {
   timeRange.value = undefined
   currentPage.value = 1
   await load()
-}
-
-function handleTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || pageSize.value
-  currentPage.value = nextSize === pageSize.value ? next.current || 1 : 1
-  pageSize.value = nextSize
-  void load()
 }
 
 function openDetail(record: SysAuditLog) {
@@ -239,16 +222,8 @@ load()
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-fields { display: grid; min-width: 0; flex: 1; grid-template-columns: minmax(220px, 1fr) 125px 125px 125px 320px; gap: 8px; }
-.query-actions { display: flex; flex: none; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; padding: 8px 13px; border-bottom: 1px solid var(--shell-border); }
-.table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
-.table-toolbar span { display: block; margin-top: 2px; color: var(--shell-muted); font-size: 12px; }
+.query-actions { flex: none; }
 .log-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .log-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
 .log-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }

@@ -17,10 +17,19 @@ import {
   type FormInstance,
   type FormProps,
   type TableColumnsType,
-  type TablePaginationConfig,
 } from 'ant-design-vue'
 import type { Dayjs } from 'dayjs'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onActivated,
+  onBeforeUnmount,
+  onDeactivated,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 
 import {
   cancelAsyncTask,
@@ -36,8 +45,11 @@ import { listDictItems, type DictItemResponse } from '@/api/dict'
 import { downloadFile } from '@/api/file'
 import { getErrorMessage } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useTablePagination } from '@/composables/use-table-pagination'
+import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
 import { formatDateTime } from '@/utils/date'
 import { downloadBlob } from '@/utils/download'
+import { createLatestRequest } from '@/utils/latest-request'
 
 import { shouldPollAsyncTasks } from './polling'
 
@@ -71,9 +83,8 @@ const taskType = ref('')
 const timeRange = ref<[Dayjs, Dayjs]>()
 const records = ref<SysAsyncTask[]>([])
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const runLatestLoad = createLatestRequest(loading)
+const { currentPage, pageSize, total, pagination, handleTableChange } = useTablePagination(load)
 const statusItems = ref<DictItemResponse[]>(fallbackStatusItems)
 
 const createOpen = ref(false)
@@ -86,15 +97,21 @@ const detailTask = ref<SysAsyncTask>()
 const detailLoading = ref(false)
 const logs = ref<SysAsyncTaskLog[]>([])
 const logLoading = ref(false)
-const logPage = ref(1)
-const logPageSize = ref(20)
-const logTotal = ref(0)
+const runLatestLogs = createLatestRequest(logLoading)
+const {
+  currentPage: logPage,
+  pageSize: logPageSize,
+  total: logTotal,
+  pagination: logPagination,
+  handleTableChange: handleLogTableChange,
+} = useTablePagination(loadLogs)
 const logTimeRange = ref<[Dayjs, Dayjs]>()
 const cancelingId = ref<number>()
 const downloadingId = ref<number>()
 
 let pollTimer: number | undefined
 let pollingNow = false
+const pageActive = ref(true)
 
 const columns: TableColumnsType = [
   { title: '任务名称', dataIndex: 'taskName', key: 'taskName', width: 190 },
@@ -118,23 +135,8 @@ function defaultForm(): AsyncTaskForm {
 }
 
 const form = reactive<AsyncTaskForm>(defaultForm())
+const { requestClose: requestCreateClose } = useUnsavedChanges(form, createOpen)
 const statusOptions = computed(() => statusItems.value.map((item) => ({ label: item.label, value: item.value })))
-const pagination = computed<TablePaginationConfig>(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
-const logPagination = computed<TablePaginationConfig>(() => ({
-  current: logPage.value,
-  pageSize: logPageSize.value,
-  total: logTotal.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
 const rules: FormProps['rules'] = {
   taskType: [{ required: true, message: '请输入任务类型', trigger: 'blur' }],
   taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
@@ -180,9 +182,8 @@ async function loadStatusItems() {
 }
 
 async function load(silent = false) {
-  if (!silent) loading.value = true
   try {
-    const result = await pageAsyncTasks(
+    const result = await runLatestLoad(() => pageAsyncTasks(
       currentPage.value,
       pageSize.value,
       keyword.value,
@@ -190,7 +191,8 @@ async function load(silent = false) {
       taskType.value,
       timeRange.value?.[0].toISOString(),
       timeRange.value?.[1].toISOString(),
-    )
+    ), !silent)
+    if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
@@ -202,7 +204,6 @@ async function load(silent = false) {
       message.error('异步任务数据获取失败，请稍后重试')
     }
   } finally {
-    if (!silent) loading.value = false
     syncPolling()
   }
 }
@@ -219,13 +220,6 @@ async function resetQuery() {
   timeRange.value = undefined
   currentPage.value = 1
   await load()
-}
-
-function handleTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || pageSize.value
-  currentPage.value = nextSize === pageSize.value ? next.current || 1 : 1
-  pageSize.value = nextSize
-  void load()
 }
 
 function openCreate() {
@@ -267,16 +261,17 @@ async function loadDetail(silent = false) {
 }
 
 async function loadLogs(silent = false) {
-  if (detailTaskId.value === undefined) return
-  if (!silent) logLoading.value = true
+  const taskId = detailTaskId.value
+  if (taskId === undefined) return
   try {
-    const result = await pageAsyncTaskLogs(
-      detailTaskId.value,
+    const result = await runLatestLogs(() => pageAsyncTaskLogs(
+      taskId,
       logPage.value,
       logPageSize.value,
       logTimeRange.value?.[0].toISOString(),
       logTimeRange.value?.[1].toISOString(),
-    )
+    ), !silent)
+    if (!result) return
     logs.value = result.records || []
     logTotal.value = Number(result.total || 0)
     logPage.value = Number(result.current || logPage.value)
@@ -287,8 +282,6 @@ async function loadLogs(silent = false) {
       logTotal.value = 0
       message.error('任务日志获取失败，请稍后重试')
     }
-  } finally {
-    if (!silent) logLoading.value = false
   }
 }
 
@@ -311,13 +304,6 @@ async function resetLogQuery() {
   logTimeRange.value = undefined
   logPage.value = 1
   await loadLogs()
-}
-
-function handleLogTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || logPageSize.value
-  logPage.value = nextSize === logPageSize.value ? next.current || 1 : 1
-  logPageSize.value = nextSize
-  void loadLogs()
 }
 
 async function cancelTask(record: SysAsyncTask) {
@@ -357,14 +343,14 @@ function syncPolling() {
   const shouldPoll = shouldPollAsyncTasks(
     records.value.map((record) => record.status),
     detailOpen.value,
-    document.visibilityState === 'visible',
+    pageActive.value && document.visibilityState === 'visible',
   )
   if (!shouldPoll) stopPolling()
   else if (pollTimer === undefined) pollTimer = window.setInterval(refreshPolling, 5000)
 }
 
 async function refreshPolling() {
-  if (pollingNow || document.visibilityState !== 'visible') {
+  if (pollingNow || !pageActive.value || document.visibilityState !== 'visible') {
     syncPolling()
     return
   }
@@ -396,6 +382,16 @@ onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
   void loadStatusItems()
   void load()
+})
+
+onActivated(() => {
+  pageActive.value = true
+  void refreshPolling()
+})
+
+onDeactivated(() => {
+  pageActive.value = false
+  stopPolling()
 })
 
 onBeforeUnmount(() => {
@@ -498,7 +494,7 @@ onBeforeUnmount(() => {
     </section>
 
     <a-modal
-      v-model:open="createOpen"
+      :open="createOpen"
       title="登记异步任务"
       :width="760"
       :confirm-loading="submitting"
@@ -506,6 +502,7 @@ onBeforeUnmount(() => {
       ok-text="登记"
       cancel-text="取消"
       @ok="submit"
+      @cancel="requestCreateClose"
     >
       <a-form ref="formRef" class="task-form" layout="vertical" :model="form" :rules="rules">
         <div class="form-grid">
@@ -595,15 +592,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-fields { display: grid; width: min(1110px, 82%); grid-template-columns: minmax(230px, 1fr) minmax(160px, .65fr) 130px 320px; gap: 8px; }
-.query-actions { display: flex; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; padding: 8px 13px; border-bottom: 1px solid var(--shell-border); }
-.table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
 .polling-note { display: block; margin-top: 2px; color: var(--shell-muted); font-size: 12px; }
 .task-table :deep(.ant-table), .log-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .task-table :deep(.ant-table-thead > tr > th), .log-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
@@ -613,8 +602,6 @@ onBeforeUnmount(() => {
 .mono-cell { display: block; overflow: hidden; color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .cell-text, .log-message { display: block; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
 .file-link { display: block; max-width: 100%; padding-inline: 0; overflow: hidden; text-overflow: ellipsis; }
-.row-actions { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 5px; }
 .empty-table { display: flex; min-height: 150px; align-items: center; justify-content: center; color: var(--shell-muted); }
 .task-form { padding-top: 8px; }
 .form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }

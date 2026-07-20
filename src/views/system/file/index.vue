@@ -12,7 +12,6 @@ import {
   Modal,
   message,
   type TableColumnsType,
-  type TablePaginationConfig,
   type TableProps,
 } from 'ant-design-vue'
 import { computed, nextTick, ref } from 'vue'
@@ -27,8 +26,10 @@ import {
 } from '@/api/file'
 import { getErrorMessage } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useTablePagination } from '@/composables/use-table-pagination'
 import { formatDateTime } from '@/utils/date'
 import { downloadBlob } from '@/utils/download'
+import { createLatestRequest } from '@/utils/latest-request'
 
 import { canDeleteFile, fileGroups, formatFileSize } from './policy'
 
@@ -40,9 +41,8 @@ const keyword = ref('')
 const group = ref<string>()
 const records = ref<SysFile[]>([])
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const runLatestLoad = createLatestRequest(loading)
+const { currentPage, pageSize, total, pagination, handleTableChange } = useTablePagination(load)
 const selectedIds = ref<number[]>([])
 const deletingId = ref<number>()
 const downloadingId = ref<number>()
@@ -67,14 +67,6 @@ const columns: TableColumnsType = [
   { title: '操作', key: 'action', width: 125, align: 'center' },
 ]
 
-const pagination = computed<TablePaginationConfig>(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
 const rowSelection = computed<TableProps<SysFile>['rowSelection']>(() => ({
   selectedRowKeys: selectedIds.value,
   fixed: true,
@@ -86,10 +78,10 @@ const rowSelection = computed<TableProps<SysFile>['rowSelection']>(() => ({
 }))
 
 async function load() {
-  loading.value = true
   selectedIds.value = []
   try {
-    const result = await pageFiles(currentPage.value, pageSize.value, keyword.value, group.value)
+    const result = await runLatestLoad(() => pageFiles(currentPage.value, pageSize.value, keyword.value, group.value))
+    if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
@@ -98,8 +90,6 @@ async function load() {
     records.value = []
     total.value = 0
     message.error('文件资产获取失败，请稍后重试')
-  } finally {
-    loading.value = false
   }
 }
 
@@ -113,13 +103,6 @@ async function resetQuery() {
   group.value = undefined
   currentPage.value = 1
   await load()
-}
-
-function handleTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || pageSize.value
-  currentPage.value = nextSize === pageSize.value ? next.current || 1 : 1
-  pageSize.value = nextSize
-  void load()
 }
 
 function openUpload() {
@@ -343,16 +326,7 @@ load()
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-fields { display: grid; width: min(700px, 66%); grid-template-columns: minmax(300px, 1fr) 150px; gap: 8px; }
-.query-actions, .toolbar-actions { display: flex; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; padding: 8px 13px; border-bottom: 1px solid var(--shell-border); }
-.table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
-.table-toolbar > div:first-child > span { display: block; margin-top: 2px; color: var(--shell-muted); font-size: 12px; }
 .file-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .file-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
 .file-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
@@ -361,8 +335,6 @@ load()
 .file-name, .cell-text, .object-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cell-text { color: var(--shell-muted); }
 .object-name { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
-.row-actions { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 5px; }
 .empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--shell-muted); }
 .upload-form { display: grid; padding-top: 8px; gap: 8px; }
 .upload-form label { margin-top: 7px; color: var(--shell-ink); font-weight: 500; }

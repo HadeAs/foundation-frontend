@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  ArrowRightOutlined,
   LockOutlined,
   SafetyCertificateOutlined,
   UserOutlined,
@@ -157,7 +156,6 @@ async function handleSubmit() {
             :loading="submitting"
           >
             <span>进入系统</span>
-            <ArrowRightOutlined v-if="!submitting" />
           </a-button>
         </a-form>
 

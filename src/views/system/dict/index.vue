@@ -19,7 +19,6 @@ import {
   type FormInstance,
   type FormProps,
   type TableColumnsType,
-  type TablePaginationConfig,
   type TableProps,
 } from 'ant-design-vue'
 import { computed, nextTick, reactive, ref } from 'vue'
@@ -50,8 +49,11 @@ import {
 } from '@/api/dict'
 import { getErrorMessage } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useTablePagination } from '@/composables/use-table-pagination'
+import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
 import { formatDateTime } from '@/utils/date'
 import { downloadBlob } from '@/utils/download'
+import { createLatestRequest } from '@/utils/latest-request'
 
 import { moveDictItem } from './order'
 
@@ -94,14 +96,20 @@ const status = ref<number>()
 const scope = ref<string>()
 const types = ref<SysDictType[]>([])
 const typeLoading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const runLatestTypes = createLatestRequest(typeLoading)
+const {
+  currentPage,
+  pageSize,
+  total,
+  pagination: typePagination,
+  handleTableChange: handleTypeTableChange,
+} = useTablePagination(loadTypes)
 const selectedType = ref<SysDictType>()
 const selectedTypeIds = ref<number[]>([])
 
 const items = ref<SysDictItem[]>([])
 const itemLoading = ref(false)
+const runLatestItems = createLatestRequest(itemLoading)
 const selectedItemIds = ref<number[]>([])
 const orderDirty = ref(false)
 
@@ -123,9 +131,14 @@ const importInput = ref<HTMLInputElement>()
 const logModalOpen = ref(false)
 const logs = ref<SysDictChangeLog[]>([])
 const logLoading = ref(false)
-const logPage = ref(1)
-const logPageSize = ref(20)
-const logTotal = ref(0)
+const runLatestLogs = createLatestRequest(logLoading)
+const {
+  currentPage: logPage,
+  pageSize: logPageSize,
+  total: logTotal,
+  pagination: logPagination,
+  handleTableChange: handleLogTableChange,
+} = useTablePagination(loadLogs)
 
 const typeColumns: TableColumnsType = [
   { title: '字典名称', dataIndex: 'dictName', key: 'dictName', width: 145 },
@@ -152,22 +165,6 @@ const logColumns: TableColumnsType = [
   { title: '变更时间', dataIndex: 'createdTime', key: 'createdTime', width: 160 },
 ]
 
-const typePagination = computed<TablePaginationConfig>(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
-const logPagination = computed<TablePaginationConfig>(() => ({
-  current: logPage.value,
-  pageSize: logPageSize.value,
-  total: logTotal.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
 const typeRowSelection = computed<TableProps<SysDictType>['rowSelection']>(() => ({
   selectedRowKeys: selectedTypeIds.value,
   fixed: true,
@@ -199,6 +196,8 @@ function defaultItemForm(): DictItemForm {
 }
 const typeForm = reactive<DictTypeForm>(defaultTypeForm())
 const itemForm = reactive<DictItemForm>(defaultItemForm())
+const { requestClose: requestTypeClose } = useUnsavedChanges(typeForm, typeModalOpen)
+const { requestClose: requestItemClose } = useUnsavedChanges(itemForm, itemModalOpen)
 const typeRules: FormProps['rules'] = {
   dictCode: [{ required: true, message: '请输入字典编码', trigger: 'blur' }],
   dictName: [{ required: true, message: '请输入字典名称', trigger: 'blur' }],
@@ -241,14 +240,13 @@ async function loadItems() {
     items.value = []
     return
   }
-  itemLoading.value = true
   try {
-    items.value = await listManagedDictItems(code)
+    const result = await runLatestItems(() => listManagedDictItems(code))
+    if (!result) return
+    items.value = result
   } catch {
     items.value = []
     message.error('字典项获取失败，请稍后重试')
-  } finally {
-    itemLoading.value = false
   }
 }
 
@@ -259,15 +257,15 @@ async function selectType(record: SysDictType) {
 }
 
 async function loadTypes() {
-  typeLoading.value = true
   try {
-    const result = await pageDictTypes(
+    const result = await runLatestTypes(() => pageDictTypes(
       currentPage.value,
       pageSize.value,
       keyword.value,
       status.value,
       scope.value,
-    )
+    ))
+    if (!result) return
     types.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
@@ -280,8 +278,6 @@ async function loadTypes() {
     selectedType.value = undefined
     items.value = []
     message.error('字典类型获取失败，请稍后重试')
-  } finally {
-    typeLoading.value = false
   }
 }
 
@@ -296,13 +292,6 @@ async function resetQuery() {
   currentPage.value = 1
   await loadTypes()
 }
-function handleTypeTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || pageSize.value
-  currentPage.value = nextSize === pageSize.value ? next.current || 1 : 1
-  pageSize.value = nextSize
-  void loadTypes()
-}
-
 function openCreateType() {
   editingType.value = undefined
   Object.assign(typeForm, defaultTypeForm())
@@ -527,21 +516,19 @@ async function refreshCache() {
 }
 
 async function loadLogs() {
-  logLoading.value = true
   try {
-    const result = await pageDictChangeLogs(
+    const result = await runLatestLogs(() => pageDictChangeLogs(
       logPage.value,
       logPageSize.value,
       selectedType.value?.dictCode,
-    )
+    ))
+    if (!result) return
     logs.value = result.records || []
     logTotal.value = Number(result.total || 0)
     logPage.value = Number(result.current || logPage.value)
     logPageSize.value = Number(result.size || logPageSize.value)
   } catch {
     message.error('变更记录获取失败，请稍后重试')
-  } finally {
-    logLoading.value = false
   }
 }
 function openLogs() {
@@ -549,13 +536,6 @@ function openLogs() {
   logModalOpen.value = true
   void loadLogs()
 }
-function handleLogTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || logPageSize.value
-  logPage.value = nextSize === logPageSize.value ? next.current || 1 : 1
-  logPageSize.value = nextSize
-  void loadLogs()
-}
-
 loadTypes()
 </script>
 
@@ -717,7 +697,7 @@ loadTypes()
     </section>
 
     <a-modal
-      v-model:open="typeModalOpen"
+      :open="typeModalOpen"
       :title="editingType ? '编辑字典类型' : '新增字典类型'"
       :width="760"
       :confirm-loading="typeSubmitting"
@@ -725,6 +705,7 @@ loadTypes()
       ok-text="保存"
       cancel-text="取消"
       @ok="submitType"
+      @cancel="requestTypeClose"
     >
       <a-form ref="typeFormRef" class="modal-form" layout="vertical" :model="typeForm" :rules="typeRules">
         <div class="form-grid">
@@ -751,7 +732,7 @@ loadTypes()
     </a-modal>
 
     <a-modal
-      v-model:open="itemModalOpen"
+      :open="itemModalOpen"
       :title="editingItemId === undefined ? '新增字典项' : '编辑字典项'"
       :width="760"
       :confirm-loading="itemSubmitting"
@@ -759,6 +740,7 @@ loadTypes()
       ok-text="保存"
       cancel-text="取消"
       @ok="submitItem"
+      @cancel="requestItemClose"
     >
       <a-form ref="itemFormRef" class="modal-form" layout="vertical" :model="itemForm" :rules="itemRules">
         <div class="form-grid">
@@ -814,12 +796,7 @@ loadTypes()
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-fields { display: grid; width: min(720px, 68%); grid-template-columns: minmax(260px, 2fr) 130px 130px; gap: 8px; }
-.query-actions, .toolbar-actions { display: flex; align-items: center; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
 .dict-workspace { display: grid; min-width: 0; margin-top: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .dict-panel { min-width: 0; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .panel-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 13px; border-bottom: 1px solid var(--shell-border); }
@@ -837,8 +814,6 @@ loadTypes()
 .status-text { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .status-text i { width: 7px; height: 7px; border-radius: 50%; background: #28aa81; }
 .status-text.disabled i { background: #aab3b3; }
-.row-actions { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 4px; }
 .empty-table { display: flex; min-height: 200px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
 .empty-table :deep(.anticon) { font-size: 30px; }
 .utility-bar { display: flex; min-height: 52px; align-items: center; justify-content: space-between; margin-top: 8px; padding: 8px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }

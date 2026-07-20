@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { useTabsStore } from '@/stores/tabs'
 
@@ -44,6 +44,32 @@ describe('PageTabs', () => {
 
     expect(tabs.items.map((tab) => tab.path)).toEqual(['/dashboard', '/system/user'])
     expect(router.currentRoute.value.path).toBe('/system/user')
+    wrapper.unmount()
+  })
+
+  it('切换标签时将当前标签滚动到可视区域', async () => {
+    const scrollIntoView = vi.fn()
+    HTMLElement.prototype.scrollIntoView = scrollIntoView
+    const pinia = createPinia()
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/dashboard', component: { template: '<div />' } },
+        { path: '/system/user', component: { template: '<div />' } },
+      ],
+    })
+    setActivePinia(pinia)
+    const tabs = useTabsStore()
+    tabs.add({ path: '/dashboard', title: '工作台', routeName: 'dashboard', fixed: true })
+    tabs.add({ path: '/system/user', title: '用户管理', routeName: 'user' })
+    await router.push('/dashboard')
+    await router.isReady()
+    const wrapper = mount(PageTabs, { global: { plugins: [pinia, router] } })
+
+    await router.push('/system/user')
+    await flushPromises()
+
+    expect(scrollIntoView).toHaveBeenCalled()
     wrapper.unmount()
   })
 })

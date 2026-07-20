@@ -19,7 +19,6 @@ import {
   type FormInstance,
   type FormProps,
   type TableColumnsType,
-  type TablePaginationConfig,
   type TableProps,
 } from 'ant-design-vue'
 import type { Dayjs } from 'dayjs'
@@ -43,6 +42,9 @@ import {
 } from '@/api/job'
 import { getErrorMessage } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
+import { useTablePagination } from '@/composables/use-table-pagination'
+import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
+import { createLatestRequest } from '@/utils/latest-request'
 import { formatDateTime } from '@/utils/date'
 
 type JobForm = {
@@ -97,9 +99,8 @@ const jobScope = ref<string>()
 const sourceType = ref<string>()
 const records = ref<SysJob[]>([])
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const runLatestLoad = createLatestRequest(loading)
+const { currentPage, pageSize, total, pagination, handleTableChange } = useTablePagination(load)
 const selectedIds = ref<number[]>([])
 const modalOpen = ref(false)
 const submitting = ref(false)
@@ -115,9 +116,14 @@ const logsOpen = ref(false)
 const logJob = ref<SysJob>()
 const logs = ref<SysJobLog[]>([])
 const logLoading = ref(false)
-const logPage = ref(1)
-const logPageSize = ref(20)
-const logTotal = ref(0)
+const runLatestLogs = createLatestRequest(logLoading)
+const {
+  currentPage: logPage,
+  pageSize: logPageSize,
+  total: logTotal,
+  pagination: logPagination,
+  handleTableChange: handleLogTableChange,
+} = useTablePagination(loadLogs)
 const logTimeRange = ref<[Dayjs, Dayjs]>()
 const detailOpen = ref(false)
 const detailLog = ref<SysJobLog>()
@@ -163,27 +169,12 @@ function defaultForm(): JobForm {
 }
 
 const form = reactive<JobForm>(defaultForm())
+const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
 const modalTitle = computed(() => editingJob.value ? '编辑定时任务' : '新增定时任务')
 const handlerOptions = computed(() => handlers.value.map((item) => ({
   label: item.source ? `${item.label || item.type}（${item.source}）` : item.label || item.type,
   value: item.type,
 })).filter((item) => item.value))
-const pagination = computed<TablePaginationConfig>(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
-const logPagination = computed<TablePaginationConfig>(() => ({
-  current: logPage.value,
-  pageSize: logPageSize.value,
-  total: logTotal.value,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  showTotal: (count) => `共 ${count} 条`,
-}))
 const rowSelection = computed<TableProps<SysJob>['rowSelection']>(() => ({
   selectedRowKeys: selectedIds.value,
   fixed: true,
@@ -221,10 +212,10 @@ function toRequest(): JobRequest {
 }
 
 async function load() {
-  loading.value = true
   selectedIds.value = []
   try {
-    const result = await pageJobs(currentPage.value, pageSize.value, keyword.value, jobScope.value, sourceType.value)
+    const result = await runLatestLoad(() => pageJobs(currentPage.value, pageSize.value, keyword.value, jobScope.value, sourceType.value))
+    if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
@@ -233,8 +224,6 @@ async function load() {
     records.value = []
     total.value = 0
     message.error('定时任务数据获取失败，请稍后重试')
-  } finally {
-    loading.value = false
   }
 }
 
@@ -249,13 +238,6 @@ async function resetQuery() {
   sourceType.value = undefined
   currentPage.value = 1
   await load()
-}
-
-function handleTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || pageSize.value
-  currentPage.value = nextSize === pageSize.value ? next.current || 1 : 1
-  pageSize.value = nextSize
-  void load()
 }
 
 async function loadHandlers() {
@@ -417,16 +399,17 @@ async function toggleStatus(record: SysJob) {
 }
 
 async function loadLogs() {
-  if (logJob.value?.jobId === undefined) return
-  logLoading.value = true
+  const jobId = logJob.value?.jobId
+  if (jobId === undefined) return
   try {
-    const result = await pageJobLogs(
-      logJob.value.jobId,
+    const result = await runLatestLogs(() => pageJobLogs(
+      jobId,
       logPage.value,
       logPageSize.value,
       logTimeRange.value?.[0].toISOString(),
       logTimeRange.value?.[1].toISOString(),
-    )
+    ))
+    if (!result) return
     logs.value = result.records || []
     logTotal.value = Number(result.total || 0)
     logPage.value = Number(result.current || logPage.value)
@@ -435,8 +418,6 @@ async function loadLogs() {
     logs.value = []
     logTotal.value = 0
     message.error('执行日志获取失败，请稍后重试')
-  } finally {
-    logLoading.value = false
   }
 }
 
@@ -458,13 +439,6 @@ async function resetLogQuery() {
   logTimeRange.value = undefined
   logPage.value = 1
   await loadLogs()
-}
-
-function handleLogTableChange(next: TablePaginationConfig) {
-  const nextSize = next.pageSize || logPageSize.value
-  logPage.value = nextSize === logPageSize.value ? next.current || 1 : 1
-  logPageSize.value = nextSize
-  void loadLogs()
 }
 
 function openLogDetail(record: SysJobLog) {
@@ -566,7 +540,7 @@ load()
     </section>
 
     <a-modal
-      v-model:open="modalOpen"
+      :open="modalOpen"
       :title="modalTitle"
       :width="860"
       :confirm-loading="submitting"
@@ -574,6 +548,7 @@ load()
       ok-text="保存"
       cancel-text="取消"
       @ok="submit"
+      @cancel="requestFormClose"
     >
       <a-form ref="formRef" class="job-form" layout="vertical" :model="form" :rules="rules">
         <div class="form-grid">
@@ -709,15 +684,7 @@ load()
 </template>
 
 <style scoped>
-.query-panel { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
 .query-fields { display: grid; width: min(820px, 70%); grid-template-columns: minmax(280px, 1fr) 135px 135px; gap: 8px; }
-.query-actions, .toolbar-actions { display: flex; gap: 7px; }
-.query-actions :deep(.ant-btn) { min-width: 58px; }
-.secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
-.secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; padding: 9px 13px; border-bottom: 1px solid var(--shell-border); }
-.table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
 .job-table :deep(.ant-table), .log-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .job-table :deep(.ant-table-thead > tr > th), .log-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
 .job-table :deep(.ant-table-tbody > tr > td), .log-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
@@ -728,8 +695,6 @@ load()
 .status-cell { display: inline-flex; align-items: center; gap: 6px; }
 .status-cell i { width: 7px; height: 7px; border-radius: 50%; background: #26aa80; }
 .status-cell.paused i { background: #d89a28; }
-.row-actions { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 4px; }
 .empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--shell-muted); }
 .job-form { padding-top: 8px; }
 .form-grid, .advanced-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
