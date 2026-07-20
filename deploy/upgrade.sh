@@ -71,7 +71,7 @@ write_version() {
 
 wait_for_health() {
   local status
-  for ((attempt = 1; attempt <= 30; attempt++)); do
+  for ((attempt = 1; attempt <= 120; attempt++)); do
     status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$CONTAINER_NAME" 2>/dev/null || true)"
     case "$status" in
       healthy|running) return 0 ;;
