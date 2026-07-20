@@ -211,8 +211,8 @@ load()
       </div>
       <div class="query-actions">
         <a-button type="primary" :loading="loading" @click="search">查询</a-button>
-        <a-button class="secondary-action" :disabled="loading" @click="resetQuery">重置</a-button>
-        <a-button class="secondary-action" :disabled="loading" @click="load">刷新</a-button>
+        <a-button :disabled="loading" @click="resetQuery">重置</a-button>
+        <a-button :disabled="loading" @click="load">刷新</a-button>
       </div>
     </section>
 
@@ -223,7 +223,7 @@ load()
           <span>文件内容存储于 MinIO</span>
         </div>
         <div class="toolbar-actions">
-          <a-button v-if="selectedIds.length" danger class="secondary-action" @click="removeSelected">
+          <a-button v-if="selectedIds.length" danger @click="removeSelected">
             批量删除（{{ selectedIds.length }}）
           </a-button>
           <a-button type="primary" @click="openUpload">上传文件</a-button>
@@ -308,7 +308,7 @@ load()
       <div class="upload-form">
         <label>文件</label>
         <div class="file-picker">
-          <a-button class="secondary-action" @click="fileInput?.click()">选择文件</a-button>
+          <a-button @click="fileInput?.click()">选择文件</a-button>
           <span :title="selectedFile?.name">{{ selectedFile ? `${selectedFile.name}（${formatFileSize(selectedFile.size)}）` : '未选择文件' }}</span>
           <input ref="fileInput" type="file" hidden @change="selectFile" />
         </div>

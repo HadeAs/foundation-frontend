@@ -549,19 +549,19 @@ loadTypes()
       </div>
       <div class="query-actions">
         <a-button type="primary" :loading="typeLoading" @click="search">查询</a-button>
-        <a-button class="secondary-action" :disabled="typeLoading" @click="resetQuery">重置</a-button>
-        <a-button class="secondary-action" :disabled="typeLoading" @click="loadTypes">刷新</a-button>
+        <a-button :disabled="typeLoading" @click="resetQuery">重置</a-button>
+        <a-button :disabled="typeLoading" @click="loadTypes">刷新</a-button>
       </div>
     </section>
 
     <section class="utility-bar">
       <h1>数据维护</h1>
       <div class="toolbar-actions">
-        <a-button class="secondary-action" :loading="templateLoading" @click="downloadTemplate">下载模板</a-button>
-        <a-button class="secondary-action" :loading="importing" @click="importInput?.click()">导入 CSV</a-button>
-        <a-button class="secondary-action" :loading="exporting" @click="exportCurrent">导出{{ selectedType ? '当前字典' : '全部字典' }}</a-button>
-        <a-button class="secondary-action" @click="openLogs">变更记录</a-button>
-        <a-button class="secondary-action" :loading="cacheRefreshing" @click="refreshCache">刷新缓存</a-button>
+        <a-button :loading="templateLoading" @click="downloadTemplate">下载模板</a-button>
+        <a-button :loading="importing" @click="importInput?.click()">导入 CSV</a-button>
+        <a-button :loading="exporting" @click="exportCurrent">导出{{ selectedType ? '当前字典' : '全部字典' }}</a-button>
+        <a-button @click="openLogs">变更记录</a-button>
+        <a-button :loading="cacheRefreshing" @click="refreshCache">刷新缓存</a-button>
         <input ref="importInput" class="file-input" type="file" accept=".csv,text/csv" @change="handleImport" />
       </div>
     </section>
@@ -574,7 +574,6 @@ loadTypes()
             <a-button
               v-if="selectedTypeIds.length"
               danger
-              class="secondary-action"
               @click="removeSelectedTypes"
             >批量删除</a-button>
             <a-button type="primary" @click="openCreateType">新增字典</a-button>
@@ -640,9 +639,9 @@ loadTypes()
           </div>
           <div class="toolbar-actions item-actions">
             <template v-if="selectedItemIds.length">
-              <a-button danger class="secondary-action" @click="removeSelectedItems">批量删除</a-button>
+              <a-button danger @click="removeSelectedItems">批量删除</a-button>
             </template>
-            <a-button v-if="orderDirty" class="secondary-action" @click="persistOrder">保存排序</a-button>
+            <a-button v-if="orderDirty" @click="persistOrder">保存排序</a-button>
             <a-button type="primary" :disabled="!selectedType" @click="openCreateItem">新增字典项</a-button>
           </div>
         </header>

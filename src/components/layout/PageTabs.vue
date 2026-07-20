@@ -163,17 +163,24 @@ async function handleAction(key: string, path: string) {
 }
 .tab-close,
 .tab-pin {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
   flex: none;
-  font-size: 11px;
+  align-items: center;
+  justify-content: center;
+  color: var(--shell-muted);
+  font-size: 12px;
+  line-height: 1;
 }
 .tab-close {
-  display: inline-grid;
-  padding: 2px;
-  color: inherit;
+  padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
-  place-items: center;
+}
+.tab-close .anticon {
+  font-size: 12px;
 }
 .tab-close:hover {
   color: var(--brand);
@@ -182,8 +189,5 @@ async function handleAction(key: string, path: string) {
   color: var(--brand-deep);
   outline: 1px solid var(--brand);
   outline-offset: 2px;
-}
-.tab-pin {
-  color: var(--shell-muted);
 }
 </style>

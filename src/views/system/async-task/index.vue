@@ -447,8 +447,8 @@ onBeforeUnmount(() => {
       </div>
       <div class="query-actions">
         <a-button type="primary" :loading="loading" @click="search">查询</a-button>
-        <a-button class="secondary-action" :disabled="loading" @click="resetQuery">重置</a-button>
-        <a-button class="secondary-action" :disabled="loading" @click="load()">刷新</a-button>
+        <a-button :disabled="loading" @click="resetQuery">重置</a-button>
+        <a-button :disabled="loading" @click="load()">刷新</a-button>
       </div>
     </section>
 
@@ -592,8 +592,8 @@ onBeforeUnmount(() => {
             :placeholder="['开始时间', '结束时间']"
           />
           <a-button type="primary" :loading="logLoading" @click="searchLogs">查询</a-button>
-          <a-button class="secondary-action" :disabled="logLoading" @click="resetLogQuery">重置</a-button>
-          <a-button class="secondary-action" :disabled="logLoading" @click="loadLogs()">刷新</a-button>
+          <a-button :disabled="logLoading" @click="resetLogQuery">重置</a-button>
+          <a-button :disabled="logLoading" @click="loadLogs()">刷新</a-button>
         </div>
       </header>
       <ResizableTable

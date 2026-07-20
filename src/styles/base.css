@@ -179,16 +179,6 @@ body:has(.app-sider.ant-layout-sider-collapsed) .ant-message {
   min-width: 58px;
 }
 
-.management-page .secondary-action {
-  color: var(--shell-ink);
-  background: var(--shell-hover);
-}
-
-.management-page .secondary-action:hover {
-  color: var(--brand-deep) !important;
-  background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important;
-}
-
 .management-page > .table-panel {
   display: flex;
   min-height: 0;

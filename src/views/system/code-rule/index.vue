@@ -334,8 +334,8 @@ load()
       </div>
       <div class="query-actions">
         <a-button type="primary" :loading="loading" @click="search">查询</a-button>
-        <a-button class="secondary-action" :disabled="loading" @click="resetQuery">重置</a-button>
-        <a-button class="secondary-action" :disabled="loading" @click="load">刷新</a-button>
+        <a-button :disabled="loading" @click="resetQuery">重置</a-button>
+        <a-button :disabled="loading" @click="load">刷新</a-button>
       </div>
     </section>
 
@@ -343,7 +343,7 @@ load()
       <header class="table-toolbar">
         <h1>编码规则</h1>
         <div class="toolbar-actions">
-          <a-button v-if="selectedIds.length" danger class="secondary-action" @click="removeSelected">
+          <a-button v-if="selectedIds.length" danger @click="removeSelected">
             批量删除（{{ selectedIds.length }}）
           </a-button>
           <a-button type="primary" @click="openCreate">新增规则</a-button>

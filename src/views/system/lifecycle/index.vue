@@ -187,7 +187,7 @@ loadOverview()
         <h1>生命周期治理</h1>
         <span>集中查看数据保留策略、清理任务及执行结果</span>
       </div>
-      <a-button class="secondary-action" :loading="overviewLoading || logLoading" @click="refresh">刷新</a-button>
+      <a-button :loading="overviewLoading || logLoading" @click="refresh">刷新</a-button>
     </header>
 
     <section class="summary-strip">
@@ -283,7 +283,7 @@ loadOverview()
           </div>
           <div class="query-actions">
             <a-button type="primary" :loading="logLoading" @click="search">查询</a-button>
-            <a-button class="secondary-action" :disabled="logLoading" @click="resetQuery">重置</a-button>
+            <a-button :disabled="logLoading" @click="resetQuery">重置</a-button>
           </div>
         </section>
 

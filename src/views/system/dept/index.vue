@@ -236,8 +236,8 @@ load()
       </div>
       <div class="query-actions">
         <a-button type="primary" :loading="loading" @click="load">查询</a-button>
-        <a-button class="secondary-action" :disabled="loading" @click="resetQuery">重置</a-button>
-        <a-button class="secondary-action" :disabled="loading" @click="load">刷新</a-button>
+        <a-button :disabled="loading" @click="resetQuery">重置</a-button>
+        <a-button :disabled="loading" @click="load">刷新</a-button>
       </div>
     </section>
 
