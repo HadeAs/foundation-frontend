@@ -13,7 +13,7 @@ export function createLatestRequest(loading: Ref<boolean>) {
       if (current === version) throw error
       return undefined
     } finally {
-      if (trackLoading && current === version) loading.value = false
+      if (current === version) loading.value = false
     }
   }
 }

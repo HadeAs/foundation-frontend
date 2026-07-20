@@ -22,4 +22,22 @@ describe('createLatestRequest', () => {
     await expect(second).resolves.toBe('新结果')
     expect(loading.value).toBe(false)
   })
+
+  it('静默请求替代普通请求后仍会关闭加载状态', async () => {
+    const loading = ref(false)
+    const runLatest = createLatestRequest(loading)
+    let finishVisible!: (value: string) => void
+    let finishSilent!: (value: string) => void
+
+    const visible = runLatest(() => new Promise<string>((resolve) => { finishVisible = resolve }))
+    const silent = runLatest(() => new Promise<string>((resolve) => { finishSilent = resolve }), false)
+
+    finishVisible('旧结果')
+    await expect(visible).resolves.toBeUndefined()
+    expect(loading.value).toBe(true)
+
+    finishSilent('轮询结果')
+    await expect(silent).resolves.toBe('轮询结果')
+    expect(loading.value).toBe(false)
+  })
 })

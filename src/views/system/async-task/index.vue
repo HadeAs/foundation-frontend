@@ -81,6 +81,13 @@ const keyword = ref('')
 const status = ref<string>()
 const taskType = ref('')
 const timeRange = ref<[Dayjs, Dayjs]>()
+const appliedQuery = reactive<{
+  keyword: string
+  status?: string
+  taskType: string
+  startTime?: string
+  endTime?: string
+}>({ keyword: '', taskType: '' })
 const records = ref<SysAsyncTask[]>([])
 const loading = ref(false)
 const runLatestLoad = createLatestRequest(loading)
@@ -106,11 +113,13 @@ const {
   handleTableChange: handleLogTableChange,
 } = useTablePagination(loadLogs)
 const logTimeRange = ref<[Dayjs, Dayjs]>()
+const appliedLogQuery = reactive<{ startTime?: string; endTime?: string }>({})
 const cancelingId = ref<number>()
 const downloadingId = ref<number>()
 
 let pollTimer: number | undefined
 let pollingNow = false
+let initialActivation = true
 const pageActive = ref(true)
 
 const columns: TableColumnsType = [
@@ -172,6 +181,19 @@ function isActive(record: SysAsyncTask) {
   return record.status === 'PENDING' || record.status === 'RUNNING'
 }
 
+function applyQuery() {
+  appliedQuery.keyword = keyword.value
+  appliedQuery.status = status.value
+  appliedQuery.taskType = taskType.value
+  appliedQuery.startTime = timeRange.value?.[0].toISOString()
+  appliedQuery.endTime = timeRange.value?.[1].toISOString()
+}
+
+function applyLogQuery() {
+  appliedLogQuery.startTime = logTimeRange.value?.[0].toISOString()
+  appliedLogQuery.endTime = logTimeRange.value?.[1].toISOString()
+}
+
 async function loadStatusItems() {
   try {
     const result = await listDictItems('async_task_status')
@@ -186,11 +208,11 @@ async function load(silent = false) {
     const result = await runLatestLoad(() => pageAsyncTasks(
       currentPage.value,
       pageSize.value,
-      keyword.value,
-      status.value,
-      taskType.value,
-      timeRange.value?.[0].toISOString(),
-      timeRange.value?.[1].toISOString(),
+      appliedQuery.keyword,
+      appliedQuery.status,
+      appliedQuery.taskType,
+      appliedQuery.startTime,
+      appliedQuery.endTime,
     ), !silent)
     if (!result) return
     records.value = result.records || []
@@ -209,6 +231,7 @@ async function load(silent = false) {
 }
 
 async function search() {
+  applyQuery()
   currentPage.value = 1
   await load()
 }
@@ -218,6 +241,7 @@ async function resetQuery() {
   status.value = undefined
   taskType.value = ''
   timeRange.value = undefined
+  applyQuery()
   currentPage.value = 1
   await load()
 }
@@ -268,8 +292,8 @@ async function loadLogs(silent = false) {
       taskId,
       logPage.value,
       logPageSize.value,
-      logTimeRange.value?.[0].toISOString(),
-      logTimeRange.value?.[1].toISOString(),
+      appliedLogQuery.startTime,
+      appliedLogQuery.endTime,
     ), !silent)
     if (!result) return
     logs.value = result.records || []
@@ -291,17 +315,20 @@ function openDetail(record: SysAsyncTask) {
   detailTask.value = record
   logPage.value = 1
   logTimeRange.value = undefined
+  applyLogQuery()
   detailOpen.value = true
   void Promise.all([loadDetail(), loadLogs()])
 }
 
 async function searchLogs() {
+  applyLogQuery()
   logPage.value = 1
   await loadLogs()
 }
 
 async function resetLogQuery() {
   logTimeRange.value = undefined
+  applyLogQuery()
   logPage.value = 1
   await loadLogs()
 }
@@ -342,7 +369,7 @@ function stopPolling() {
 function syncPolling() {
   const shouldPoll = shouldPollAsyncTasks(
     records.value.map((record) => record.status),
-    detailOpen.value,
+    detailOpen.value ? detailTask.value?.status : undefined,
     pageActive.value && document.visibilityState === 'visible',
   )
   if (!shouldPoll) stopPolling()
@@ -386,6 +413,10 @@ onMounted(() => {
 
 onActivated(() => {
   pageActive.value = true
+  if (initialActivation) {
+    initialActivation = false
+    return
+  }
   void refreshPolling()
 })
 
