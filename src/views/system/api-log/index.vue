@@ -17,6 +17,7 @@ import { computed, ref } from 'vue'
 
 import { getErrorMessage } from '@/api/http'
 import { pageApiLogs, type SysApiLog } from '@/api/log'
+import AsyncExportButton from '@/components/common/AsyncExportButton.vue'
 import ResizableTable from '@/components/common/ResizableTable.vue'
 import { formatDateTime } from '@/utils/date'
 
@@ -61,6 +62,12 @@ const pagination = computed<TablePaginationConfig>(() => ({
   showSizeChanger: true,
   pageSizeOptions: ['10', '20', '50', '100'],
   showTotal: (count) => `共 ${count} 条`,
+}))
+const exportFilters = computed(() => ({
+  keyword: keyword.value.trim() || undefined,
+  statusCode: statusCode.value,
+  startTime: timeRange.value?.[0].format('YYYY-MM-DDTHH:mm:ss'),
+  endTime: timeRange.value?.[1].format('YYYY-MM-DDTHH:mm:ss'),
 }))
 
 async function load() {
@@ -141,6 +148,12 @@ load()
           <h1>接口日志</h1>
           <span>记录接口访问状态、耗时与链路标识</span>
         </div>
+        <AsyncExportButton
+          task-type="EXPORT_API_LOG"
+          task-name="接口日志导出"
+          resource="api-log"
+          :filters="exportFilters"
+        />
       </header>
 
       <ResizableTable
@@ -213,7 +226,7 @@ load()
 .secondary-action { color: var(--shell-ink); background: var(--shell-hover); }
 .secondary-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
 .table-panel { margin-top: 8px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.table-toolbar { display: flex; min-height: 58px; align-items: center; padding: 8px 13px; border-bottom: 1px solid var(--shell-border); }
+.table-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; padding: 8px 13px; border-bottom: 1px solid var(--shell-border); }
 .table-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
 .table-toolbar span { display: block; margin-top: 2px; color: var(--shell-muted); font-size: 12px; }
 .log-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
