@@ -356,7 +356,6 @@ load()
 
 <style scoped>
 .query-field { width: min(520px, 58%); }
-.table-title { display: flex; align-items: center; gap: 7px; }
 .dept-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
 .dept-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
 .dept-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }

@@ -206,6 +206,12 @@ body:has(.app-sider.ant-layout-sider-collapsed) .ant-message {
   font-weight: 600;
 }
 
+.management-page .table-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .management-page .table-toolbar > div:first-child > span {
   display: block;
   margin-top: 2px;
