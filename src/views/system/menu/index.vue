@@ -94,7 +94,18 @@ function toTableRows(nodes: MenuNode[]): TableMenu[] {
   }))
 }
 
+function collectExpandableMenuIds(nodes: TableMenu[]): number[] {
+  return nodes.flatMap((node) => [
+    ...(node.menuId === undefined || !node.children?.length ? [] : [node.menuId]),
+    ...collectExpandableMenuIds(node.children || []),
+  ])
+}
+
 const treeRows = computed(() => toTableRows(buildMenuTree(records.value, false, false)))
+const expandableIds = computed(() => collectExpandableMenuIds(treeRows.value))
+const allExpanded = computed(() =>
+  expandableIds.value.length > 0 && expandableIds.value.every((id) => expandedKeys.value.includes(id)),
+)
 const parentTree = computed(() => buildMenuTree(records.value, false, false))
 const modalTitle = computed(() => editingId.value ? '编辑菜单' : '新增菜单')
 const iconOptions = menuIconNames.map((name) => ({ label: name, value: name }))
@@ -156,12 +167,14 @@ async function load() {
     const result = await runLatestLoad(() => listMenus(keyword.value))
     if (!result) return
     records.value = result
-    expandedKeys.value = records.value
-      .filter((item) => item.menuType === 'DIR' && item.menuId !== undefined)
-      .map((item) => item.menuId as number)
+    expandedKeys.value = expandableIds.value
   } catch {
     message.error('数据获取失败，请稍后重试')
   }
+}
+
+function toggleAllRows() {
+  expandedKeys.value = allExpanded.value ? [] : expandableIds.value
 }
 
 async function resetQuery() {
@@ -274,8 +287,11 @@ load()
 
     <section class="table-panel">
       <header class="table-toolbar">
-        <div>
+        <div class="table-title">
           <h1>菜单结构</h1>
+          <a-button type="primary" :disabled="!expandableIds.length" @click="toggleAllRows">
+            {{ allExpanded ? '全部收起' : '全部展开' }}
+          </a-button>
         </div>
         <a-button type="primary" @click="openCreate()">
           新增菜单
