@@ -25,6 +25,8 @@ const actionLabels: Record<string, string> = {
   UPDATE: '更新',
   DELETE: '删除',
   INSERT: '新增',
+  BATCH_DELETE: '批量删除',
+  BATCH_DELETE_SUBTREE: '批量删除子树',
   OTHER: '其他',
 }
 const actionColors: Record<string, string> = {
@@ -32,7 +34,22 @@ const actionColors: Record<string, string> = {
   INSERT: 'green',
   UPDATE: 'blue',
   DELETE: 'red',
+  BATCH_DELETE: 'red',
+  BATCH_DELETE_SUBTREE: 'red',
   OTHER: 'default',
+}
+const targetLabels: Record<string, string> = {
+  SYS_USER: '用户',
+  SYS_ROLE: '角色',
+  SYS_MENU: '菜单',
+  SYS_DEPT: '部门',
+  SYS_JOB: '定时任务',
+  SYS_FILE: '文件',
+  SYS_CONFIG: '系统参数',
+  SYS_DICT_TYPE: '字典类型',
+  SYS_DICT_ITEM: '字典项',
+  SYS_CODE_RULE: '编码规则',
+  SYS_ASYNC_TASK: '异步任务',
 }
 
 const keyword = ref('')
@@ -50,8 +67,8 @@ const detailLog = ref<SysAuditLog>()
 const columns: TableColumnsType = [
   { title: '审计时间', dataIndex: 'createdTime', key: 'createdTime', width: 165 },
   { title: '操作人', dataIndex: 'operator', key: 'operator', width: 120 },
-  { title: '动作类型', dataIndex: 'actionType', key: 'actionType', width: 105, align: 'center' },
-  { title: '目标类型', dataIndex: 'targetType', key: 'targetType', width: 145 },
+  { title: '动作类型', dataIndex: 'actionType', key: 'actionType', width: 125, align: 'center' },
+  { title: '目标类型', dataIndex: 'targetType', key: 'targetType', width: 120 },
   { title: '目标名称', dataIndex: 'targetName', key: 'targetName', width: 180 },
   { title: '目标编号', dataIndex: 'targetId', key: 'targetId', width: 130 },
   { title: '变更摘要', dataIndex: 'summary', key: 'summary', width: 300 },
@@ -63,6 +80,10 @@ const columns: TableColumnsType = [
 
 function actionName(value?: string) {
   return actionLabels[value || ''] || value || '未知'
+}
+
+function targetName(value?: string) {
+  return targetLabels[value || ''] || value || '未知'
 }
 
 async function load() {
@@ -159,10 +180,18 @@ load()
             <strong>{{ record.operator || '未知用户' }}</strong>
           </template>
           <template v-else-if="column.key === 'actionType'">
-            <a-tag :color="actionColors[record.actionType] || 'default'">{{ actionName(record.actionType) }}</a-tag>
+            <a-tag
+              class="audit-type-tag"
+              :color="actionColors[record.actionType] || 'default'"
+              :title="record.actionType"
+            >
+              {{ actionName(record.actionType) }}
+            </a-tag>
           </template>
           <template v-else-if="column.key === 'targetType'">
-            <code class="code-cell" :title="record.targetType">{{ record.targetType || '—' }}</code>
+            <a-tag class="audit-type-tag target-type-tag" :title="record.targetType">
+              {{ targetName(record.targetType) }}
+            </a-tag>
           </template>
           <template v-else-if="column.key === 'targetName'">
             <span class="cell-text" :title="record.targetName">{{ record.targetName || '—' }}</span>
@@ -191,7 +220,7 @@ load()
         <div><dt>操作人</dt><dd>{{ detailLog?.operator || '未知用户' }}</dd></div>
         <div><dt>动作类型</dt><dd><a-tag :color="actionColors[detailLog?.actionType || ''] || 'default'">{{ actionName(detailLog?.actionType) }}</a-tag></dd></div>
         <div><dt>IP 地址</dt><dd>{{ detailLog?.ipAddress || '—' }}</dd></div>
-        <div><dt>目标类型</dt><dd><code>{{ detailLog?.targetType || '—' }}</code></dd></div>
+        <div><dt>目标类型</dt><dd><a-tag class="target-type-tag" :title="detailLog?.targetType">{{ targetName(detailLog?.targetType) }}</a-tag></dd></div>
         <div><dt>目标编号</dt><dd><code>{{ detailLog?.targetId || '—' }}</code></dd></div>
         <div><dt>目标名称</dt><dd>{{ detailLog?.targetName || '—' }}</dd></div>
         <div><dt>来源系统</dt><dd>{{ detailLog?.sourceSystem || '—' }}</dd></div>
@@ -229,6 +258,8 @@ load()
 .log-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
 .log-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
 .log-table :deep(.ant-pagination) { margin: 13px; }
+.audit-type-tag { display: inline-block; max-width: 100%; margin-inline-end: 0; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; white-space: nowrap; }
+.target-type-tag { color: var(--brand-deep); border-color: color-mix(in srgb, var(--brand) 34%, var(--shell-border)); background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
 .code-cell, .cell-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .code-cell { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
 .cell-text { color: var(--shell-muted); }
