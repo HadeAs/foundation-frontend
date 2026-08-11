@@ -9,8 +9,10 @@ import { setSessionExpiredHandler } from './api/http'
 import { createAppRouter } from './router'
 import { syncDynamicRoutes } from './router/dynamic'
 import { useAuthStore } from './stores/auth'
+import { installRequestActionFeedback } from './utils/request-action-feedback'
 
 async function bootstrap() {
+  installRequestActionFeedback()
   const app = createApp(App)
   const pinia = createPinia()
   const router = createAppRouter(pinia)

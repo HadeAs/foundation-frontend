@@ -253,6 +253,27 @@ body:has(.app-sider.ant-layout-sider-collapsed) .ant-message {
   align-items: center;
 }
 
+.ant-btn.global-request-loading {
+  opacity: 0.65;
+  pointer-events: none;
+  cursor: wait;
+}
+
+.ant-btn.global-request-loading::before {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  border: 2px solid currentcolor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  content: '';
+  animation: global-request-spin 0.75s linear infinite;
+}
+
+@keyframes global-request-spin {
+  to { transform: rotate(360deg); }
+}
+
 .ant-table-wrapper .ant-table-thead > tr > th:first-child,
 .ant-table-wrapper .ant-table-tbody > tr > td:first-child {
   padding-inline-start: 16px !important;

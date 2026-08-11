@@ -10,6 +10,11 @@ import {
   writeStoredSession,
 } from '@/auth/session'
 import type { components } from '@/types/api'
+import {
+  acquireRequestAction,
+  releaseRequestAction,
+  type RequestAction,
+} from '@/utils/request-action-feedback'
 
 export type ApiResult<T> = {
   code?: number
@@ -19,7 +24,11 @@ export type ApiResult<T> = {
   traceId?: string
 }
 
-type RetryRequest = InternalAxiosRequestConfig & { _retry?: boolean }
+type RetryRequest = InternalAxiosRequestConfig & {
+  _retry?: boolean
+  _requestAction?: RequestAction
+  _requestActionTracked?: boolean
+}
 type TokenResponse = components['schemas']['TokenResponse']
 
 export class ApiError extends Error {
@@ -52,6 +61,14 @@ async function notifySessionExpired() {
 }
 
 apiClient.interceptors.request.use((config) => {
+  const request = config as RetryRequest
+  if (!request._requestActionTracked) {
+    const action = acquireRequestAction()
+    if (action) {
+      request._requestAction = action
+      request._requestActionTracked = true
+    }
+  }
   const token = readStoredSession()?.token
   if (token) {
     sessionExpiryHandled = false
@@ -109,6 +126,24 @@ apiClient.interceptors.response.use(
       await notifySessionExpired()
       return Promise.reject(refreshError)
     }
+  },
+)
+
+function finishRequestAction(config?: InternalAxiosRequestConfig) {
+  const request = config as RetryRequest | undefined
+  if (!request?._requestActionTracked) return
+  request._requestActionTracked = false
+  releaseRequestAction(request._requestAction)
+}
+
+apiClient.interceptors.response.use(
+  (response) => {
+    finishRequestAction(response.config)
+    return response
+  },
+  (error: AxiosError) => {
+    finishRequestAction(error.config)
+    return Promise.reject(error)
   },
 )
 
