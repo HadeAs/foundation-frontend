@@ -1,6 +1,6 @@
 import type { components } from '@/types/api'
 
-import { apiClient, type ApiResult, unwrapResult } from './http'
+import { apiClient, type ApiResult, requireVersion, unwrapResult } from './http'
 
 export type SysRole = components['schemas']['SysRole']
 export type RoleRequest = components['schemas']['RoleRequest']
@@ -20,14 +20,19 @@ export async function createRole(request: RoleRequest) {
   )
 }
 
-export async function updateRole(roleId: number, request: RoleRequest) {
+export async function updateRole(roleId: number, request: RoleRequest, version: number | undefined) {
   return unwrapResult(
-    await apiClient.put<ApiResult<SysRole>>(`/api/v1/system/roles/${roleId}`, request),
+    await apiClient.put<ApiResult<SysRole>>(`/api/v1/system/roles/${roleId}`, {
+      ...request,
+      version: requireVersion(version),
+    }),
   )
 }
 
-export function deleteRole(roleId: number) {
-  return apiClient.delete(`/api/v1/system/roles/${roleId}`)
+export function deleteRole(roleId: number, version: number | undefined) {
+  return apiClient.delete(`/api/v1/system/roles/${roleId}`, {
+    params: { version: requireVersion(version) },
+  })
 }
 
 export async function getRoleMenuIds(roleId: number) {
@@ -36,6 +41,9 @@ export async function getRoleMenuIds(roleId: number) {
   )
 }
 
-export function assignRoleMenus(roleId: number, ids: number[]) {
-  return apiClient.put(`/api/v1/system/roles/${roleId}/menus`, { ids })
+export function assignRoleMenus(roleId: number, ids: number[], version: number | undefined) {
+  return apiClient.put(`/api/v1/system/roles/${roleId}/menus`, {
+    ids,
+    version: requireVersion(version),
+  })
 }

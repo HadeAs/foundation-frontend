@@ -1,6 +1,6 @@
 import type { components } from '@/types/api'
 
-import { apiClient, type ApiResult, unwrapResult } from './http'
+import { apiClient, type ApiResult, requireVersion, unwrapResult } from './http'
 
 export type SysConfig = components['schemas']['SysConfig']
 export type ConfigRequest = components['schemas']['ConfigRequest']
@@ -32,14 +32,19 @@ export async function createConfig(request: ConfigRequest) {
   )
 }
 
-export async function updateConfig(configId: number, request: ConfigRequest) {
+export async function updateConfig(configId: number, request: ConfigRequest, version: number | undefined) {
   return unwrapResult(
-    await apiClient.put<ApiResult<SysConfig>>(`/api/v1/system/configs/${configId}`, request),
+    await apiClient.put<ApiResult<SysConfig>>(`/api/v1/system/configs/${configId}`, {
+      ...request,
+      version: requireVersion(version),
+    }),
   )
 }
 
-export function deleteConfig(configId: number) {
-  return apiClient.delete(`/api/v1/system/configs/${configId}`)
+export function deleteConfig(configId: number, version: number | undefined) {
+  return apiClient.delete(`/api/v1/system/configs/${configId}`, {
+    params: { version: requireVersion(version) },
+  })
 }
 
 export function refreshConfigCache() {

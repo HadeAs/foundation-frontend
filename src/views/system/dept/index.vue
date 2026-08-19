@@ -194,7 +194,7 @@ async function submit() {
       await createDept(request)
       message.success('部门已新增')
     } else {
-      await updateDept(editingId.value, request)
+      await updateDept(editingId.value, request, form.version)
       message.success('部门已更新')
     }
     modalOpen.value = false
@@ -210,7 +210,7 @@ async function remove(record: SysDept) {
   if (record.deptId === undefined) return
   deletingId.value = record.deptId
   try {
-    await deleteDept(record.deptId)
+    await deleteDept(record.deptId, record.version)
     message.success('部门已删除')
     await load()
   } catch (error) {

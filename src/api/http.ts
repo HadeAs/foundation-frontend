@@ -24,6 +24,9 @@ export type ApiResult<T> = {
   traceId?: string
 }
 
+export type VersionedId = { id: number; version: number }
+export const CONFLICT_MESSAGE = '数据已被其他操作修改或删除，请刷新后重试'
+
 type RetryRequest = InternalAxiosRequestConfig & {
   _retry?: boolean
   _requestAction?: RequestAction
@@ -39,6 +42,15 @@ export class ApiError extends Error {
     super(message)
     this.name = 'ApiError'
   }
+}
+
+export function requireVersion(version?: number) {
+  if (version === undefined) throw new ApiError('数据版本缺失，请刷新后重试')
+  return version
+}
+
+export function versionedId(id: number, version?: number): VersionedId {
+  return { id, version: requireVersion(version) }
 }
 
 export const apiClient = axios.create({
@@ -159,6 +171,9 @@ export function getErrorMessage(error: unknown) {
     return error.traceId ? `${error.message}（Trace ID: ${error.traceId}）` : error.message
   }
   if (axios.isAxiosError<ApiResult<unknown>>(error)) {
+    if (error.response?.status === 409 || Number(error.response?.data?.code) === 40900) {
+      return CONFLICT_MESSAGE
+    }
     const message = error.response?.data?.message
     const traceId = error.response?.data?.traceId
     if (message) return traceId ? `${message}（Trace ID: ${traceId}）` : message

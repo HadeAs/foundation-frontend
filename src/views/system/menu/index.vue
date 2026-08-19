@@ -233,7 +233,7 @@ async function submit() {
   try {
     const request = toRequest()
     if (editingId.value !== undefined) {
-      await updateMenu(editingId.value, request)
+      await updateMenu(editingId.value, request, form.version)
       message.success('菜单已更新')
     } else {
       await createMenu(request)
@@ -252,7 +252,7 @@ async function remove(record: SysMenu) {
   if (record.menuId === undefined) return
   deletingId.value = record.menuId
   try {
-    await deleteMenu(record.menuId)
+    await deleteMenu(record.menuId, record.version)
     message.success('菜单已删除')
     await load()
   } catch (error) {

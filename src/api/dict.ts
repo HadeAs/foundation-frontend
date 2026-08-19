@@ -1,12 +1,19 @@
 import type { components } from '@/types/api'
 
-import { apiClient, type ApiResult, unwrapResult } from './http'
+import {
+  apiClient,
+  type ApiResult,
+  requireVersion,
+  type VersionedId,
+  unwrapResult,
+} from './http'
 
 export type DictTypeRequest = components['schemas']['DictTypeRequest']
 export type DictItemRequest = components['schemas']['DictItemRequest']
 export type SysDictType = components['schemas']['SysDictType']
 export type SysDictItem = components['schemas']['SysDictItem']
 export type DictDisableImpact = components['schemas']['DictDisableImpactResponse']
+export type DictObjectUsage = components['schemas']['DictObjectUsageResponse']
 export type DictImportResult = components['schemas']['DictImportResult']
 export type SysDictChangeLog = components['schemas']['SysDictChangeLog']
 export type DictItemResponse = components['schemas']['DictItemResponse']
@@ -42,22 +49,31 @@ export async function createDictType(request: DictTypeRequest) {
   return result
 }
 
-export async function updateDictType(dictTypeId: number, request: DictTypeRequest) {
+export async function updateDictType(
+  dictTypeId: number,
+  request: DictTypeRequest,
+  version: number | undefined,
+) {
   const result = unwrapResult(
-    await apiClient.put<ApiResult<SysDictType>>(`/api/v1/system/dicts/types/${dictTypeId}`, request),
+    await apiClient.put<ApiResult<SysDictType>>(`/api/v1/system/dicts/types/${dictTypeId}`, {
+      ...request,
+      version: requireVersion(version),
+    }),
   )
   clearDictItemCache()
   return result
 }
 
-export async function deleteDictType(dictTypeId: number) {
-  const result = await apiClient.delete(`/api/v1/system/dicts/types/${dictTypeId}`)
+export async function deleteDictType(dictTypeId: number, version: number | undefined) {
+  const result = await apiClient.delete(`/api/v1/system/dicts/types/${dictTypeId}`, {
+    params: { version: requireVersion(version) },
+  })
   clearDictItemCache()
   return result
 }
 
-export async function batchDeleteDictTypes(ids: number[]) {
-  const result = await apiClient.post('/api/v1/system/dicts/types/batch/delete', { ids })
+export async function batchDeleteDictTypes(items: VersionedId[]) {
+  const result = await apiClient.post('/api/v1/system/dicts/types/batch/delete', { items })
   clearDictItemCache()
   return result
 }
@@ -66,6 +82,14 @@ export async function getDictDisableImpact(dictTypeId: number) {
   return unwrapResult(
     await apiClient.get<ApiResult<DictDisableImpact>>(
       `/api/v1/system/dicts/types/${dictTypeId}/disable-impact`,
+    ),
+  )
+}
+
+export async function listDictObjectUsages(dictTypeId: number) {
+  return unwrapResult(
+    await apiClient.get<ApiResult<DictObjectUsage[]>>(
+      `/api/v1/system/dicts/types/${dictTypeId}/object-usages`,
     ),
   )
 }
@@ -101,34 +125,40 @@ export async function createDictItem(request: DictItemRequest) {
   return result
 }
 
-export async function updateDictItem(dictItemId: number, request: DictItemRequest) {
+export async function updateDictItem(
+  dictItemId: number,
+  request: DictItemRequest,
+  version: number | undefined,
+) {
   const result = unwrapResult(
     await apiClient.put<ApiResult<SysDictItem>>(
       `/api/v1/system/dicts/items/${dictItemId}`,
-      request,
+      { ...request, version: requireVersion(version) },
     ),
   )
   clearDictItemCache()
   return result
 }
 
-export async function deleteDictItem(dictItemId: number) {
-  const result = await apiClient.delete(`/api/v1/system/dicts/items/${dictItemId}`)
+export async function deleteDictItem(dictItemId: number, version: number | undefined) {
+  const result = await apiClient.delete(`/api/v1/system/dicts/items/${dictItemId}`, {
+    params: { version: requireVersion(version) },
+  })
   clearDictItemCache()
   return result
 }
 
 export async function saveDictItemOrder(
   dictCode: string,
-  items: Array<{ dictItemId: number; sortNo: number }>,
+  items: VersionedId[],
 ) {
   const result = await apiClient.post('/api/v1/system/dicts/items/sort', { dictCode, items })
   clearDictItemCache(dictCode)
   return result
 }
 
-export async function batchDeleteDictItems(ids: number[]) {
-  const result = await apiClient.post('/api/v1/system/dicts/items/batch/delete', { ids })
+export async function batchDeleteDictItems(items: VersionedId[]) {
+  const result = await apiClient.post('/api/v1/system/dicts/items/batch/delete', { items })
   clearDictItemCache()
   return result
 }

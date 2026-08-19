@@ -177,7 +177,7 @@ async function submit() {
       await createRole(toRequest(form))
       message.success('角色已新增')
     } else {
-      await updateRole(editingId.value, toRequest(form))
+      await updateRole(editingId.value, toRequest(form), form.version)
       message.success('角色已更新')
     }
     modalOpen.value = false
@@ -194,8 +194,8 @@ async function changeStatus(record: SysRole, checked: boolean) {
   statusUpdatingId.value = record.roleId
   try {
     const nextStatus = checked ? 1 : 0
-    await updateRole(record.roleId, toRequest(record, nextStatus))
-    record.status = nextStatus
+    const updated = await updateRole(record.roleId, toRequest(record, nextStatus), record.version)
+    Object.assign(record, updated)
     message.success(checked ? '角色已启用' : '角色已禁用')
   } catch (error) {
     message.error(getErrorMessage(error))
@@ -208,7 +208,7 @@ async function remove(record: SysRole) {
   if (record.roleId === undefined) return
   deletingId.value = record.roleId
   try {
-    await deleteRole(record.roleId)
+    await deleteRole(record.roleId, record.version)
     if (records.value.length === 1 && currentPage.value > 1) currentPage.value -= 1
     message.success('角色已删除')
     await load()
@@ -256,9 +256,10 @@ async function savePermission() {
       ? checkedMenuIds.value
       : [...new Set([...checkedMenuIds.value, dashboardMenuId.value])]
     const menuIds = includeAncestorMenuIds(allMenus.value, selectedIds)
-    await assignRoleMenus(roleId, menuIds)
+    await assignRoleMenus(roleId, menuIds, permissionRole.value?.version)
     message.success('菜单权限已保存')
     permissionOpen.value = false
+    await load()
   } catch (error) {
     message.error(getErrorMessage(error))
   } finally {

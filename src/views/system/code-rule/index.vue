@@ -34,7 +34,7 @@ import {
   type CodeRuleRequest,
   type SysCodeRule,
 } from '@/api/code-rule'
-import { getErrorMessage } from '@/api/http'
+import { getErrorMessage, versionedId } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
 import { useTablePagination } from '@/composables/use-table-pagination'
 import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
@@ -42,6 +42,7 @@ import { formatDateTime } from '@/utils/date'
 import { createLatestRequest } from '@/utils/latest-request'
 
 type CodeRuleForm = {
+  version?: number
   ruleCode: string
   ruleName: string
   prefix?: string
@@ -100,6 +101,7 @@ const columns: TableColumnsType = [
 
 function defaultForm(): CodeRuleForm {
   return {
+    version: undefined,
     ruleCode: '',
     ruleName: '',
     prefix: undefined,
@@ -126,7 +128,6 @@ const rowSelection = computed<TableProps<SysCodeRule>['rowSelection']>(() => ({
 }))
 const rules: FormProps['rules'] = {
   ruleCode: [
-    { required: true, message: '请输入规则编码', trigger: 'blur' },
     { pattern: /^[A-Za-z][A-Za-z0-9_-]*$/, message: '规则编码须以字母开头，仅支持字母、数字、下划线和短横线', trigger: 'blur' },
   ],
   ruleName: [{ required: true, message: '请输入规则名称', trigger: 'blur' }],
@@ -142,7 +143,7 @@ function clean(value?: string) {
 
 function toRequest(): CodeRuleRequest {
   return {
-    ruleCode: form.ruleCode.trim(),
+    ruleCode: clean(form.ruleCode),
     ruleName: form.ruleName.trim(),
     prefix: clean(form.prefix),
     datePattern: clean(form.datePattern),
@@ -205,6 +206,7 @@ function openEdit(record: SysCodeRule) {
   if (record.ruleId === undefined) return
   editingId.value = record.ruleId
   Object.assign(form, defaultForm(), {
+    version: record.version,
     ruleCode: record.ruleCode || '',
     ruleName: record.ruleName || '',
     prefix: record.prefix,
@@ -233,7 +235,7 @@ async function submit() {
       await createCodeRule(toRequest())
       message.success('编码规则已新增')
     } else {
-      await updateCodeRule(editingId.value, toRequest())
+      await updateCodeRule(editingId.value, toRequest(), form.version)
       message.success('编码规则已更新')
     }
     modalOpen.value = false
@@ -249,7 +251,7 @@ async function remove(record: SysCodeRule) {
   if (record.ruleId === undefined) return
   deletingId.value = record.ruleId
   try {
-    await deleteCodeRule(record.ruleId)
+    await deleteCodeRule(record.ruleId, record.version)
     if (records.value.length === 1 && currentPage.value > 1) currentPage.value -= 1
     message.success('编码规则已删除')
     await load()
@@ -268,7 +270,9 @@ function removeSelected() {
     cancelText: '取消',
     onOk: async () => {
       try {
-        await batchDeleteCodeRules(selectedIds.value)
+        await batchDeleteCodeRules(selectedIds.value.map((id) =>
+          versionedId(id, records.value.find((record) => record.ruleId === id)?.version),
+        ))
         selectedIds.value = []
         message.success('编码规则已批量删除')
         await load()
@@ -436,7 +440,7 @@ load()
               v-model:value="form.ruleCode"
               :disabled="editingId !== undefined"
               :maxlength="64"
-              placeholder="例如 ORDER_NO"
+              placeholder="选填，例如 ORDER_NO"
             />
           </a-form-item>
           <a-form-item label="固定前缀" name="prefix">

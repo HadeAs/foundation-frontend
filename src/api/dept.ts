@@ -1,6 +1,6 @@
 import type { components } from '@/types/api'
 
-import { apiClient, type ApiResult, unwrapResult } from './http'
+import { apiClient, type ApiResult, requireVersion, unwrapResult } from './http'
 
 export type SysDept = components['schemas']['SysDept']
 export type DeptRequest = components['schemas']['DeptRequest']
@@ -25,12 +25,17 @@ export async function createDept(request: DeptRequest) {
   )
 }
 
-export async function updateDept(deptId: number, request: DeptRequest) {
+export async function updateDept(deptId: number, request: DeptRequest, version: number | undefined) {
   return unwrapResult(
-    await apiClient.put<ApiResult<SysDept>>(`/api/v1/system/depts/${deptId}`, request),
+    await apiClient.put<ApiResult<SysDept>>(`/api/v1/system/depts/${deptId}`, {
+      ...request,
+      version: requireVersion(version),
+    }),
   )
 }
 
-export function deleteDept(deptId: number) {
-  return apiClient.delete(`/api/v1/system/depts/${deptId}`)
+export function deleteDept(deptId: number, version: number | undefined) {
+  return apiClient.delete(`/api/v1/system/depts/${deptId}`, {
+    params: { version: requireVersion(version) },
+  })
 }

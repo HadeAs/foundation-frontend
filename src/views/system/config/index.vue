@@ -194,7 +194,7 @@ async function submit() {
       await createConfig(toRequest(form))
       message.success('参数已新增')
     } else {
-      await updateConfig(editingId.value, toRequest(form))
+      await updateConfig(editingId.value, toRequest(form), form.version)
       message.success('参数已更新')
     }
     modalOpen.value = false
@@ -210,7 +210,7 @@ async function remove(record: SysConfig) {
   if (record.configId === undefined || record.editable === false) return
   deletingId.value = record.configId
   try {
-    await deleteConfig(record.configId)
+    await deleteConfig(record.configId, record.version)
     if (records.value.length === 1 && currentPage.value > 1) currentPage.value -= 1
     message.success('参数已删除')
     await load()

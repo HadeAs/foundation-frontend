@@ -47,7 +47,7 @@ import {
   type SysDictItem,
   type SysDictType,
 } from '@/api/dict'
-import { getErrorMessage } from '@/api/http'
+import { getErrorMessage, versionedId } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
 import { useTablePagination } from '@/composables/use-table-pagination'
 import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
@@ -336,7 +336,7 @@ async function submitType() {
       await createDictType(toTypeRequest())
       message.success('字典类型已新增')
     } else {
-      await updateDictType(editingType.value.dictTypeId, toTypeRequest())
+      await updateDictType(editingType.value.dictTypeId, toTypeRequest(), editingType.value.version)
       message.success('字典类型已更新')
     }
     typeModalOpen.value = false
@@ -350,7 +350,7 @@ async function submitType() {
 async function removeType(record: SysDictType) {
   if (record.dictTypeId === undefined || record.builtinFlag) return
   try {
-    await deleteDictType(record.dictTypeId)
+    await deleteDictType(record.dictTypeId, record.version)
     message.success('字典类型已删除')
     await loadTypes()
   } catch (error) {
@@ -364,10 +364,17 @@ function removeSelectedTypes() {
     okText: '删除',
     cancelText: '取消',
     onOk: async () => {
-      await batchDeleteDictTypes(selectedTypeIds.value)
-      selectedTypeIds.value = []
-      message.success('字典类型已批量删除')
-      await loadTypes()
+      try {
+        await batchDeleteDictTypes(selectedTypeIds.value.map((id) =>
+          versionedId(id, types.value.find((record) => record.dictTypeId === id)?.version),
+        ))
+        selectedTypeIds.value = []
+        message.success('字典类型已批量删除')
+        await loadTypes()
+      } catch (error) {
+        message.error(getErrorMessage(error))
+        throw error
+      }
     },
   })
 }
@@ -403,7 +410,7 @@ async function submitItem() {
       await createDictItem(toItemRequest())
       message.success('字典项已新增')
     } else {
-      await updateDictItem(editingItemId.value, toItemRequest())
+      await updateDictItem(editingItemId.value, toItemRequest(), itemForm.version)
       message.success('字典项已更新')
     }
     itemModalOpen.value = false
@@ -417,7 +424,7 @@ async function submitItem() {
 async function removeItem(record: SysDictItem) {
   if (record.dictItemId === undefined || record.builtinFlag) return
   try {
-    await deleteDictItem(record.dictItemId)
+    await deleteDictItem(record.dictItemId, record.version)
     message.success('字典项已删除')
     await loadItems()
   } catch (error) {
@@ -435,12 +442,13 @@ async function persistOrder() {
   const code = selectedType.value?.dictCode
   if (!code) return
   const sorted = items.value.flatMap((item) =>
-    item.dictItemId === undefined ? [] : [{ dictItemId: item.dictItemId, sortNo: item.sortNo || 0 }],
+    item.dictItemId === undefined ? [] : [versionedId(item.dictItemId, item.version)],
   )
   try {
     await saveDictItemOrder(code, sorted)
     orderDirty.value = false
     message.success('字典项排序已保存')
+    await loadItems()
   } catch (error) {
     message.error(getErrorMessage(error))
   }
@@ -451,10 +459,17 @@ function removeSelectedItems() {
     okText: '删除',
     cancelText: '取消',
     onOk: async () => {
-      await batchDeleteDictItems(selectedItemIds.value)
-      selectedItemIds.value = []
-      message.success('字典项已批量删除')
-      await loadItems()
+      try {
+        await batchDeleteDictItems(selectedItemIds.value.map((id) =>
+          versionedId(id, items.value.find((record) => record.dictItemId === id)?.version),
+        ))
+        selectedItemIds.value = []
+        message.success('字典项已批量删除')
+        await loadItems()
+      } catch (error) {
+        message.error(getErrorMessage(error))
+        throw error
+      }
     },
   })
 }

@@ -1,8 +1,8 @@
 # 工业系统管理平台前端 SPEC
 
 > 状态：已确认，作为首版开发与逐页验收基线  
-> 更新日期：2026-07-15  
-> 接口契约：`doc/foundation-frontend-runtime-V3.openapi.json`  
+> 更新日期：2026-08-19
+> 接口契约：`doc/foundation-frontend-runtime-V5.openapi.json`
 > 字典契约：`前端系统字典与枚举接入.md`
 
 ## 1. 项目目标
@@ -196,7 +196,7 @@ Pinia 只保存认证会话、动态菜单/路由状态、主题和多标签页�
 
 ### 9.1 类型生成
 
-- 使用 `openapi-typescript` 从 `doc/foundation-frontend-runtime-V3.openapi.json` 生成 TypeScript 类型。
+- 使用 `openapi-typescript` 从 `doc/foundation-frontend-runtime-V5.openapi.json` 生成 TypeScript 类型。
 - 提供 `npm run api:types`。
 - 生成文件不允许手工修改。
 - Axios 请求按领域拆分为薄封装，不生成完整 SDK。
@@ -211,6 +211,10 @@ Pinia 只保存认证会话、动态菜单/路由状态、主题和多标签页�
 - 401 进入统一刷新/退出流程。
 - 403 显示无权限提示或页面。
 - 404 显示资源不存在。
+- 乐观锁冲突统一识别 HTTP `409` 或业务码 `40900`，提示“数据已被其他操作修改或删除，请刷新后重试”。
+- 更新、删除、授权、密码重置和任务启停均提交查询响应中的当前 `version`。
+- 批量删除统一提交 `{ "items": [{ "id": 1, "version": 2 }] }`；任一数据冲突时由服务端整批回滚。
+- 部门和菜单子树删除只提交所选根节点的 ID 与版本，不展开提交子节点。
 - 5xx 和网络错误提供重试入口。
 - 应用提供全局 Vue 错误兜底页面。
 - 首版不接入 Sentry；开发环境保留控制台告警。

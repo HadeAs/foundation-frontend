@@ -1,6 +1,6 @@
 import type { components } from '@/types/api'
 
-import { apiClient, type ApiResult, unwrapResult } from './http'
+import { apiClient, type ApiResult, requireVersion, unwrapResult } from './http'
 
 export type SysMenu = components['schemas']['SysMenu']
 export type MenuRequest = components['schemas']['MenuRequest']
@@ -19,12 +19,17 @@ export async function createMenu(request: MenuRequest) {
   )
 }
 
-export async function updateMenu(menuId: number, request: MenuRequest) {
+export async function updateMenu(menuId: number, request: MenuRequest, version: number | undefined) {
   return unwrapResult(
-    await apiClient.put<ApiResult<SysMenu>>(`/api/v1/system/menus/${menuId}`, request),
+    await apiClient.put<ApiResult<SysMenu>>(`/api/v1/system/menus/${menuId}`, {
+      ...request,
+      version: requireVersion(version),
+    }),
   )
 }
 
-export function deleteMenu(menuId: number) {
-  return apiClient.delete(`/api/v1/system/menus/${menuId}`)
+export function deleteMenu(menuId: number, version: number | undefined) {
+  return apiClient.delete(`/api/v1/system/menus/${menuId}`, {
+    params: { version: requireVersion(version) },
+  })
 }

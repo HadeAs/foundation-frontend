@@ -40,7 +40,7 @@ import {
   type SysJob,
   type SysJobLog,
 } from '@/api/job'
-import { getErrorMessage } from '@/api/http'
+import { getErrorMessage, versionedId } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
 import { useTablePagination } from '@/composables/use-table-pagination'
 import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
@@ -48,6 +48,7 @@ import { createLatestRequest } from '@/utils/latest-request'
 import { formatDateTime } from '@/utils/date'
 
 type JobForm = {
+  version?: number
   jobName: string
   jobGroup?: string
   jobScope: string
@@ -150,6 +151,7 @@ const logColumns: TableColumnsType = [
 
 function defaultForm(): JobForm {
   return {
+    version: undefined,
     jobName: '',
     jobGroup: 'DEFAULT',
     jobScope: 'BUSINESS',
@@ -313,7 +315,7 @@ async function submit() {
       await createJob(toRequest())
       message.success('定时任务已新增')
     } else {
-      await updateJob(editingJob.value.jobId, toRequest())
+      await updateJob(editingJob.value.jobId, toRequest(), editingJob.value.version)
       message.success('定时任务已更新')
     }
     modalOpen.value = false
@@ -329,7 +331,7 @@ async function remove(record: SysJob) {
   if (record.jobId === undefined || record.protectedFlag) return
   deletingId.value = record.jobId
   try {
-    await deleteJob(record.jobId)
+    await deleteJob(record.jobId, record.version)
     if (records.value.length === 1 && currentPage.value > 1) currentPage.value -= 1
     message.success('定时任务已删除')
     await load()
@@ -348,7 +350,9 @@ function removeSelected() {
     cancelText: '取消',
     onOk: async () => {
       try {
-        await batchDeleteJobs(selectedIds.value)
+        await batchDeleteJobs(selectedIds.value.map((id) =>
+          versionedId(id, records.value.find((record) => record.jobId === id)?.version),
+        ))
         selectedIds.value = []
         message.success('定时任务已批量删除')
         await load()
@@ -387,8 +391,8 @@ async function toggleStatus(record: SysJob) {
   const resume = record.status === 0
   actionKey.value = `status:${record.jobId}`
   try {
-    if (resume) await resumeJob(record.jobId)
-    else await pauseJob(record.jobId)
+    if (resume) await resumeJob(record.jobId, record.version)
+    else await pauseJob(record.jobId, record.version)
     message.success(resume ? '任务已恢复' : '任务已暂停')
     await load()
   } catch (error) {

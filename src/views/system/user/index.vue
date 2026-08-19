@@ -221,6 +221,7 @@ function toRequest(source: UserForm | SysUser, status = source.status): UserRequ
     remark: clean(source.remark),
     deptId: source.deptId,
     roleIds: 'roles' in source ? getUserRoleIds(source) : source.roleIds,
+    version: source.version,
   }
 }
 
@@ -238,7 +239,7 @@ async function submit() {
       await createUser(toRequest(form))
       message.success('用户已新增')
     } else {
-      await updateUser(editingId.value, toRequest(form))
+      await updateUser(editingId.value, toRequest(form), form.version)
       message.success('用户已更新')
     }
     modalOpen.value = false
@@ -255,8 +256,8 @@ async function changeStatus(record: SysUser, checked: boolean) {
   statusUpdatingId.value = record.userId
   try {
     const nextStatus = checked ? 1 : 0
-    await updateUser(record.userId, toRequest(record, nextStatus))
-    record.status = nextStatus
+    const updated = await updateUser(record.userId, toRequest(record, nextStatus), record.version)
+    Object.assign(record, updated)
     message.success(checked ? '用户已启用' : '用户已禁用')
   } catch (error) {
     message.error(getErrorMessage(error))
@@ -269,7 +270,7 @@ async function remove(record: SysUser) {
   if (record.userId === undefined) return
   deletingId.value = record.userId
   try {
-    await deleteUser(record.userId)
+    await deleteUser(record.userId, record.version)
     if (records.value.length === 1 && currentPage.value > 1) currentPage.value -= 1
     message.success('用户已删除')
     await load()
@@ -299,9 +300,10 @@ async function submitPasswordReset() {
 
   passwordSubmitting.value = true
   try {
-    await resetUserPassword(userId, passwordForm.newPassword)
+    await resetUserPassword(userId, passwordForm.newPassword, passwordUser.value?.version)
     message.success('密码已重置')
     passwordOpen.value = false
+    await load()
   } catch (error) {
     message.error(getErrorMessage(error))
   } finally {

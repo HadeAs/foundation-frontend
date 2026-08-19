@@ -181,25 +181,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/business/station/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询工站详情 */
-        get: operations["get_7"];
-        /** 更新工站 */
-        put: operations["update_7"];
-        post?: never;
-        /** 删除工站 */
-        delete: operations["delete_7"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/system/users": {
         parameters: {
             query?: never;
@@ -787,58 +768,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/business/station": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 分页查询工站 */
-        get: operations["page_7"];
-        put?: never;
-        /** 创建工站 */
-        post: operations["create_9"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/station/batch/delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 批量删除工站 */
-        post: operations["batchDelete_8"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/applyInStation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 申请进工站 */
-        post: operations["postBusinessApplyInStation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/auth/refresh": {
         parameters: {
             query?: never;
@@ -1063,6 +992,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/dicts/types/{dictTypeId}/object-usages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询字典被对象模型字段引用的明细 */
+        get: operations["objectUsages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/dicts/types/{dictTypeId}/disable-impact": {
         parameters: {
             query?: never;
@@ -1198,7 +1144,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1278,7 +1224,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["page_8"];
+        get: operations["page_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1361,7 +1307,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_8"];
+        delete: operations["delete_7"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1392,6 +1338,12 @@ export interface components {
             /** Format: int64 */
             deptId?: number;
             roleIds?: number[];
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultUserResponse: {
             /** Format: int32 */
@@ -1432,6 +1384,8 @@ export interface components {
             passwordUpdatedTime?: string;
             /** Format: date-time */
             lastLoginTime?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -1451,6 +1405,12 @@ export interface components {
         };
         IdListRequest: {
             ids?: number[];
+            /**
+             * Format: int32
+             * @description 父资源当前版本
+             * @example 1
+             */
+            version: number;
         };
         RoleRequest: {
             roleCode: string;
@@ -1459,6 +1419,12 @@ export interface components {
             status?: number;
             remark?: string;
             menuIds?: number[];
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultSysRole: {
             /** Format: int32 */
@@ -1477,6 +1443,8 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -1498,6 +1466,12 @@ export interface components {
             status?: number;
             remark?: string;
             syncParentRoleAssignments?: boolean;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultSysMenu: {
             /** Format: int32 */
@@ -1525,6 +1499,8 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -1550,6 +1526,12 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultSysJob: {
             /** Format: int32 */
@@ -1585,6 +1567,8 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -1597,6 +1581,12 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultSysDictType: {
             /** Format: int32 */
@@ -1617,6 +1607,8 @@ export interface components {
             status?: number;
             builtinFlag?: boolean;
             remark?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -1632,6 +1624,12 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultSysDictItem: {
             /** Format: int32 */
@@ -1655,6 +1653,8 @@ export interface components {
             status?: number;
             builtinFlag?: boolean;
             remark?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -1673,6 +1673,12 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultSysDept: {
             /** Format: int32 */
@@ -1699,6 +1705,8 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -1714,6 +1722,12 @@ export interface components {
             editable?: boolean;
             sensitiveFlag?: boolean;
             remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultSysConfig: {
             /** Format: int32 */
@@ -1743,7 +1757,7 @@ export interface components {
             updatedTime?: string;
         };
         CodeRuleRequest: {
-            ruleCode: string;
+            ruleCode?: string;
             ruleName: string;
             prefix?: string;
             datePattern?: string;
@@ -1758,6 +1772,12 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
         };
         ApiResultSysCodeRule: {
             /** Format: int32 */
@@ -1786,65 +1806,40 @@ export interface components {
             /** Format: int32 */
             status?: number;
             remark?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
             updatedTime?: string;
-        };
-        StationRequest: {
-            stationCode: string;
-            stationName: string;
-            businessStatus?: string;
-            /** Format: int32 */
-            sortNo?: number;
-            remark?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        ApiResultStationResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["StationResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        StationResponse: {
-            /** Format: int64 */
-            id?: number;
-            stationCode?: string;
-            stationName?: string;
-            businessStatus?: string;
-            /** Format: int32 */
-            sortNo?: number;
-            remark?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
         };
         ResetPasswordRequest: {
             newPassword: string;
-        };
-        /** @description 标准批量操作 ID 请求，单次最多 1000 条 */
-        BatchIdsRequest: {
             /**
-             * @description 待操作的资源 ID 列表
-             * @example [
-             *       1,
-             *       2,
-             *       3
-             *     ]
+             * Format: int32
+             * @description 用户当前版本
+             * @example 1
              */
-            ids: number[];
+            version: number;
+        };
+        /** @description 带乐观锁版本的标准批量操作请求，单次最多 1000 条 */
+        BatchVersionedIdsRequest: {
+            /** @description 待操作的资源及其当前版本 */
+            items: components["schemas"]["Item"][];
+        };
+        Item: {
+            /**
+             * Format: int64
+             * @description 资源 ID
+             * @example 1
+             */
+            id: number;
+            /**
+             * Format: int32
+             * @description 读取资源时获得的版本
+             * @example 1
+             */
+            version: number;
         };
         ApiResultSysAsyncTask: {
             /** Format: int32 */
@@ -1890,14 +1885,8 @@ export interface components {
             dictCode: string;
             items: components["schemas"]["Item"][];
         };
-        Item: {
-            /** Format: int64 */
-            dictItemId: number;
-            /** Format: int32 */
-            sortNo: number;
-        };
         DictItemBatchStatusRequest: {
-            ids: number[];
+            items: components["schemas"]["Item"][];
             /** Format: int32 */
             status: number;
         };
@@ -1981,6 +1970,18 @@ export interface components {
             /** Format: date-time */
             expiredTime?: string;
         };
+        /** @description 标准批量操作 ID 请求，单次最多 1000 条 */
+        BatchIdsRequest: {
+            /**
+             * @description 待操作的资源 ID 列表
+             * @example [
+             *       1,
+             *       2,
+             *       3
+             *     ]
+             */
+            ids: number[];
+        };
         ApiResultDashboardOverview: {
             /** Format: int32 */
             code?: number;
@@ -2021,9 +2022,6 @@ export interface components {
         EnvironmentMigrationVersions: {
             foundation?: components["schemas"]["EnvironmentMigrationTrack"];
             business?: components["schemas"]["EnvironmentMigrationTrack"];
-        };
-        PostBusinessApplyInStationRequest: {
-            trayCode?: string;
         };
         ApiResultTokenResponse: {
             /** Format: int32 */
@@ -2072,11 +2070,18 @@ export interface components {
             menus?: components["schemas"]["SysMenu"][];
             permissions?: string[];
         };
-        PageQuery: {
+        SortablePageQuery: {
             /** Format: int64 */
             page?: number;
             /** Format: int64 */
             size?: number;
+            /** @description 单字段排序编码；仅接受当前接口说明中的白名单字段 */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
         };
         ApiResultPageResultUserResponse: {
             /** Format: int32 */
@@ -2264,6 +2269,12 @@ export interface components {
             /** Format: date-time */
             archivedTime?: string;
         };
+        PageQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+        };
         ApiResultPageResultSysJob: {
             /** Format: int32 */
             code?: number;
@@ -2381,6 +2392,24 @@ export interface components {
             current?: number;
             /** Format: int64 */
             pages?: number;
+        };
+        ApiResultListDictObjectUsageResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["DictObjectUsageResponse"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        DictObjectUsageResponse: {
+            /** Format: int64 */
+            draftId?: number;
+            objectCode?: string;
+            objectName?: string;
+            tableName?: string;
+            fieldCode?: string;
+            fieldName?: string;
         };
         ApiResultDictDisableImpactResponse: {
             /** Format: int32 */
@@ -2781,40 +2810,6 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        StationQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            stationCode?: string;
-            stationName?: string;
-            businessStatus?: string;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        ApiResultPageResultStationResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultStationResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultStationResponse: {
-            records?: components["schemas"]["StationResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
         ApiResultMapStringObject: {
             /** Format: int32 */
             code?: number;
@@ -2975,7 +2970,9 @@ export interface operations {
     };
     delete: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 userId: number;
@@ -3110,7 +3107,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultUserResponse"];
                 };
             };
             /** @description Bad Request */
@@ -3273,7 +3270,9 @@ export interface operations {
     };
     delete_1: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 roleId: number;
@@ -3350,7 +3349,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultSysRole"];
                 };
             };
             /** @description Bad Request */
@@ -3513,7 +3512,9 @@ export interface operations {
     };
     delete_2: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 menuId: number;
@@ -3691,7 +3692,9 @@ export interface operations {
     };
     delete_3: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 jobId: number;
@@ -3869,7 +3872,9 @@ export interface operations {
     };
     deleteType: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 dictTypeId: number;
@@ -3989,7 +3994,9 @@ export interface operations {
     };
     deleteItem: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 dictItemId: number;
@@ -4167,7 +4174,9 @@ export interface operations {
     };
     delete_4: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 deptId: number;
@@ -4345,7 +4354,9 @@ export interface operations {
     };
     delete_5: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 configId: number;
@@ -4523,7 +4534,9 @@ export interface operations {
     };
     delete_6: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 ruleId: number;
@@ -4579,189 +4592,13 @@ export interface operations {
             };
         };
     };
-    get_7: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultStationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
-    update_7: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StationRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultStationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
-    delete_7: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
     page: {
         parameters: {
             query: {
-                pageQuery: components["schemas"]["PageQuery"];
+                pageQuery: components["schemas"]["SortablePageQuery"];
                 keyword?: string;
+                /** @description 可排序字段 */
+                sortBy?: "userId" | "username" | "realName" | "deptId" | "status" | "lastLoginTime" | "createdTime" | "updatedTime";
             };
             header?: never;
             path?: never;
@@ -4897,7 +4734,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultUserResponse"];
                 };
             };
             /** @description Bad Request */
@@ -4947,7 +4784,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -5001,8 +4838,10 @@ export interface operations {
     page_1: {
         parameters: {
             query: {
-                pageQuery: components["schemas"]["PageQuery"];
+                pageQuery: components["schemas"]["SortablePageQuery"];
                 keyword?: string;
+                /** @description 可排序字段 */
+                sortBy?: "roleId" | "roleCode" | "roleName" | "status" | "createdTime" | "updatedTime";
             };
             header?: never;
             path?: never;
@@ -5126,7 +4965,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -5304,7 +5143,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -5536,7 +5375,9 @@ export interface operations {
     };
     resume: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 jobId: number;
@@ -5594,7 +5435,9 @@ export interface operations {
     };
     pause: {
         parameters: {
-            query?: never;
+            query: {
+                version: number;
+            };
             header?: never;
             path: {
                 jobId: number;
@@ -5659,7 +5502,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -5839,10 +5682,12 @@ export interface operations {
     types: {
         parameters: {
             query: {
-                pageQuery: components["schemas"]["PageQuery"];
+                pageQuery: components["schemas"]["SortablePageQuery"];
                 keyword?: string;
                 status?: number;
                 scope?: string;
+                /** @description 可排序字段 */
+                sortBy?: "dictTypeId" | "dictCode" | "dictName" | "dictScope" | "status" | "builtinFlag" | "createdTime" | "updatedTime";
             };
             header?: never;
             path?: never;
@@ -5966,7 +5811,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -6320,7 +6165,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -6563,7 +6408,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -6617,10 +6462,12 @@ export interface operations {
     page_3: {
         parameters: {
             query: {
-                pageQuery: components["schemas"]["PageQuery"];
+                pageQuery: components["schemas"]["SortablePageQuery"];
                 keyword?: string;
                 group?: string;
                 scope?: string;
+                /** @description 可排序字段 */
+                sortBy?: "configId" | "configKey" | "configGroup" | "configScope" | "configType" | "editable" | "version" | "createdTime" | "updatedTime";
             };
             header?: never;
             path?: never;
@@ -6800,7 +6647,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -6854,9 +6701,11 @@ export interface operations {
     page_4: {
         parameters: {
             query: {
-                pageQuery: components["schemas"]["PageQuery"];
+                pageQuery: components["schemas"]["SortablePageQuery"];
                 keyword?: string;
                 status?: number;
+                /** @description 可排序字段 */
+                sortBy?: "ruleId" | "ruleCode" | "ruleName" | "prefix" | "resetScope" | "status" | "createdTime" | "updatedTime";
             };
             header?: never;
             path?: never;
@@ -7096,7 +6945,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
             };
         };
         responses: {
@@ -7530,244 +7379,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResultDashboardOverview"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
-    page_7: {
-        parameters: {
-            query: {
-                query: components["schemas"]["StationQuery"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultPageResultStationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
-    create_9: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StationRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultStationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
-    batchDelete_8: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BatchIdsRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
-    postBusinessApplyInStation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PostBusinessApplyInStationRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
             /** @description Bad Request */
@@ -8638,6 +8249,64 @@ export interface operations {
             };
         };
     };
+    objectUsages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dictTypeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultListDictObjectUsageResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
     disableImpact: {
         parameters: {
             query?: never;
@@ -8755,8 +8424,10 @@ export interface operations {
     changeLogs: {
         parameters: {
             query: {
-                pageQuery: components["schemas"]["PageQuery"];
+                pageQuery: components["schemas"]["SortablePageQuery"];
                 dictCode?: string;
+                /** @description 可排序字段 */
+                sortBy?: "logId" | "dictCode" | "targetType" | "actionType" | "createdTime";
             };
             header?: never;
             path?: never;
@@ -9101,7 +8772,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -9407,7 +9078,7 @@ export interface operations {
             };
         };
     };
-    page_8: {
+    page_7: {
         parameters: {
             query: {
                 query: components["schemas"]["AuditLogQuery"];
@@ -9691,7 +9362,7 @@ export interface operations {
             };
         };
     };
-    delete_8: {
+    delete_7: {
         parameters: {
             query?: never;
             header?: never;

@@ -1,6 +1,12 @@
 import type { components } from '@/types/api'
 
-import { apiClient, type ApiResult, unwrapResult } from './http'
+import {
+  apiClient,
+  type ApiResult,
+  requireVersion,
+  type VersionedId,
+  unwrapResult,
+} from './http'
 
 export type JobRequest = components['schemas']['JobRequest']
 export type SysJob = components['schemas']['SysJob']
@@ -35,30 +41,39 @@ export async function createJob(request: JobRequest) {
   )
 }
 
-export async function updateJob(jobId: number, request: JobRequest) {
+export async function updateJob(jobId: number, request: JobRequest, version: number | undefined) {
   return unwrapResult(
-    await apiClient.put<ApiResult<SysJob>>(`/api/v1/system/jobs/${jobId}`, request),
+    await apiClient.put<ApiResult<SysJob>>(`/api/v1/system/jobs/${jobId}`, {
+      ...request,
+      version: requireVersion(version),
+    }),
   )
 }
 
-export function deleteJob(jobId: number) {
-  return apiClient.delete(`/api/v1/system/jobs/${jobId}`)
+export function deleteJob(jobId: number, version: number | undefined) {
+  return apiClient.delete(`/api/v1/system/jobs/${jobId}`, {
+    params: { version: requireVersion(version) },
+  })
 }
 
-export function batchDeleteJobs(ids: number[]) {
-  return apiClient.post('/api/v1/system/jobs/batch/delete', { ids })
+export function batchDeleteJobs(items: VersionedId[]) {
+  return apiClient.post('/api/v1/system/jobs/batch/delete', { items })
 }
 
 export function runJobNow(jobId: number) {
   return apiClient.post(`/api/v1/system/jobs/${jobId}/run`)
 }
 
-export function pauseJob(jobId: number) {
-  return apiClient.post(`/api/v1/system/jobs/${jobId}/pause`)
+export function pauseJob(jobId: number, version: number | undefined) {
+  return apiClient.post(`/api/v1/system/jobs/${jobId}/pause`, undefined, {
+    params: { version: requireVersion(version) },
+  })
 }
 
-export function resumeJob(jobId: number) {
-  return apiClient.post(`/api/v1/system/jobs/${jobId}/resume`)
+export function resumeJob(jobId: number, version: number | undefined) {
+  return apiClient.post(`/api/v1/system/jobs/${jobId}/resume`, undefined, {
+    params: { version: requireVersion(version) },
+  })
 }
 
 export async function pageJobLogs(

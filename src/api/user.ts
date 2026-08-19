@@ -1,6 +1,6 @@
 import type { components } from '@/types/api'
 
-import { apiClient, type ApiResult, unwrapResult } from './http'
+import { apiClient, type ApiResult, requireVersion, unwrapResult } from './http'
 
 export type SysUser = components['schemas']['UserResponse']
 export type UserRequest = components['schemas']['UserRequest']
@@ -20,16 +20,24 @@ export async function createUser(request: UserRequest) {
   )
 }
 
-export async function updateUser(userId: number, request: UserRequest) {
+export async function updateUser(userId: number, request: UserRequest, version: number | undefined) {
   return unwrapResult(
-    await apiClient.put<ApiResult<SysUser>>(`/api/v1/system/users/${userId}`, request),
+    await apiClient.put<ApiResult<SysUser>>(`/api/v1/system/users/${userId}`, {
+      ...request,
+      version: requireVersion(version),
+    }),
   )
 }
 
-export function deleteUser(userId: number) {
-  return apiClient.delete(`/api/v1/system/users/${userId}`)
+export function deleteUser(userId: number, version: number | undefined) {
+  return apiClient.delete(`/api/v1/system/users/${userId}`, {
+    params: { version: requireVersion(version) },
+  })
 }
 
-export function resetUserPassword(userId: number, newPassword: string) {
-  return apiClient.post(`/api/v1/system/users/${userId}/password/reset`, { newPassword })
+export function resetUserPassword(userId: number, newPassword: string, version: number | undefined) {
+  return apiClient.post(`/api/v1/system/users/${userId}/password/reset`, {
+    newPassword,
+    version: requireVersion(version),
+  })
 }
