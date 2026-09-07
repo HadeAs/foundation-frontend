@@ -55,6 +55,7 @@ const uploading = ref(false)
 const fileInput = ref<HTMLInputElement>()
 
 const columns: TableColumnsType = [
+  { title: '文件ID', dataIndex: 'fileId', key: 'fileId', width: 90 },
   { title: '文件名称', dataIndex: 'originalName', key: 'originalName', width: 230 },
   { title: '文件分组', dataIndex: 'fileGroup', key: 'fileGroup', width: 110, align: 'center' },
   { title: '内容类型', dataIndex: 'contentType', key: 'contentType', width: 160 },

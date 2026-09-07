@@ -1457,6 +1457,9 @@ export interface components {
             menuType: string;
             path?: string;
             component?: string;
+            /** @enum {string} */
+            terminalType?: "PC" | "MOBILE" | "OT";
+            externalUrl?: string;
             permission?: string;
             icon?: string;
             /** Format: int32 */
@@ -1491,6 +1494,8 @@ export interface components {
             menuType?: string;
             path?: string;
             component?: string;
+            terminalType?: string;
+            externalUrl?: string;
             permission?: string;
             icon?: string;
             /** Format: int32 */

@@ -28,7 +28,12 @@ import ChangePasswordModal from '@/components/layout/ChangePasswordModal.vue'
 import PageTabs from '@/components/layout/PageTabs.vue'
 import ThemePanel from '@/components/layout/ThemePanel.vue'
 import { resolveMenuIcon } from '@/components/layout/menu-icons'
-import { buildMenuTree, createMenuRoutes, type MenuNode } from '@/router/dynamic'
+import {
+  buildMenuTree,
+  createMenuRoutes,
+  isMenuForCurrentTerminal,
+  type MenuNode,
+} from '@/router/dynamic'
 import { useAuthStore } from '@/stores/auth'
 import { useTabsStore } from '@/stores/tabs'
 
@@ -39,7 +44,9 @@ const tabs = useTabsStore()
 const collapsed = ref(false)
 const themeOpen = ref(false)
 const passwordOpen = ref(false)
-const menuTree = computed(() => buildMenuTree(auth.user?.menus || []))
+const menuTree = computed(() => buildMenuTree(
+  (auth.user?.menus || []).filter(isMenuForCurrentTerminal),
+))
 const selectedKeys = computed(() => [route.path])
 const openKeys = ref<string[]>([])
 

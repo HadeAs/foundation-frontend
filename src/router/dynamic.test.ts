@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   buildMenuTree,
   createMenuRoutes,
+  isMenuForCurrentTerminal,
   joinRoutePath,
   normalizeComponentPath,
+  normalizeExternalUrl,
   normalizeRoutePath,
   type SysMenu,
 } from './dynamic'
@@ -45,6 +47,14 @@ describe('dynamic routes', () => {
       '/src/views/system/user/index.vue',
     )
     expect(normalizeComponentPath('../secret')).toBeNull()
+    expect(normalizeExternalUrl('https://example.com/docs')).toBe('https://example.com/docs')
+    expect(normalizeExternalUrl('javascript:alert(1)')).toBeNull()
+  })
+
+  it('keeps only PC-compatible menus in the current application', () => {
+    expect(isMenuForCurrentTerminal({ terminalType: 'PC' })).toBe(true)
+    expect(isMenuForCurrentTerminal({})).toBe(true)
+    expect(isMenuForCurrentTerminal({ terminalType: 'MOBILE' })).toBe(false)
   })
 
   it('joins parent and current menu paths', () => {
@@ -71,5 +81,16 @@ describe('dynamic routes', () => {
     }])
     expect(route?.path).toBe('/dashboard')
     expect(route?.meta?.fixedTab).toBe(true)
+  })
+
+  it('registers external menus as internal routes and filters non-PC menus', () => {
+    const [externalRoute] = createMenuRoutes([
+      { menuId: 8, menuName: '文档', menuType: 'MENU', path: 'docs', externalUrl: 'https://example.com', status: 1 },
+    ])
+    expect(externalRoute?.path).toBe('/docs')
+    expect(externalRoute?.meta?.externalUrl).toBe('https://example.com')
+    expect(createMenuRoutes([
+      { menuId: 9, menuName: '移动端', menuType: 'MENU', path: 'mobile', terminalType: 'MOBILE', status: 1 },
+    ])).toEqual([])
   })
 })

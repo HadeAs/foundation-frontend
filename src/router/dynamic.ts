@@ -1,10 +1,13 @@
 import type { Router, RouteRecordRaw } from 'vue-router'
 
+import ExternalPage from '@/views/external-page.vue'
 import MissingPage from '@/views/errors/page-not-configured.vue'
 import type { components } from '@/types/api'
 
 export type SysMenu = components['schemas']['SysMenu']
 export type MenuNode = SysMenu & { children: MenuNode[]; fullPath: string | null }
+
+export const CURRENT_TERMINAL_TYPE = 'PC'
 
 const viewModules = import.meta.glob('/src/views/**/*.vue')
 const installedNames = new Set<string>()
@@ -31,6 +34,15 @@ export function normalizeComponentPath(component?: string) {
     ? value
     : `/src/views${value.startsWith('/') ? value : `/${value}`}`
   return `${directory}/index.vue`
+}
+
+export function normalizeExternalUrl(externalUrl?: string) {
+  const value = externalUrl?.trim()
+  return value && /^https?:\/\/\S+$/i.test(value) ? value : null
+}
+
+export function isMenuForCurrentTerminal(menu: SysMenu) {
+  return !menu.terminalType || menu.terminalType === CURRENT_TERMINAL_TYPE
 }
 
 export function joinRoutePath(parentPath: string | null, currentPath?: string) {
@@ -79,7 +91,7 @@ export function buildMenuTree(
 
 export function createMenuRoutes(menus: SysMenu[]): RouteRecordRaw[] {
   const paths = new Set<string>()
-  const nodes = buildMenuTree(menus, false, false)
+  const nodes = buildMenuTree(menus.filter(isMenuForCurrentTerminal), false, false)
   const pages = nodes.flatMap(function flatten(node: MenuNode): MenuNode[] {
     return [node, ...node.children.flatMap(flatten)]
   })
@@ -90,6 +102,7 @@ export function createMenuRoutes(menus: SysMenu[]): RouteRecordRaw[] {
     if (!path || paths.has(path)) return []
     paths.add(path)
 
+    const externalUrl = normalizeExternalUrl(menu.externalUrl)
     const componentPath = normalizeComponentPath(menu.component)
     const routeComponentPath = `/src/views${path}/index.vue`
     const loader = (componentPath ? viewModules[componentPath] : undefined)
@@ -97,11 +110,12 @@ export function createMenuRoutes(menus: SysMenu[]): RouteRecordRaw[] {
     return [{
       path,
       name: `menu-${menu.menuId}`,
-      component: loader || MissingPage,
+      component: externalUrl ? ExternalPage : loader || MissingPage,
       meta: {
         title: menu.menuName || '未命名页面',
         icon: menu.icon,
         menuId: menu.menuId,
+        externalUrl,
         fixedTab: path === '/dashboard',
         keepAlive: true,
       },

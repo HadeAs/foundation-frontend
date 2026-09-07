@@ -2,7 +2,7 @@
 
 > 状态：已确认，作为首版开发与逐页验收基线  
 > 更新日期：2026-08-19
-> 接口契约：`doc/foundation-frontend-runtime-V5.openapi.json`
+> 接口契约：`doc/foundation-frontend-runtime-V6.openapi.json`
 > 字典契约：`前端系统字典与枚举接入.md`
 
 ## 1. 项目目标
@@ -130,6 +130,8 @@ Pinia 只保存认证会话、动态菜单/路由状态、主题和多标签页�
 - 菜单路由由各级菜单 `path` 逐级拼接，例如父级 `system` 与当前 `user` 生成 `/system/user`。
 - 菜单 `component` 只存储 `/system/user` 形式的组件目录。
 - 前端通过 `import.meta.glob('/src/views/**/*.vue')` 自动收集页面组件，将后端目录转换为 `/src/views${component}/index.vue` 后加载，不维护手工组件映射表。
+- 当前应用只加载 `terminalType` 为空或为 `PC` 的菜单；新增菜单默认提交 `PC`。
+- 配置 `externalUrl` 的菜单仍按 `path` 注册站内路由，页面通过 iframe 嵌入对应 HTTP(S) 地址，不加载 `component`。
 - 新增根菜单或根目录时不选择上级目录，请求参数 `parentId` 固定提交为 `0`；选择上级目录时提交对应菜单 ID。
 - 找不到组件文件时进入“页面未配置”错误页，并输出包含菜单 ID、路径和组件路径的开发告警。
 - 未知、重复或非法路由路径不得导致整棵菜单加载失败。
@@ -196,7 +198,7 @@ Pinia 只保存认证会话、动态菜单/路由状态、主题和多标签页�
 
 ### 9.1 类型生成
 
-- 使用 `openapi-typescript` 从 `doc/foundation-frontend-runtime-V5.openapi.json` 生成 TypeScript 类型。
+- 使用 `openapi-typescript` 从 `doc/foundation-frontend-runtime-V6.openapi.json` 生成 TypeScript 类型。
 - 提供 `npm run api:types`。
 - 生成文件不允许手工修改。
 - Axios 请求按领域拆分为薄封装，不生成完整 SDK。

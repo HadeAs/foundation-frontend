@@ -24,7 +24,11 @@ import {
 } from '@/api/dashboard'
 import { getErrorMessage } from '@/api/http'
 import { resolveMenuIcon } from '@/components/layout/menu-icons'
-import { buildMenuTree, type MenuNode } from '@/router/dynamic'
+import {
+  buildMenuTree,
+  isMenuForCurrentTerminal,
+  type MenuNode,
+} from '@/router/dynamic'
 import { useAuthStore } from '@/stores/auth'
 import { createLatestRequest } from '@/utils/latest-request'
 
@@ -53,10 +57,18 @@ function flattenMenus(nodes: MenuNode[]): MenuNode[] {
 }
 
 const quickMenus = computed(() =>
-  flattenMenus(buildMenuTree(auth.user?.menus || []))
-    .filter((menu) => menu.menuType === 'MENU' && menu.fullPath !== '/dashboard')
+  flattenMenus(buildMenuTree((auth.user?.menus || []).filter(isMenuForCurrentTerminal)))
+    .filter((menu) =>
+      menu.menuType === 'MENU'
+      && menu.fullPath !== '/dashboard'
+      && Boolean(menu.fullPath),
+    )
     .slice(0, 4),
 )
+
+async function openQuickMenu(menu: MenuNode) {
+  if (menu.fullPath) await router.push(menu.fullPath)
+}
 
 function displayMetric(metric: DashboardMetric) {
   if (metric.text) return metric.text
@@ -146,7 +158,7 @@ onMounted(() => load())
             <div><h2>快捷入口</h2><p>常用管理功能</p></div>
           </header>
           <div v-if="quickMenus.length" class="quick-list">
-            <button v-for="menu in quickMenus" :key="menu.menuId" type="button" @click="router.push(menu.fullPath!)">
+            <button v-for="menu in quickMenus" :key="menu.menuId" type="button" @click="openQuickMenu(menu)">
               <component :is="resolveMenuIcon(menu.icon)" />
               <span>{{ menu.menuName }}</span>
               <ArrowRightOutlined class="quick-arrow" />

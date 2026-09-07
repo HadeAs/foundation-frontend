@@ -38,7 +38,7 @@ import { getErrorMessage } from '@/api/http'
 import ResizableTable from '@/components/common/ResizableTable.vue'
 import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
 import { menuIconNames, resolveMenuIcon } from '@/components/layout/menu-icons'
-import { buildMenuTree, type MenuNode } from '@/router/dynamic'
+import { buildMenuTree, normalizeExternalUrl, type MenuNode } from '@/router/dynamic'
 import { createLatestRequest } from '@/utils/latest-request'
 
 type MenuForm = MenuRequest & { menuId?: number }
@@ -59,8 +59,10 @@ const formRef = ref<FormInstance>()
 const columns: TableColumnsType = [
   { title: '菜单名称', dataIndex: 'menuName', key: 'menuName', width: 150 },
   { title: '类型', dataIndex: 'menuType', key: 'menuType', width: 58, align: 'center' },
+  { title: '终端', dataIndex: 'terminalType', key: 'terminalType', width: 68, align: 'center' },
   { title: '当前路径', dataIndex: 'path', key: 'path', width: 110 },
   { title: '组件目录', dataIndex: 'component', key: 'component', width: 150 },
+  { title: '外部链接', dataIndex: 'externalUrl', key: 'externalUrl', width: 180 },
   { title: '排序', dataIndex: 'sortNo', key: 'sortNo', width: 56, align: 'center' },
   { title: '显示', dataIndex: 'visible', key: 'visible', width: 58, align: 'center' },
   { title: '状态', dataIndex: 'status', key: 'status', width: 58, align: 'center' },
@@ -75,6 +77,8 @@ function defaultForm(parentId?: number): MenuForm {
     menuType: 'MENU',
     path: undefined,
     component: undefined,
+    terminalType: 'PC',
+    externalUrl: undefined,
     permission: undefined,
     icon: 'AppstoreOutlined',
     sortNo: 0,
@@ -135,10 +139,18 @@ async function validatePath(_: unknown, value?: string) {
 }
 
 async function validateComponent(_: unknown, value?: string) {
+  if (clean(form.externalUrl)) return
   if (form.menuType !== 'MENU' && !value) return
   if (!value) throw new Error('请输入组件目录')
   if (!value.startsWith('/') || value.includes('..') || value.endsWith('.vue')) {
     throw new Error('组件目录应为 /system/user 格式')
+  }
+}
+
+async function validateExternalUrl(_: unknown, value?: string) {
+  if (!value) return
+  if (!/^https?:\/\/\S+$/i.test(value.trim())) {
+    throw new Error('请输入以 http:// 或 https:// 开头的完整地址')
   }
 }
 
@@ -148,8 +160,10 @@ const rules: FormProps['rules'] = {
     { max: 50, message: '菜单名称不能超过 50 个字符', trigger: 'blur' },
   ],
   menuType: [{ required: true, message: '请选择菜单类型', trigger: 'change' }],
+  terminalType: [{ required: true, message: '请选择终端类型', trigger: 'change' }],
   path: [{ validator: validatePath, trigger: 'blur' }],
   component: [{ validator: validateComponent, trigger: 'blur' }],
+  externalUrl: [{ validator: validateExternalUrl, trigger: 'blur' }],
 }
 
 watch(
@@ -157,6 +171,7 @@ watch(
   (type) => {
     if (type === 'DIR') {
       form.component = undefined
+      form.externalUrl = undefined
       form.permission = undefined
     }
   },
@@ -205,14 +220,21 @@ function clean(value?: string) {
   return value?.trim() || undefined
 }
 
+function terminalLabel(value?: string) {
+  return ({ PC: 'PC', MOBILE: '移动端', OT: '工控端' } as Record<string, string>)[value || 'PC'] || value
+}
+
 function toRequest(): MenuRequest {
   const isPage = form.menuType === 'MENU'
+  const externalUrl = isPage ? clean(form.externalUrl) : undefined
   return {
     parentId: form.parentId ?? 0,
     menuName: form.menuName.trim(),
     menuType: form.menuType,
     path: clean(form.path),
-    component: isPage ? clean(form.component) : undefined,
+    component: isPage && !externalUrl ? clean(form.component) : undefined,
+    terminalType: form.terminalType || 'PC',
+    externalUrl,
     permission: isPage ? clean(form.permission) : undefined,
     icon: clean(form.icon),
     sortNo: form.sortNo ?? 0,
@@ -321,12 +343,26 @@ load()
               {{ record.menuType === 'DIR' ? '目录' : '菜单' }}
             </a-tag>
           </template>
+          <template v-else-if="column.key === 'terminalType'">
+            <span>{{ terminalLabel(record.terminalType) }}</span>
+          </template>
           <template v-else-if="column.key === 'path'">
             <code v-if="record.path" class="path-text">{{ record.path }}</code>
             <span v-else class="empty-value">—</span>
           </template>
           <template v-else-if="column.key === 'component'">
             <code v-if="record.component" class="path-text">{{ record.component }}</code>
+            <span v-else class="empty-value">—</span>
+          </template>
+          <template v-else-if="column.key === 'externalUrl'">
+            <a
+              v-if="normalizeExternalUrl(record.externalUrl)"
+              class="path-text external-link"
+              :href="normalizeExternalUrl(record.externalUrl) || undefined"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click.stop
+            >{{ record.externalUrl }}</a>
             <span v-else class="empty-value">—</span>
           </template>
           <template v-else-if="column.key === 'visible'">
@@ -411,13 +447,31 @@ load()
                 </template>
               </a-select>
             </a-form-item>
+            <a-form-item label="终端类型" name="terminalType">
+              <a-select
+                v-model:value="form.terminalType"
+                :options="[
+                  { label: 'PC', value: 'PC' },
+                  { label: '移动端', value: 'MOBILE' },
+                  { label: '工控端', value: 'OT' },
+                ]"
+              />
+            </a-form-item>
             <a-form-item label="当前路径" name="path">
-              <a-input v-model:value="form.path" placeholder="例如 user；完整路由将拼接上级路径" />
+              <a-input
+                v-model:value="form.path"
+                :placeholder="form.menuType === 'MENU' ? '例如 report；完整路由将拼接上级路径' : '例如 system；下级路由将拼接此路径'"
+              />
             </a-form-item>
             <template v-if="form.menuType === 'MENU'">
-              <a-form-item label="组件目录" name="component">
-                <a-input v-model:value="form.component" placeholder="例如 /system/user" />
+              <a-form-item label="外部链接" name="externalUrl">
+                <a-input v-model:value="form.externalUrl" placeholder="可选，例如 https://example.com" />
               </a-form-item>
+              <template v-if="!form.externalUrl?.trim()">
+                <a-form-item label="组件目录" name="component">
+                  <a-input v-model:value="form.component" placeholder="例如 /system/user" />
+                </a-form-item>
+              </template>
               <a-form-item label="权限标识" name="permission">
                 <a-input v-model:value="form.permission" placeholder="可选，例如 system:user:view" />
               </a-form-item>
@@ -456,6 +510,7 @@ load()
 .menu-name :deep(.anticon) { flex: none; color: var(--brand); font-size: 17px; }
 .menu-name span, .path-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .path-text { display: block; color: var(--shell-muted); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
+.external-link { color: var(--brand); }
 .empty-value { color: color-mix(in srgb, var(--shell-muted) 55%, transparent); }
 .status-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #28a87d; }
 .status-dot.disabled { background: #9ba8a8; }
