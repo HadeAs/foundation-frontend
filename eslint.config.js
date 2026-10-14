@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 
 export default [
   {
-    ignores: ['dist/**', 'coverage/**', 'src/types/api.d.ts'],
+    ignores: ['dist/**', 'coverage/**', 'src/types/api.d.ts', 'src/types/business-api.d.ts'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

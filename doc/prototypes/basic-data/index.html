@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>基础资料 · 高保真交互原型</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../runtime-business/style.css">
+</head>
+<body>
+  <div class="review-bar">
+    <strong>基础资料 · 高保真评审稿 <span>/ 演示数据</span></strong>
+    <div class="review-tools">
+      <label for="scene">查看场景</label>
+      <select id="scene" aria-label="原型评审场景">
+        <option value="normal">正常列表</option><option value="loading">加载中</option>
+        <option value="empty">空数据</option><option value="failure">加载失败</option>
+        <option value="conflict">编辑版本冲突</option><option value="reference">删除被引用数据</option>
+      </select>
+      <a href="interaction-spec.md" target="_blank">交互说明 ↗</a>
+      <a href="../runtime-business/index.html">业务管理原型 ↗</a>
+    </div>
+  </div>
+  <div class="app-shell">
+    <aside>
+      <div class="brand"><span class="brand-mark">⌁</span><strong>工业系统</strong></div>
+      <nav aria-label="主菜单"><div class="nav-label"><span data-icon="home"></span>工作台</div><div class="nav-group"><span data-icon="grid"></span>基础资料<span class="chevron">⌃</span></div><div id="navigation"></div><div class="nav-label"><span data-icon="settings"></span>系统管理</div></nav>
+      <p class="demo-note">评审原型<br>所有操作仅修改本页演示数据，刷新浏览器后恢复。</p>
+    </aside>
+    <div class="workspace">
+      <header class="app-header"><div class="breadcrumb"><span data-icon="menu"></span><span>基础资料 / <b id="breadcrumb"></b></span></div><div class="account"><span class="avatar" data-icon="user"></span><div>基础资料管理员<small>administrator</small></div></div></header>
+      <div class="tab-strip"><span class="page-tab"><span data-icon="home"></span>工作台<span class="pin">♧</span></span><span class="page-tab active"><span data-icon="grid"></span><span id="activeTab"></span></span></div>
+      <main>
+        <form id="filters" class="filter-panel" aria-label="查询条件"></form>
+        <section class="list-panel" aria-labelledby="pageTitle">
+          <div class="toolbar"><h1 id="pageTitle"></h1><div class="toolbar-actions"><span id="selectionCount" class="muted"></span><button id="batchDelete" class="danger-text" disabled data-action="batch">批量删除</button><button class="primary" data-action="create"><span data-icon="plus"></span>新增</button></div></div>
+          <div class="table-scroll" id="mainTable"></div>
+          <div id="pagination" class="pagination"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <dialog id="manager" class="large-dialog" aria-labelledby="managerTitle"></dialog>
+  <dialog id="editor" aria-labelledby="editorTitle"></dialog>
+  <dialog id="picker" aria-labelledby="pickerTitle"></dialog>
+  <dialog id="confirmation" class="confirm-dialog" aria-labelledby="confirmationTitle"></dialog>
+  <div id="toast" role="status" hidden></div>
+  <script src="data.js"></script>
+  <script src="prototype.js"></script>
+  <script src="../runtime-business/fixture-orders.js"></script>
+</body>
+</html>

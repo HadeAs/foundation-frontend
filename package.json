@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "typecheck": "vue-tsc -b",
-    "api:types": "openapi-typescript doc/foundation-frontend-runtime-V6.openapi.json -o src/types/api.d.ts",
+    "api:business-types": "openapi-typescript doc/nari-logistics.openapi.json -o src/types/business-api.d.ts",
     "lint": "eslint .",
     "test": "vitest",
     "test:run": "vitest run",

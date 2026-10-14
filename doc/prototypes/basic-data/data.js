@@ -1,0 +1,65 @@
+// Offline review fixtures only. V9 field names are retained; no network requests.
+window.basicData = (() => {
+  const dictionaries = {
+    lineType:{SMT:'SMT',WAVE_SOLDER:'波峰焊',SELECTIVE_SOLDER:'选择焊',MANUAL_SOLDER:'手工焊',DEBUG:'调试'},
+    storageType:{BOX_LINE_SIDE:'料箱线边库',FIXTURE_LINE_SIDE:'治具线边库',WAREHOUSE:'库房'},
+    locationType:{STORAGE_SLOT:'存储库位',DOCK_POSITION:'接驳位置',MACHINE_INLET:'设备进料口',MACHINE_OUTLET:'设备出料口',CARRIER_PARKING:'料车停靠位'},
+    agvVendor:{STANDARD:'斯坦德',HIKVISION:'海康'},
+    containerCategory:{BOX:'料箱',VEHICLE_DIRECT:'无装载位载具',VEHICLE_SLOT:'有装载位载具'},
+    usageType:{MAGAZINE:'A料箱',TURNOVER_BOX:'周转箱',FIXTURE_BOX:'专用治具箱',TRANSFER_CART:'转运料车'},
+    relationDirection:{SOURCE:'取料来源',TARGET:'配送目标'},
+    operationRole:{STORAGE:'存储',LABEL_OUTPUT:'贴码出料交接',PANEL_SUPPLY:'板件供料',LINE_OUTPUT:'线尾出料',RIVET_HANDOFF:'铆接交接',EMPTY_RETURN:'空框或用后治具回收',FIXTURE_SUPPLY:'治具供料',AGV_RELAY:'高低车接力',WAREHOUSE_INBOUND:'库房入库交接',WAREHOUSE_OUTBOUND:'库房发料交接'},
+  };
+  const field = (key,label,kind='text',required=true) => ({key,label,kind,required});
+  const status = field('enabled','状态','boolean');
+  const remark = field('remark','备注','textarea',false);
+  const relation = (key,label,target,required=true) => ({...field(key,label,'relation',required),target});
+  const code = (key,label) => field(key,label);
+  const schema = {
+    factory:{label:'工厂',icon:'factory',code:'factoryCode',name:'factoryName',fields:[code('factoryCode','工厂编码'),field('factoryName','工厂名称'),status,remark],columns:['factoryCode','factoryName','enabled','remark'],filters:[]},
+    floor:{label:'楼层',icon:'layers',code:'floorCode',name:'floorName',fields:[code('floorCode','楼层编码'),field('floorName','楼层名称'),relation('factoryId','所属工厂','factory'),field('floorNumber','楼层序号','integer'),status,remark],columns:['floorCode','floorName','factoryId','floorNumber','enabled','remark'],filters:['factoryId']},
+    area:{label:'区域',icon:'grid',code:'areaCode',name:'areaName',fields:[code('areaCode','区域编码'),field('areaName','区域名称'),relation('floorId','所属楼层','floor'),status,remark],columns:['areaCode','areaName','floorId','enabled','remark'],filters:['floorId']},
+    line:{label:'产线',icon:'line',code:'lineCode',name:'lineName',fields:[code('lineCode','产线编码'),field('lineName','产线名称'),relation('areaId','所属区域','area'),field('lineType','产线类型','enum'),field('mesLineCode','MES 产线编码','text',false),status,remark],columns:['lineCode','lineName','areaId','lineType','mesLineCode','enabled'],filters:['areaId','lineType']},
+    storage:{label:'存储区',icon:'storage',code:'storageCode',name:'storageName',fields:[code('storageCode','存储区编码'),field('storageName','存储区名称'),relation('areaId','所属区域','area'),field('storageType','存储区类型','enum'),status,remark],columns:['storageCode','storageName','areaId','storageType','enabled','remark'],filters:['areaId','storageType']},
+    location:{label:'固定位置',icon:'pin',code:'locationCode',name:'locationName',fields:[code('locationCode','位置编码'),field('locationName','位置名称'),relation('areaId','所属区域','area'),relation('storageZoneId','静态归属存储区','storage',false),field('locationType','位置类型','enum'),field('agvVendor','AGV 厂商','enum'),status,remark],columns:['locationCode','locationName','areaId','storageZoneId','locationType','agvVendor','enabled'],filters:['areaId','locationType']},
+    model:{label:'容器规格',icon:'box',code:'modelCode',name:'modelName',fields:[code('modelCode','规格编码'),field('modelName','规格名称'),field('containerCategory','容器大类','enum'),field('usageType','用途类型','enum'),field('boxCapacity','料箱容量','positive',false),status,remark],columns:['modelCode','modelName','containerCategory','usageType','boxCapacity','enabled'],filters:['containerCategory','usageType']},
+    container:{label:'容器台账',icon:'cart',code:'containerCode',name:'containerName',fields:[code('containerCode','容器编码'),field('containerName','容器名称'),relation('factoryId','所属工厂','factory'),relation('containerModelId','容器规格','model'),status,remark],columns:['containerCode','containerName','factoryId','containerModelId','enabled','remark'],filters:['factoryId','containerModelId']},
+    locationLine:{label:'位置服务产线',owner:'locationId',fields:[relation('locationId','固定位置','location'),relation('productionLineId','服务产线','line'),status,remark],columns:['productionLineId','enabled','remark']},
+    locationModel:{label:'位置允许容器规格',owner:'locationId',fields:[relation('locationId','固定位置','location'),relation('containerModelId','允许容器规格','model'),status,remark],columns:['containerModelId','enabled','remark']},
+    locationUsage:{label:'位置业务用途',owner:'locationId',fields:[relation('locationId','固定位置','location'),field('operationRole','业务用途','enum'),status],columns:['operationRole','enabled']},
+    locationStorage:{label:'位置业务库关联',owner:'locationId',fields:[relation('locationId','固定位置','location'),field('relationDirection','关联方向','enum'),relation('storageZoneId','业务存储区','storage'),status,remark],columns:['relationDirection','storageZoneId','enabled','remark']},
+    slot:{label:'料车装载位',owner:'vehicleId',code:'slotCode',name:'slotName',fields:[relation('vehicleId','所属料车','container'),code('slotCode','装载位编码'),field('slotName','装载位名称','text',false),status,remark],columns:['slotCode','slotName','enabled','remark']},
+    resourceLine:{label:'资源产线映射',owner:'productionLineId',name:'resourceCode',fields:[relation('productionLineId','所属产线','line'),field('resourceCode','资源编码'),status,remark],columns:['resourceCode','enabled','remark','createdTime','updatedTime']},
+    lineProcessStorage:{label:'产线主工序配送区',owner:'productionLineId',name:'mainProcessCode',fields:[relation('productionLineId','所属产线','line'),field('mainProcessCode','主工序编码'),relation('storageZoneId','配送存储区','storage'),status,remark],columns:['mainProcessCode','storageZoneId','enabled','remark','createdTime','updatedTime']},
+  };
+  for(const config of Object.values(schema))if(!config.owner)config.columns.push('createdTime','updatedTime');
+  const stamp = {enabled:true,version:1,remark:'',createdTime:'2026-10-12 08:30:00',updatedTime:'2026-10-12 09:15:00'};
+  const rows = entries => entries.map((r,i)=>({...stamp,id:i+1,...r}));
+  const records = {
+    factory:rows([{factoryCode:'NR-NJ',factoryName:'南京生产基地',remark:'电力自动化设备制造'},{factoryCode:'NR-CZ',factoryName:'常州生产基地',remark:'智能制造产业园'},{factoryCode:'NR-TEST',factoryName:'试制中心',enabled:false,remark:'试制业务暂停'}]),
+    floor:rows([{floorCode:'NJ-A-1F',floorName:'A 栋一层',factoryId:1,floorNumber:1},{floorCode:'NJ-A-2F',floorName:'A 栋二层',factoryId:1,floorNumber:2},{floorCode:'CZ-B-1F',floorName:'B 栋一层',factoryId:2,floorNumber:1}]),
+    area:rows([{areaCode:'SMT-A',areaName:'SMT 生产区',floorId:1},{areaCode:'ASSY-A',areaName:'装配生产区',floorId:2},{areaCode:'WH-A',areaName:'物料仓储区',floorId:1},{areaCode:'CZ-DEBUG',areaName:'调试生产区',floorId:3}]),
+    line:rows([{lineCode:'SMT-01',lineName:'SMT 一线',areaId:1,lineType:'SMT',mesLineCode:'MES-SMT-01'},{lineCode:'SMT-02',lineName:'SMT 二线',areaId:1,lineType:'SMT',mesLineCode:'MES-SMT-02'},{lineCode:'WAVE-01',lineName:'波峰焊一线',areaId:2,lineType:'WAVE_SOLDER',mesLineCode:'MES-WAVE-01'},{lineCode:'SELECT-01',lineName:'选择焊一线',areaId:2,lineType:'SELECTIVE_SOLDER'},{lineCode:'MANUAL-01',lineName:'手工焊一线',areaId:2,lineType:'MANUAL_SOLDER'},{lineCode:'DEBUG-01',lineName:'调试一线',areaId:4,lineType:'DEBUG'}]),
+    storage:rows([{storageCode:'SMT-BOX',storageName:'SMT 料箱线边库',areaId:1,storageType:'BOX_LINE_SIDE'},{storageCode:'ASSY-FIX',storageName:'装配治具线边库',areaId:2,storageType:'FIXTURE_LINE_SIDE'},{storageCode:'WH-MAIN',storageName:'主物料库',areaId:3,storageType:'WAREHOUSE'},{storageCode:'CZ-LINE',storageName:'调试料箱线边库',areaId:4,storageType:'BOX_LINE_SIDE'}]),
+    location:rows([
+      {locationCode:'NJ-SMT-IN-01',locationName:'SMT 一线进料口',areaId:1,storageZoneId:1,locationType:'MACHINE_INLET',agvVendor:'STANDARD'},
+      {locationCode:'NJ-SMT-OUT-01',locationName:'SMT 一线出料口',areaId:1,locationType:'MACHINE_OUTLET',agvVendor:'STANDARD'},
+      {locationCode:'NJ-SMT-DOCK-01',locationName:'SMT 接驳位',areaId:1,locationType:'DOCK_POSITION',agvVendor:'HIKVISION'},
+      {locationCode:'NJ-ASSY-PARK-01',locationName:'装配料车停靠位',areaId:2,locationType:'CARRIER_PARKING',agvVendor:'STANDARD'},
+      {locationCode:'NJ-WH-001',locationName:'主物料库 001 库位',areaId:3,storageZoneId:3,locationType:'STORAGE_SLOT',agvVendor:'HIKVISION'},
+      {locationCode:'NJ-WH-002',locationName:'主物料库 002 库位',areaId:3,storageZoneId:3,locationType:'STORAGE_SLOT',agvVendor:'HIKVISION'},
+      {locationCode:'NJ-WH-003',locationName:'主物料库 003 库位',areaId:3,storageZoneId:3,locationType:'STORAGE_SLOT',agvVendor:'HIKVISION',enabled:false},
+      {locationCode:'CZ-DEBUG-IN',locationName:'调试一线进料口',areaId:4,locationType:'MACHINE_INLET',agvVendor:'STANDARD'},
+    ]),
+    model:rows([{modelCode:'BOX-A',modelName:'标准 A 料箱',containerCategory:'BOX',usageType:'MAGAZINE'},{modelCode:'BOX-T',modelName:'周转料箱',containerCategory:'BOX',usageType:'TURNOVER_BOX'},{modelCode:'BOX-F',modelName:'专用治具箱',containerCategory:'BOX',usageType:'FIXTURE_BOX'},{modelCode:'CART-S4',modelName:'四位转运料车',containerCategory:'VEHICLE_SLOT',usageType:'TRANSFER_CART',boxCapacity:4},{modelCode:'CART-D',modelName:'整车转运料车',containerCategory:'VEHICLE_DIRECT',usageType:'TRANSFER_CART'},{modelCode:'CART-S6',modelName:'六位转运料车',containerCategory:'VEHICLE_SLOT',usageType:'TRANSFER_CART',boxCapacity:6}]),
+    container:rows([{containerCode:'CART-0001',containerName:'SMT 一号料车',factoryId:1,containerModelId:4},{containerCode:'CART-0002',containerName:'装配整车料车',factoryId:1,containerModelId:5},{containerCode:'BOX-000001',containerName:'A 料箱 001',factoryId:1,containerModelId:1},{containerCode:'BOX-000002',containerName:'周转箱 002',factoryId:1,containerModelId:2},{containerCode:'CART-0003',containerName:'常州转运料车',factoryId:2,containerModelId:6},{containerCode:'BOX-000003',containerName:'治具箱 003',factoryId:1,containerModelId:3}]),
+    resourceLine:rows([{productionLineId:1,resourceCode:'0001001',remark:'贴装资源'},{productionLineId:1,resourceCode:'0001002',remark:'回流焊资源',updatedTime:'2026-10-14 10:20:00'},{productionLineId:1,resourceCode:'0001003',enabled:false},{productionLineId:2,resourceCode:'0002001'},{productionLineId:6,resourceCode:'0006001'}]),
+    lineProcessStorage:rows([{productionLineId:1,mainProcessCode:'0010',storageZoneId:1,remark:'贴装配送'},{productionLineId:1,mainProcessCode:'0020',storageZoneId:3,remark:'备料配送',updatedTime:'2026-10-14 10:30:00'},{productionLineId:1,mainProcessCode:'0030',storageZoneId:2,enabled:false},{productionLineId:2,mainProcessCode:'0010',storageZoneId:1},{productionLineId:6,mainProcessCode:'0040',storageZoneId:4}]),
+    locationLine:rows([{locationId:1,productionLineId:1,remark:'主服务产线'},{locationId:1,productionLineId:2,remark:'共用接驳'},{locationId:2,productionLineId:1}]),
+    locationModel:rows([{locationId:1,containerModelId:1},{locationId:1,containerModelId:4},{locationId:2,containerModelId:2}]),
+    locationUsage:rows([{locationId:1,operationRole:'PANEL_SUPPLY'},{locationId:1,operationRole:'EMPTY_RETURN'},{locationId:2,operationRole:'LINE_OUTPUT'}]),
+    locationStorage:rows([{locationId:1,relationDirection:'SOURCE',storageZoneId:3,remark:'允许从主物料库取料'},{locationId:1,relationDirection:'TARGET',storageZoneId:1,remark:'允许配送至线边库'}]),
+    slot:rows([{vehicleId:1,slotCode:'CART-0001-01',slotName:'左前位'},{vehicleId:1,slotCode:'CART-0001-02',slotName:'右前位'},{vehicleId:1,slotCode:'CART-0001-03',slotName:'左后位'},{vehicleId:1,slotCode:'CART-0001-04',slotName:'右后位'},{vehicleId:5,slotCode:'CART-0003-01',slotName:'第一装载位'}]),
+  };
+  return {schema,dictionaries,records};
+})();
