@@ -1327,6 +1327,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/business/nari-warehouse-record/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询缴库成功记录详情 */
+        get: operations["NariWarehouseRecordGet"];
+        /** 更新缴库成功记录 */
+        put: operations["NariWarehouseRecordUpdate"];
+        post?: never;
+        /** 删除缴库成功记录 */
+        delete: operations["NariWarehouseRecordDelete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-warehouse-record-box/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询缴库成功箱明细详情 */
+        get: operations["NariWarehouseRecordBoxGet"];
+        /** 更新缴库成功箱明细 */
+        put: operations["NariWarehouseRecordBoxUpdate"];
+        post?: never;
+        /** 删除缴库成功箱明细 */
+        delete: operations["NariWarehouseRecordBoxDelete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/business/nari-vehicle-slot/{id}": {
         parameters: {
             query?: never;
@@ -1403,6 +1441,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/business/nari-receiving-record/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询库房接收记录详情 */
+        get: operations["NariReceivingRecordGet"];
+        /** 更新库房接收记录 */
+        put: operations["NariReceivingRecordUpdate"];
+        post?: never;
+        /** 删除库房接收记录 */
+        delete: operations["NariReceivingRecordDelete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/business/nari-production-plan/{id}": {
         parameters: {
             query?: never;
@@ -1436,6 +1493,44 @@ export interface paths {
         post?: never;
         /** 删除产线 */
         delete: operations["NariProductionLineDelete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-operation-record/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询业务操作记录详情 */
+        get: operations["NariOperationRecordGet"];
+        /** 更新业务操作记录 */
+        put: operations["NariOperationRecordUpdate"];
+        post?: never;
+        /** 删除业务操作记录 */
+        delete: operations["NariOperationRecordDelete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics-task/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询物流运输任务详情 */
+        get: operations["NariLogisticsTaskGet"];
+        /** 更新物流运输任务 */
+        put: operations["NariLogisticsTaskUpdate"];
+        post?: never;
+        /** 删除物流运输任务 */
+        delete: operations["NariLogisticsTaskDelete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2313,6 +2408,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/business/nari-warehouse-record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询缴库成功记录 */
+        get: operations["NariWarehouseRecordPage"];
+        put?: never;
+        /** 创建缴库成功记录 */
+        post: operations["NariWarehouseRecordCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-warehouse-record/batch/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量删除缴库成功记录 */
+        post: operations["NariWarehouseRecordBatchDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-warehouse-record-box": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询缴库成功箱明细 */
+        get: operations["NariWarehouseRecordBoxPage"];
+        put?: never;
+        /** 创建缴库成功箱明细 */
+        post: operations["NariWarehouseRecordBoxCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-warehouse-record-box/batch/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量删除缴库成功箱明细 */
+        post: operations["NariWarehouseRecordBoxBatchDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/business/nari-vehicle-slot": {
         parameters: {
             query?: never;
@@ -2453,6 +2618,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/business/nari-receiving-record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询库房接收记录 */
+        get: operations["NariReceivingRecordPage"];
+        put?: never;
+        /** 创建库房接收记录 */
+        post: operations["NariReceivingRecordCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-receiving-record/batch/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量删除库房接收记录 */
+        post: operations["NariReceivingRecordBatchDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/business/nari-production-plan": {
         parameters: {
             query?: never;
@@ -2517,6 +2717,76 @@ export interface paths {
         put?: never;
         /** 批量删除产线 */
         post: operations["NariProductionLineBatchDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-operation-record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询业务操作记录 */
+        get: operations["NariOperationRecordPage"];
+        put?: never;
+        /** 创建业务操作记录 */
+        post: operations["NariOperationRecordCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-operation-record/batch/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量删除业务操作记录 */
+        post: operations["NariOperationRecordBatchDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics-task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询物流运输任务 */
+        get: operations["NariLogisticsTaskPage"];
+        put?: never;
+        /** 创建物流运输任务 */
+        post: operations["NariLogisticsTaskCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics-task/batch/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量删除物流运输任务 */
+        post: operations["NariLogisticsTaskBatchDelete"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6628,11 +6898,649 @@ export interface components {
              */
             containerVersion: number;
         };
+        ApiResultPageResultSysCodeRule: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysCodeRule"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLogisticsTaskUpdateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultSysCodeRule: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysCodeRule"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultNariLocationUsageResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariLocationUsageResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultNariReceivingRecordResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariReceivingRecordResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultNariLocationLineResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariLocationLineResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        DictTypeRequest: {
+            dictCode: string;
+            dictName: string;
+            dictScope?: string;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
+        };
         ApiResultPageResultSysRole: {
             /** Format: int32 */
             code?: number;
             message?: string;
             data?: components["schemas"]["PageResultSysRole"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultNariProductionLineResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariProductionLineResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLocationLineUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            locationId?: number;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            productionLineId?: number;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultSysDictType: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysDictType"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultNariFactoryResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariFactoryResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultSysDictType: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysDictType"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariContainerRequest: {
+            containerCode: string;
+            /** Format: int64 */
+            containerModelId: number;
+            containerName: string;
+            enabled: boolean;
+            /** Format: int64 */
+            factoryId: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultDictDisableImpactResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["DictDisableImpactResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        AuditLogQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            targetType?: string;
+            actionType?: string;
+            operator?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        NariLocationLineQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            enabled?: boolean;
+            /** Format: int64 */
+            locationId?: number;
+            /** Format: int64 */
+            productionLineId?: number;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        ApiResultPageResultSysAsyncTaskLog: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysAsyncTaskLog"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariContainerModelUpdateRequest: {
+            /**
+             * Format: int32
+             * @description 不传保留原值；null清空
+             */
+            boxCapacity?: number | null;
+            /** @description 不传保留原值；禁止清空 */
+            containerCategory?: string;
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /** @description 不传保留原值；禁止清空 */
+            modelCode?: string;
+            /** @description 不传保留原值；禁止清空 */
+            modelName?: string;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /** @description 不传保留原值；禁止清空 */
+            usageType?: string;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        NariWarehouseRecordRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultPageResultNariAreaResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariAreaResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultSysJob: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysJob"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariResourceLineRequest: {
+            enabled: boolean;
+            /** Format: int64 */
+            productionLineId: number;
+            remark?: string;
+            resourceCode: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        NariWarehouseRecordBoxUpdateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultNariFloorResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariFloorResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultNariVehicleSlotResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariVehicleSlotResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLocationStorageZoneRequest: {
+            enabled: boolean;
+            /** Format: int64 */
+            locationId: number;
+            relationDirection: string;
+            remark?: string;
+            /** Format: int64 */
+            storageZoneId: number;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultNariContainerResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariContainerResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariContainerResponse: {
+            /** Format: int64 */
+            id?: number;
+            containerCode?: string;
+            /** Format: int64 */
+            containerModelId?: number;
+            containerName?: string;
+            enabled?: boolean;
+            /** Format: int64 */
+            factoryId?: number;
+            remark?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        NariStorageZoneUpdateRequest: {
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            areaId?: number;
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /** @description 不传保留原值；禁止清空 */
+            storageCode?: string;
+            /** @description 不传保留原值；禁止清空 */
+            storageName?: string;
+            /** @description 不传保留原值；禁止清空 */
+            storageType?: string;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultMapStringObject: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultListJobHandlerOption: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["JobHandlerOption"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariWarehouseRecordBoxQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            /** Format: int64 */
+            activeBoxId?: number;
+            /** Format: int64 */
+            boxId?: number;
+            /** Format: int32 */
+            boxVersion?: number;
+            /** Format: date-time */
+            cleanupCompletedTimeStart?: string;
+            /** Format: date-time */
+            cleanupCompletedTimeEnd?: string;
+            cleanupRequestId?: string;
+            /** Format: date-time */
+            cleanupSentTimeStart?: string;
+            /** Format: date-time */
+            cleanupSentTimeEnd?: string;
+            contentKey?: string;
+            materialBatch?: string;
+            materialCode?: string;
+            /** Format: date-time */
+            nextCheckTimeStart?: string;
+            /** Format: date-time */
+            nextCheckTimeEnd?: string;
+            orderNo?: string;
+            /** Format: int32 */
+            quantity?: number;
+            /** Format: int64 */
+            warehouseRecordId?: number;
+            wmsCleanupStatus?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        SysJob: {
+            /** Format: int64 */
+            jobId?: number;
+            jobName?: string;
+            jobGroup?: string;
+            jobScope?: string;
+            sourceType?: string;
+            sourceRef?: string;
+            protectedFlag?: boolean;
+            cronExpression?: string;
+            jobType?: string;
+            jobData?: string;
+            concurrencyPolicy?: string;
+            /** Format: int32 */
+            timeoutSeconds?: number;
+            /** Format: int32 */
+            maxRetries?: number;
+            /** Format: int32 */
+            retryIntervalSeconds?: number;
+            idempotencyKeyExpression?: string;
+            failureStrategy?: string;
+            paramsSchemaJson?: string;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            /** Format: int32 */
+            version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+        };
+        ApiResultNariLocationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariLocationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        SortablePageQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            /** @description 单字段排序编码；仅接受当前接口说明中的白名单字段 */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+        };
+        ApiResultPageResultSysAuditLog: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysAuditLog"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultNariLocationLineResponse: {
+            records?: components["schemas"]["NariLocationLineResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariLocationLineResponse: {
+            /** Format: int64 */
+            id?: number;
+            enabled?: boolean;
+            /** Format: int64 */
+            locationId?: number;
+            /** Format: int64 */
+            productionLineId?: number;
+            remark?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        ApiResultLifecycleOverviewResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["LifecycleOverviewResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        LifecycleOverviewResponse: {
+            summary?: components["schemas"]["Summary"];
+            policies?: components["schemas"]["Policy"][];
+            jobs?: components["schemas"]["CleanupJob"][];
+        };
+        Summary: {
+            /** Format: int32 */
+            policyCount?: number;
+            /** Format: int32 */
+            enabledJobCount?: number;
+            /** Format: int32 */
+            totalJobCount?: number;
+            /** Format: int32 */
+            policiesWithHistoryCount?: number;
+            /** Format: int32 */
+            latestFailureCount?: number;
+            /** Format: date-time */
+            latestExecutionTime?: string;
+        };
+        NariWarehouseRecordQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            applicationNo?: string;
+            /** Format: int64 */
+            objectId?: number;
+            requestId?: string;
+            /** Format: int32 */
+            submittedVersion?: number;
+            /** Format: date-time */
+            succeededTimeStart?: string;
+            /** Format: date-time */
+            succeededTimeEnd?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        NariLocationContainerModelQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            /** Format: int64 */
+            containerModelId?: number;
+            enabled?: boolean;
+            /** Format: int64 */
+            locationId?: number;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        NariLogisticsTaskRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultPageResultNariLocationStorageZoneResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariLocationStorageZoneResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ChangePasswordRequest: {
+            oldPassword: string;
+            newPassword: string;
+        };
+        ApiResultDictImportResult: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["DictImportResult"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        DictImportResult: {
+            /** Format: int32 */
+            createdTypes?: number;
+            /** Format: int32 */
+            updatedTypes?: number;
+            /** Format: int32 */
+            createdItems?: number;
+            /** Format: int32 */
+            updatedItems?: number;
+            /** Format: int32 */
+            skippedRows?: number;
+            errors?: string[];
+        };
+        ApiResultPageResultNariBoxBindingResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariBoxBindingResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
@@ -6643,6 +7551,107 @@ export interface components {
              * @description 更新时必须提交当前版本
              */
             version: number;
+        };
+        ApiResultPageResultSysFile: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysFile"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultSysFile: {
+            records?: components["schemas"]["SysFile"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        ApiResultNariStorageZoneResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariStorageZoneResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultLoginResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["LoginResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultSysRole: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysRole"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        SysRole: {
+            /** Format: int64 */
+            roleId?: number;
+            roleCode?: string;
+            roleName?: string;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            /** Format: int32 */
+            version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+        };
+        ApiResultNariLocationStateResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariLocationStateResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        LoginResponse: {
+            token?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: date-time */
+            refreshExpiresAt?: string;
+            /** Format: int64 */
+            userId?: number;
+            username?: string;
+            realName?: string;
+            roles?: components["schemas"]["SysRole"][];
+            menus?: components["schemas"]["SysMenu"][];
+            permissions?: string[];
+        };
+        NariOperationRecordRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultDashboardOverview: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["DashboardOverview"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
         };
         NariStorageZoneQuery: {
             /** Format: int64 */
@@ -6668,31 +7677,467 @@ export interface components {
             /** Format: date-time */
             endTime?: string;
         };
-        NariFactoryUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
+        ApiResultSysAsyncTask: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysAsyncTask"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultSysDept: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysDept"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultListDictObjectUsageResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["DictObjectUsageResponse"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        JobHandlerOption: {
+            type?: string;
+            label?: string;
+            source?: string;
+        };
+        NariBoxBindingQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            activePanelCode?: string;
+            bindingMode?: string;
+            bindingStatus?: string;
+            /** Format: int64 */
+            boxId?: number;
+            materialBatch?: string;
+            materialCode?: string;
+            orderNo?: string;
+            panelCode?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        ApiResultSysConfig: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysConfig"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultMapStringListDictItemResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: {
+                [key: string]: components["schemas"]["DictItemResponse"][];
+            };
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultNariLocationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariLocationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariFloorResponse: {
+            /** Format: int64 */
+            id?: number;
             enabled?: boolean;
-            /** @description 不传保留原值；禁止清空 */
-            factoryCode?: string;
-            /** @description 不传保留原值；禁止清空 */
-            factoryName?: string;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
+            /** Format: int64 */
+            factoryId?: number;
+            floorCode?: string;
+            floorName?: string;
+            /** Format: int32 */
+            floorNumber?: number;
+            remark?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        NariWarehouseRecordUpdateRequest: {
             /**
              * Format: int32
              * @description 更新时必须提交当前版本
              */
             version: number;
         };
-        ApiResultNariContainerModelResponse: {
+        ApiResultNariReceivingRecordResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["NariContainerModelResponse"];
+            data?: components["schemas"]["NariReceivingRecordResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        NariResourceLineQuery: {
+        NariLocationStateResponse: {
+            /** Format: int64 */
+            id?: number;
+            autoLogisticsEnabled?: boolean;
+            /** Format: int64 */
+            currentContainerId?: number;
+            /** Format: int64 */
+            locationId?: number;
+            presenceState?: string;
+            /** Format: date-time */
+            presenceUpdatedTime?: string;
+            reservationKey?: string;
+            /** Format: date-time */
+            reservedTime?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        NariReceivingRecordUpdateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultPageResultNariProductionLineResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariProductionLineResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultNariProductionLineResponse: {
+            records?: components["schemas"]["NariProductionLineResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        DictItemSortRequest: {
+            dictCode: string;
+            items: components["schemas"]["Item"][];
+        };
+        NariReceivingRecordResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            boxId?: number;
+            /** Format: int64 */
+            logisticsTaskId?: number;
+            /** Format: date-time */
+            receivedTime?: string;
+            receivingNo?: string;
+            remark?: string;
+            requestId?: string;
+            /** Format: int64 */
+            warehouseRecordBoxId?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        ApiResultPageResultUserResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultUserResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariProductionPlanRequest: {
+            mainProcessCode?: string;
+            orderNo: string;
+            /** Format: int32 */
+            plannedQuantity: number;
+            /** Format: date-time */
+            plannedStartTime: string;
+            planNo: string;
+            planStatus: string;
+            /** Format: int64 */
+            productionLineId: number;
+            remark?: string;
+            resourceCode?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        NariResourceLineUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            productionLineId?: number;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /** @description 不传保留原值；禁止清空 */
+            resourceCode?: string;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultNariBoxBindingResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariBoxBindingResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLocationLineRequest: {
+            enabled: boolean;
+            /** Format: int64 */
+            locationId: number;
+            /** Format: int64 */
+            productionLineId: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultPageResultNariVehicleLoadResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariVehicleLoadResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultNariOperationRecordResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariOperationRecordResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariOperationRecordResponse: {
+            /** Format: int64 */
+            id?: number;
+            afterState?: string;
+            beforeState?: string;
+            cancelStatus?: string;
+            /** Format: int64 */
+            containerId?: number;
+            eventKey?: string;
+            eventType?: string;
+            evidenceSource?: string;
+            externalEventKey?: string;
+            /** Format: int64 */
+            locationId?: number;
+            /** Format: date-time */
+            occurredTime?: string;
+            operationKey?: string;
+            reason?: string;
+            /** Format: int64 */
+            receivingRecordId?: number;
+            requestHash?: string;
+            requestId?: string;
+            resultSnapshot?: string;
+            /** Format: int64 */
+            taskId?: number;
+            /** Format: int32 */
+            taskVersion?: number;
+            /** Format: int64 */
+            warehouseRecordId?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        ApiResultListSysDictItem: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysDictItem"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariProductionLineRequest: {
+            /** Format: int64 */
+            areaId: number;
+            enabled: boolean;
+            lineCode: string;
+            lineName: string;
+            lineType: string;
+            mesLineCode?: string;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        NariAreaRequest: {
+            areaCode: string;
+            areaName: string;
+            enabled: boolean;
+            /** Format: int64 */
+            floorId: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultPageResultNariResourceLineResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariResourceLineResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultNariWarehouseRecordResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariWarehouseRecordResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultNariContainerStateResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariContainerStateResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultNariContainerStateResponse: {
+            records?: components["schemas"]["NariContainerStateResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        Item: {
+            /**
+             * Format: int64
+             * @description 资源 ID
+             * @example 1
+             */
+            id: number;
+            /**
+             * Format: int32
+             * @description 读取资源时获得的版本
+             * @example 1
+             */
+            version: number;
+        };
+        NariContainerQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、containerCode、containerName */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            containerCode?: string;
+            /** Format: int64 */
+            containerModelId?: number;
+            containerName?: string;
+            enabled?: boolean;
+            /** Format: int64 */
+            factoryId?: number;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        ApiResultPageResultSysLifecycleCleanupLog: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysLifecycleCleanupLog"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLineProcessStorageZoneQuery: {
             /** Format: int64 */
             page?: number;
             /** Format: int64 */
@@ -6706,9 +8151,11 @@ export interface components {
              */
             sortOrder?: "ASC" | "DESC";
             enabled?: boolean;
+            mainProcessCode?: string;
             /** Format: int64 */
             productionLineId?: number;
-            resourceCode?: string;
+            /** Format: int64 */
+            storageZoneId?: number;
             /** Format: date-time */
             startTime?: string;
             /** Format: date-time */
@@ -6739,229 +8186,84 @@ export interface components {
             /** Format: date-time */
             endTime?: string;
         };
-        NariAreaQuery: {
+        SysMenu: {
             /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、areaCode、areaName */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            areaCode?: string;
-            areaName?: string;
-            enabled?: boolean;
-            /** Format: int64 */
-            floorId?: number;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        ApiResultSessionResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SessionResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultListDictObjectUsageResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["DictObjectUsageResponse"][];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultSysAuditLog: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysAuditLog"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultSysDictType: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysDictType"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultNariContainerModelResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariContainerModelResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        DictObjectUsageResponse: {
-            /** Format: int64 */
-            draftId?: number;
-            objectCode?: string;
-            objectName?: string;
-            tableName?: string;
-            fieldCode?: string;
-            fieldName?: string;
-        };
-        ApiResultPageResultNariProductionLineResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariProductionLineResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultNariLocationResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariLocationResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariProductionPlanQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、plannedStartTime、planNo、sequenceNo */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            /** Format: int64 */
-            deliveryStorageZoneId?: number;
-            mainProcessCode?: string;
-            orderNo?: string;
-            /** Format: date-time */
-            plannedStartTimeStart?: string;
-            /** Format: date-time */
-            plannedStartTimeEnd?: string;
-            planNo?: string;
-            planStatus?: string;
-            /** Format: int64 */
-            productionLineId?: number;
-            resourceCode?: string;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        DeptRequest: {
+            menuId?: number;
             /** Format: int64 */
             parentId?: number;
-            deptCode: string;
-            deptName: string;
-            leader?: string;
-            phone?: string;
-            email?: string;
+            menuName?: string;
+            menuType?: string;
+            path?: string;
+            component?: string;
+            terminalType?: string;
+            externalUrl?: string;
+            permission?: string;
+            icon?: string;
             /** Format: int32 */
             sortNo?: number;
+            visible?: boolean;
             /** Format: int32 */
             status?: number;
             remark?: string;
-            /**
-             * Format: int32
-             * @description 修改时必填，使用查询响应中的当前版本
-             * @example 1
-             */
+            /** Format: int32 */
             version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
         };
-        NariResourceLineRequest: {
-            enabled: boolean;
+        NariFixtureBoxOrderRequest: {
             /** Format: int64 */
-            productionLineId: number;
+            boxId: number;
+            enabled: boolean;
+            orderNo: string;
             remark?: string;
-            resourceCode: string;
             /**
              * Format: int32
              * @description 更新时必填；新增时留空
              */
             version?: number;
         };
-        NariLocationStateQuery: {
+        NariContainerStateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        PageResultNariAreaResponse: {
+            records?: components["schemas"]["NariAreaResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariVehicleSlotQuery: {
             /** Format: int64 */
             page?: number;
             /** Format: int64 */
             size?: number;
             keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、slotCode、slotName */
             sortBy?: string;
             /**
              * @description 排序方向；未填写时默认 ASC
              * @enum {string}
              */
             sortOrder?: "ASC" | "DESC";
-            autoLogisticsEnabled?: boolean;
+            enabled?: boolean;
+            slotCode?: string;
+            slotName?: string;
             /** Format: int64 */
-            currentContainerId?: number;
-            /** Format: int64 */
-            locationId?: number;
-            presenceState?: string;
-            reservationKey?: string;
+            vehicleId?: number;
             /** Format: date-time */
             startTime?: string;
             /** Format: date-time */
             endTime?: string;
-        };
-        ApiResultPageResultNariFloorResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariFloorResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultNariLocationUsageResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariLocationUsageResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultSysMenu: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysMenu"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariStorageZoneRequest: {
-            /** Format: int64 */
-            areaId: number;
-            enabled: boolean;
-            remark?: string;
-            storageCode: string;
-            storageName: string;
-            storageType: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
         };
         NariContainerModelQuery: {
             /** Format: int64 */
@@ -6988,100 +8290,81 @@ export interface components {
             /** Format: date-time */
             endTime?: string;
         };
-        ApiResultPageResultNariAreaResponse: {
+        SysDictItem: {
+            /** Format: int64 */
+            dictItemId?: number;
+            dictCode?: string;
+            itemLabel?: string;
+            itemValue?: string;
+            tagType?: string;
             /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariAreaResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        IdListRequest: {
-            ids?: number[];
-            /**
-             * Format: int32
-             * @description 父资源当前版本
-             * @example 1
-             */
-            version: number;
-        };
-        NariBoxBindingUpdateRequest: {
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        AsyncTaskRequest: {
-            taskType: string;
-            taskName: string;
-            paramsJson?: string;
-            idempotentKey?: string;
-            remark?: string;
-        };
-        NariProductionLineUpdateRequest: {
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            areaId?: number;
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /** @description 不传保留原值；禁止清空 */
-            lineCode?: string;
-            /** @description 不传保留原值；禁止清空 */
-            lineName?: string;
-            /** @description 不传保留原值；禁止清空 */
-            lineType?: string;
-            /** @description 不传保留原值；null清空 */
-            mesLineCode?: string | null;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        RoleRequest: {
-            roleCode: string;
-            roleName: string;
+            sortNo?: number;
             /** Format: int32 */
             status?: number;
+            builtinFlag?: boolean;
             remark?: string;
-            menuIds?: number[];
-            /**
-             * Format: int32
-             * @description 修改时必填，使用查询响应中的当前版本
-             * @example 1
-             */
+            /** Format: int32 */
             version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
         };
-        LifecycleCleanupLogQuery: {
+        NariFloorQuery: {
             /** Format: int64 */
             page?: number;
             /** Format: int64 */
             size?: number;
             keyword?: string;
-            policyCode?: string;
-            targetName?: string;
-            status?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、floorCode、floorName、floorNumber */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            enabled?: boolean;
+            /** Format: int64 */
+            factoryId?: number;
+            floorCode?: string;
+            floorName?: string;
+            /** Format: int32 */
+            floorNumber?: number;
             /** Format: date-time */
             startTime?: string;
             /** Format: date-time */
             endTime?: string;
         };
-        ApiResultPageResultNariVehicleSlotResponse: {
+        CleanupJob: {
+            /** Format: int64 */
+            jobId?: number;
+            jobName?: string;
+            jobType?: string;
+            label?: string;
+            purpose?: string;
+            cronExpression?: string;
+            available?: boolean;
+            enabled?: boolean;
+        };
+        DictObjectUsageResponse: {
+            /** Format: int64 */
+            draftId?: number;
+            objectCode?: string;
+            objectName?: string;
+            tableName?: string;
+            fieldCode?: string;
+            fieldName?: string;
+        };
+        ApiResultListDictItemResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["PageResultNariVehicleSlotResponse"];
+            data?: components["schemas"]["DictItemResponse"][];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        NariLocationContainerModelQuery: {
+        NariLocationStorageZoneQuery: {
             /** Format: int64 */
             page?: number;
             /** Format: int64 */
@@ -7094,62 +8377,28 @@ export interface components {
              * @enum {string}
              */
             sortOrder?: "ASC" | "DESC";
-            /** Format: int64 */
-            containerModelId?: number;
             enabled?: boolean;
             /** Format: int64 */
             locationId?: number;
+            relationDirection?: string;
+            /** Format: int64 */
+            storageZoneId?: number;
             /** Format: date-time */
             startTime?: string;
             /** Format: date-time */
             endTime?: string;
         };
-        /** @description 标准批量操作 ID 请求，单次最多 1000 条 */
-        BatchIdsRequest: {
-            /**
-             * @description 待操作的资源 ID 列表
-             * @example [
-             *       1,
-             *       2,
-             *       3
-             *     ]
-             */
-            ids: number[];
-        };
-        ApiResultPageResultSysAsyncTaskLog: {
+        ApiResultPageResultNariProductionPlanResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["PageResultSysAsyncTaskLog"];
+            data?: components["schemas"]["PageResultNariProductionPlanResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        DictItemBatchStatusRequest: {
-            items: components["schemas"]["Item"][];
-            /** Format: int32 */
-            status: number;
-        };
-        ApiResultPageResultNariLocationStorageZoneResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariLocationStorageZoneResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultSysDictType: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysDictType"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultNariProductionLineResponse: {
-            records?: components["schemas"]["NariProductionLineResponse"][];
+        PageResultNariProductionPlanResponse: {
+            records?: components["schemas"]["NariProductionPlanResponse"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -7159,8 +8408,30 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        PageResultNariLocationStorageZoneResponse: {
-            records?: components["schemas"]["NariLocationStorageZoneResponse"][];
+        NariVehicleLoadRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        NariContainerModelRequest: {
+            /** Format: int32 */
+            boxCapacity?: number;
+            containerCategory: string;
+            enabled: boolean;
+            modelCode: string;
+            modelName: string;
+            remark?: string;
+            usageType: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        PageResultNariBoxBindingResponse: {
+            records?: components["schemas"]["NariBoxBindingResponse"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -7170,134 +8441,166 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        NariProductionLineRequest: {
-            /** Format: int64 */
-            areaId: number;
-            enabled: boolean;
-            lineCode: string;
-            lineName: string;
-            lineType: string;
-            mesLineCode?: string;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        NariFloorRequest: {
-            enabled: boolean;
-            /** Format: int64 */
-            factoryId: number;
-            floorCode: string;
-            floorName: string;
+        ApiResultPageResultSysOperationLog: {
             /** Format: int32 */
-            floorNumber: number;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysOperationLog"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
         };
-        NariResourceLineUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            productionLineId?: number;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /** @description 不传保留原值；禁止清空 */
-            resourceCode?: string;
+        ApiResultPageResultNariLocationUsageResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariLocationUsageResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultNariLocationUsageResponse: {
+            records?: components["schemas"]["NariLocationUsageResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariContainerStateUpdateRequest: {
             /**
              * Format: int32
              * @description 更新时必须提交当前版本
              */
             version: number;
         };
-        NariLocationStorageZoneResponse: {
+        ApiResultPageResultNariFloorResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariFloorResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariResourceLineQuery: {
             /** Format: int64 */
-            id?: number;
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
             enabled?: boolean;
+            /** Format: int64 */
+            productionLineId?: number;
+            resourceCode?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        ApiResultPageResultNariLocationContainerModelResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariLocationContainerModelResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultNariLocationContainerModelResponse: {
+            records?: components["schemas"]["NariLocationContainerModelResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        ApiResultSessionResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SessionResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        SessionResponse: {
+            /** Format: int64 */
+            userId?: number;
+            username?: string;
+            realName?: string;
+            roles?: components["schemas"]["SysRole"][];
+            menus?: components["schemas"]["SysMenu"][];
+            permissions?: string[];
+        };
+        DictItemResponse: {
+            dictCode?: string;
+            label?: string;
+            value?: string;
+            tagType?: string;
+            /** Format: int32 */
+            sortNo?: number;
+        };
+        NariLocationStateQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            autoLogisticsEnabled?: boolean;
+            /** Format: int64 */
+            currentContainerId?: number;
             /** Format: int64 */
             locationId?: number;
-            relationDirection?: string;
-            remark?: string;
-            /** Format: int64 */
-            storageZoneId?: number;
+            presenceState?: string;
+            reservationKey?: string;
             /** Format: date-time */
-            createdTime?: string;
+            startTime?: string;
             /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
+            endTime?: string;
         };
-        ApiResultSysCodeRule: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysCodeRule"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariProductionLineResponse: {
+        NariAreaQuery: {
             /** Format: int64 */
-            id?: number;
+            page?: number;
             /** Format: int64 */
-            areaId?: number;
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、areaCode、areaName */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            areaCode?: string;
+            areaName?: string;
             enabled?: boolean;
-            lineCode?: string;
-            lineName?: string;
-            lineType?: string;
-            mesLineCode?: string;
-            remark?: string;
+            /** Format: int64 */
+            floorId?: number;
             /** Format: date-time */
-            createdTime?: string;
+            startTime?: string;
             /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        ApiResultDashboardOverview: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["DashboardOverview"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultListLong: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: number[];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultNariFactoryResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariFactoryResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
+            endTime?: string;
         };
         NariLocationUpdateRequest: {
             /** @description 不传保留原值；禁止清空 */
@@ -7328,47 +8631,22 @@ export interface components {
              */
             version: number;
         };
-        NariVehicleSlotRequest: {
-            enabled: boolean;
-            remark?: string;
-            slotCode: string;
-            slotName?: string;
+        PageResultNariWarehouseRecordResponse: {
+            records?: components["schemas"]["NariWarehouseRecordResponse"][];
             /** Format: int64 */
-            vehicleId: number;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
         };
-        ApiResultPageResultSysApiLog: {
+        ApiResultSysFile: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["PageResultSysApiLog"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariLineProcessStorageZoneRequest: {
-            enabled: boolean;
-            mainProcessCode: string;
-            /** Format: int64 */
-            productionLineId: number;
-            remark?: string;
-            /** Format: int64 */
-            storageZoneId: number;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        ApiResultSysAsyncTask: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysAsyncTask"];
+            data?: components["schemas"]["SysFile"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
@@ -7394,66 +8672,26 @@ export interface components {
             /** Format: date-time */
             endTime?: string;
         };
-        NariLocationLineRequest: {
-            enabled: boolean;
-            /** Format: int64 */
-            locationId: number;
-            /** Format: int64 */
-            productionLineId: number;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        ApiResultListSysMenu: {
+        ApiResultNariLocationLineResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["SysMenu"][];
+            data?: components["schemas"]["NariLocationLineResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        JobRequest: {
-            jobName: string;
-            jobGroup?: string;
-            jobScope?: string;
-            cronExpression: string;
-            jobType?: string;
-            jobData?: string;
-            concurrencyPolicy?: string;
-            /** Format: int32 */
-            timeoutSeconds?: number;
-            /** Format: int32 */
-            maxRetries?: number;
-            /** Format: int32 */
-            retryIntervalSeconds?: number;
-            idempotencyKeyExpression?: string;
-            failureStrategy?: string;
-            paramsSchemaJson?: string;
-            /** Format: int32 */
-            status?: number;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 修改时必填，使用查询响应中的当前版本
-             * @example 1
-             */
-            version?: number;
-        };
-        ApiResultSysFile: {
+        ApiResultNariContainerStateResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["SysFile"];
+            data?: components["schemas"]["NariContainerStateResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        PageResultNariFloorResponse: {
-            records?: components["schemas"]["NariFloorResponse"][];
+        PageResultNariVehicleLoadResponse: {
+            records?: components["schemas"]["NariVehicleLoadResponse"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -7463,17 +8701,25 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        NariFloorResponse: {
+        PageResultNariResourceLineResponse: {
+            records?: components["schemas"]["NariResourceLineResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariResourceLineResponse: {
             /** Format: int64 */
             id?: number;
             enabled?: boolean;
             /** Format: int64 */
-            factoryId?: number;
-            floorCode?: string;
-            floorName?: string;
-            /** Format: int32 */
-            floorNumber?: number;
+            productionLineId?: number;
             remark?: string;
+            resourceCode?: string;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -7486,6 +8732,51 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
+        PageResultNariLocationStorageZoneResponse: {
+            records?: components["schemas"]["NariLocationStorageZoneResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        PageResultSysDictType: {
+            records?: components["schemas"]["SysDictType"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariLineProcessStorageZoneUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /** @description 不传保留原值；禁止清空 */
+            mainProcessCode?: string;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            productionLineId?: number;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            storageZoneId?: number;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
         ApiResultNariVehicleLoadResponse: {
             /** Format: int32 */
             code?: number;
@@ -7494,6 +8785,254 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
+        };
+        ApiResultPageResultSysApiLog: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysApiLog"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultSysApiLog: {
+            records?: components["schemas"]["SysApiLog"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        ApiResultPageResultNariContainerResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariContainerResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLocationStateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        SysConfig: {
+            /** Format: int64 */
+            configId?: number;
+            configKey?: string;
+            configValue?: string;
+            configType?: string;
+            configGroup?: string;
+            configScope?: string;
+            editable?: boolean;
+            sensitiveFlag?: boolean;
+            remark?: string;
+            /** Format: int32 */
+            version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+        };
+        NariLocationUsageRequest: {
+            enabled: boolean;
+            /** Format: int64 */
+            locationId: number;
+            operationRole: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultString: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: string;
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        DictDisableImpactResponse: {
+            dictCode?: string;
+            dictName?: string;
+            /** Format: int64 */
+            activeItemCount?: number;
+            /** Format: int64 */
+            totalItemCount?: number;
+            /** Format: int64 */
+            knownUsageCount?: number;
+        };
+        PageResultNariLocationResponse: {
+            records?: components["schemas"]["NariLocationResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariFactoryUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /** @description 不传保留原值；禁止清空 */
+            factoryCode?: string;
+            /** @description 不传保留原值；禁止清空 */
+            factoryName?: string;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        NariOperationRecordUpdateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        NariFloorUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            factoryId?: number;
+            /** @description 不传保留原值；禁止清空 */
+            floorCode?: string;
+            /** @description 不传保留原值；禁止清空 */
+            floorName?: string;
+            /**
+             * Format: int32
+             * @description 不传保留原值；禁止清空
+             */
+            floorNumber?: number;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultPageResultSysDictChangeLog: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysDictChangeLog"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        SysFile: {
+            /** Format: int64 */
+            fileId?: number;
+            originalName?: string;
+            objectName?: string;
+            bucketName?: string;
+            contentType?: string;
+            /** Format: int64 */
+            fileSize?: number;
+            fileGroup?: string;
+            uploader?: string;
+            remark?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            archivedFlag?: boolean;
+            /** Format: date-time */
+            archivedTime?: string;
+            expiredFlag?: boolean;
+            /** Format: date-time */
+            expiredTime?: string;
+        };
+        ApiResultNariAreaResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariAreaResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLocationContainerModelRequest: {
+            /** Format: int64 */
+            containerModelId: number;
+            enabled: boolean;
+            /** Format: int64 */
+            locationId: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        NariVehicleSlotRequest: {
+            enabled: boolean;
+            remark?: string;
+            slotCode: string;
+            slotName?: string;
+            /** Format: int64 */
+            vehicleId: number;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultSysMenu: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysMenu"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLocationUsageUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            locationId?: number;
+            /** @description 不传保留原值；禁止清空 */
+            operationRole?: string;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        PageResultSysRole: {
+            records?: components["schemas"]["SysRole"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
         };
         NariVehicleLoadResponse: {
             /** Format: int64 */
@@ -7526,140 +9065,38 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        ApiResultNariContainerStateResponse: {
+        /** @description 标准批量操作 ID 请求，单次最多 1000 条 */
+        BatchIdsRequest: {
+            /**
+             * @description 待操作的资源 ID 列表
+             * @example [
+             *       1,
+             *       2,
+             *       3
+             *     ]
+             */
+            ids: number[];
+        };
+        ApiResultListSysMenu: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["NariContainerStateResponse"];
+            data?: components["schemas"]["SysMenu"][];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        ApiResultUserResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["UserResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        DashboardOverview: {
-            /** Format: date-time */
-            snapshotTime?: string;
-            snapshotStale?: boolean;
-            metrics?: components["schemas"]["DashboardMetric"][];
-            alerts?: string[];
-            migrationVersions?: components["schemas"]["EnvironmentMigrationVersions"];
-        };
-        DashboardMetric: {
-            key?: string;
-            name?: string;
-            group?: string;
-            value?: number;
-            unit?: string;
-            text?: string;
-            tone?: string;
-        };
-        PageResultNariVehicleSlotResponse: {
-            records?: components["schemas"]["NariVehicleSlotResponse"][];
+        PageQuery: {
             /** Format: int64 */
-            total?: number;
+            page?: number;
             /** Format: int64 */
             size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
         };
-        ConfigRequest: {
-            configKey: string;
-            configValue: string;
-            configType?: string;
-            configGroup?: string;
-            configScope?: string;
-            editable?: boolean;
-            sensitiveFlag?: boolean;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 修改时必填，使用查询响应中的当前版本
-             * @example 1
-             */
-            version?: number;
-        };
-        ApiResultListSysRole: {
+        ApiResultSysDictItem: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["SysRole"][];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultSysConfig: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysConfig"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        SysConfig: {
-            /** Format: int64 */
-            configId?: number;
-            configKey?: string;
-            configValue?: string;
-            configType?: string;
-            configGroup?: string;
-            configScope?: string;
-            editable?: boolean;
-            sensitiveFlag?: boolean;
-            remark?: string;
-            /** Format: int32 */
-            version?: number;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-        };
-        SysAsyncTask: {
-            /** Format: int64 */
-            taskId?: number;
-            taskType?: string;
-            taskName?: string;
-            status?: string;
-            /** Format: int32 */
-            progress?: number;
-            paramsJson?: string;
-            /** Format: int64 */
-            resultFileId?: number;
-            resultFileName?: string;
-            failureReason?: string;
-            operator?: string;
-            /** Format: date-time */
-            startedTime?: string;
-            /** Format: date-time */
-            finishedTime?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            archivedFlag?: boolean;
-            /** Format: date-time */
-            archivedTime?: string;
-        };
-        ApiResultDictDisableImpactResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["DictDisableImpactResponse"];
+            data?: components["schemas"]["SysDictItem"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
@@ -7673,317 +9110,43 @@ export interface components {
             timestamp?: string;
             traceId?: string;
         };
+        DeptRequest: {
+            /** Format: int64 */
+            parentId?: number;
+            deptCode: string;
+            deptName: string;
+            leader?: string;
+            phone?: string;
+            email?: string;
+            /** Format: int32 */
+            sortNo?: number;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
+        };
+        DashboardOverview: {
+            /** Format: date-time */
+            snapshotTime?: string;
+            snapshotStale?: boolean;
+            metrics?: components["schemas"]["DashboardMetric"][];
+            alerts?: string[];
+            migrationVersions?: components["schemas"]["EnvironmentMigrationVersions"];
+        };
         EnvironmentMigrationVersions: {
             foundation?: components["schemas"]["EnvironmentMigrationTrack"];
             business?: components["schemas"]["EnvironmentMigrationTrack"];
         };
-        EnvironmentMigrationTrack: {
-            name?: string;
-            historyTable?: string;
-            latestVersion?: string;
-            latestDescription?: string;
-            installedOn?: string;
-            /** Format: int32 */
-            appliedCount?: number;
-            available?: boolean;
-            message?: string;
-        };
-        ApiResultCodePreviewResponse: {
+        ApiResultNariLocationContainerModelResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["CodePreviewResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        CodePreviewResponse: {
-            ruleCode?: string;
-            sequenceKey?: string;
-            /** Format: int64 */
-            nextValue?: number;
-            code?: string;
-        };
-        ApiResultPageResultSysJobLog: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysJobLog"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultSysJobLog: {
-            records?: components["schemas"]["SysJobLog"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        ApiResultTokenResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["TokenResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultSysDictItem: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysDictItem"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultListDictItemResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["DictItemResponse"][];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariLocationLineUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            locationId?: number;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            productionLineId?: number;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        ApiResultNariAreaResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariAreaResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariLocationStorageZoneUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            locationId?: number;
-            /** @description 不传保留原值；禁止清空 */
-            relationDirection?: string;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            storageZoneId?: number;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        ResetPasswordRequest: {
-            newPassword: string;
-            /**
-             * Format: int32
-             * @description 用户当前版本
-             * @example 1
-             */
-            version: number;
-        };
-        ApiResultPageResultNariLocationContainerModelResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariLocationContainerModelResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultVoid: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: unknown;
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultNariVehicleLoadResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariVehicleLoadResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultNariVehicleLoadResponse: {
-            records?: components["schemas"]["NariVehicleLoadResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        NariBoxBindingRequest: {
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        NariVehicleLoadRequest: {
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        NariLocationRequest: {
-            agvVendor: string;
-            /** Format: int64 */
-            areaId: number;
-            enabled: boolean;
-            locationCode: string;
-            locationName: string;
-            locationType: string;
-            remark?: string;
-            /** Format: int64 */
-            storageZoneId?: number;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        NariLocationStorageZoneRequest: {
-            enabled: boolean;
-            /** Format: int64 */
-            locationId: number;
-            relationDirection: string;
-            remark?: string;
-            /** Format: int64 */
-            storageZoneId: number;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        ApiResultPageResultNariStorageZoneResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariStorageZoneResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultNariContainerStateResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariContainerStateResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariAreaUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
-            areaCode?: string;
-            /** @description 不传保留原值；禁止清空 */
-            areaName?: string;
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            floorId?: number;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        ApiResultPageResultNariProductionPlanResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariProductionPlanResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultNariProductionPlanResponse: {
-            records?: components["schemas"]["NariProductionPlanResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        NariFloorUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            factoryId?: number;
-            /** @description 不传保留原值；禁止清空 */
-            floorCode?: string;
-            /** @description 不传保留原值；禁止清空 */
-            floorName?: string;
-            /**
-             * Format: int32
-             * @description 不传保留原值；禁止清空
-             */
-            floorNumber?: number;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        ApiResultLoginResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["LoginResponse"];
+            data?: components["schemas"]["NariLocationContainerModelResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
@@ -8007,6 +9170,32 @@ export interface components {
              * @description 更新时必须提交当前版本
              */
             version: number;
+        };
+        NariLocationRequest: {
+            agvVendor: string;
+            /** Format: int64 */
+            areaId: number;
+            enabled: boolean;
+            locationCode: string;
+            locationName: string;
+            locationType: string;
+            remark?: string;
+            /** Format: int64 */
+            storageZoneId?: number;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultUserResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["UserResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
         };
         UserResponse: {
             /** Format: int64 */
@@ -8049,57 +9238,31 @@ export interface components {
             /** Format: int32 */
             status?: number;
         };
-        ApiResultSysRole: {
+        Policy: {
+            policyCode?: string;
+            label?: string;
+            targetDescription?: string;
+            effectDescription?: string;
             /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysRole"];
+            retentionDays?: number;
+            jobType?: string;
+            latestStatus?: string;
+            latestTargetName?: string;
+            /** Format: int64 */
+            latestAffectedRows?: number;
             /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
+            latestStartedTime?: string;
         };
-        ApiResultPageResultSysCodeRule: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysCodeRule"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultSysCodeRule: {
-            records?: components["schemas"]["SysCodeRule"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        SortablePageQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            /** @description 单字段排序编码；仅接受当前接口说明中的白名单字段 */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-        };
-        NariAreaResponse: {
+        NariStorageZoneResponse: {
             /** Format: int64 */
             id?: number;
-            areaCode?: string;
-            areaName?: string;
-            enabled?: boolean;
             /** Format: int64 */
-            floorId?: number;
+            areaId?: number;
+            enabled?: boolean;
             remark?: string;
+            storageCode?: string;
+            storageName?: string;
+            storageType?: string;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -8111,6 +9274,69 @@ export interface components {
             idempotentKey?: string;
             /** Format: int32 */
             version?: number;
+        };
+        ApiResultNariLogisticsTaskResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariLogisticsTaskResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLocationStateUpdateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        NariLocationUsageQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            enabled?: boolean;
+            /** Format: int64 */
+            locationId?: number;
+            operationRole?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        IdListRequest: {
+            ids?: number[];
+            /**
+             * Format: int32
+             * @description 父资源当前版本
+             * @example 1
+             */
+            version: number;
+        };
+        NariWarehouseRecordBoxRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultPageResultSysConfig: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysConfig"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
         };
         NariProductionPlanResponse: {
             /** Format: int64 */
@@ -8143,29 +9369,57 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        ApiResultNariLocationStateResponse: {
+        NariLocationStorageZoneUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            locationId?: number;
+            /** @description 不传保留原值；禁止清空 */
+            relationDirection?: string;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            storageZoneId?: number;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultPageResultNariFixtureBoxOrderResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["NariLocationStateResponse"];
+            data?: components["schemas"]["PageResultNariFixtureBoxOrderResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        NariLocationStateResponse: {
+        PageResultNariFixtureBoxOrderResponse: {
+            records?: components["schemas"]["NariFixtureBoxOrderResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariFixtureBoxOrderResponse: {
             /** Format: int64 */
             id?: number;
-            autoLogisticsEnabled?: boolean;
             /** Format: int64 */
-            currentContainerId?: number;
-            /** Format: int64 */
-            locationId?: number;
-            presenceState?: string;
-            /** Format: date-time */
-            presenceUpdatedTime?: string;
-            reservationKey?: string;
-            /** Format: date-time */
-            reservedTime?: string;
+            boxId?: number;
+            enabled?: boolean;
+            orderNo?: string;
+            remark?: string;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -8178,25 +9432,18 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        MenuRequest: {
-            /** Format: int64 */
-            parentId?: number;
-            menuName: string;
-            menuType: string;
-            path?: string;
-            component?: string;
-            /** @enum {string} */
-            terminalType?: "PC" | "MOBILE" | "OT";
-            externalUrl?: string;
-            permission?: string;
-            icon?: string;
-            /** Format: int32 */
-            sortNo?: number;
-            visible?: boolean;
+        UserRequest: {
+            username: string;
+            password?: string;
+            realName: string;
+            email?: string;
+            phone?: string;
             /** Format: int32 */
             status?: number;
             remark?: string;
-            syncParentRoleAssignments?: boolean;
+            /** Format: int64 */
+            deptId?: number;
+            roleIds?: number[];
             /**
              * Format: int32
              * @description 修改时必填，使用查询响应中的当前版本
@@ -8204,17 +9451,339 @@ export interface components {
              */
             version?: number;
         };
-        ApiResultPageResultNariResourceLineResponse: {
+        NariFloorRequest: {
+            enabled: boolean;
+            /** Format: int64 */
+            factoryId: number;
+            floorCode: string;
+            floorName: string;
+            /** Format: int32 */
+            floorNumber: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultNariLocationStorageZoneResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["PageResultNariResourceLineResponse"];
+            data?: components["schemas"]["NariLocationStorageZoneResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        PageResultNariResourceLineResponse: {
-            records?: components["schemas"]["NariResourceLineResponse"][];
+        NariFactoryRequest: {
+            enabled: boolean;
+            factoryCode: string;
+            factoryName: string;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        NariAreaResponse: {
+            /** Format: int64 */
+            id?: number;
+            areaCode?: string;
+            areaName?: string;
+            enabled?: boolean;
+            /** Format: int64 */
+            floorId?: number;
+            remark?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        ConfigRequest: {
+            configKey: string;
+            configValue: string;
+            configType?: string;
+            configGroup?: string;
+            configScope?: string;
+            editable?: boolean;
+            sensitiveFlag?: boolean;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
+        };
+        ResetPasswordRequest: {
+            newPassword: string;
+            /**
+             * Format: int32
+             * @description 用户当前版本
+             * @example 1
+             */
+            version: number;
+        };
+        NariOperationRecordQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            cancelStatus?: string;
+            /** Format: int64 */
+            containerId?: number;
+            eventKey?: string;
+            eventType?: string;
+            evidenceSource?: string;
+            externalEventKey?: string;
+            /** Format: int64 */
+            locationId?: number;
+            /** Format: date-time */
+            occurredTimeStart?: string;
+            /** Format: date-time */
+            occurredTimeEnd?: string;
+            operationKey?: string;
+            /** Format: int64 */
+            receivingRecordId?: number;
+            requestHash?: string;
+            requestId?: string;
+            /** Format: int64 */
+            taskId?: number;
+            /** Format: int32 */
+            taskVersion?: number;
+            /** Format: int64 */
+            warehouseRecordId?: number;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        NariLocationResponse: {
+            /** Format: int64 */
+            id?: number;
+            agvVendor?: string;
+            /** Format: int64 */
+            areaId?: number;
+            enabled?: boolean;
+            locationCode?: string;
+            locationName?: string;
+            locationType?: string;
+            remark?: string;
+            /** Format: int64 */
+            storageZoneId?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        SysDept: {
+            /** Format: int64 */
+            deptId?: number;
+            /** Format: int64 */
+            parentId?: number;
+            ancestors?: string;
+            deptCode?: string;
+            deptName?: string;
+            leader?: string;
+            phone?: string;
+            email?: string;
+            /** Format: int32 */
+            sortNo?: number;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            /** Format: int32 */
+            version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            children?: components["schemas"]["SysDept"][];
+        };
+        ApiResultNariContainerModelResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariContainerModelResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariContainerModelResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            boxCapacity?: number;
+            containerCategory?: string;
+            enabled?: boolean;
+            modelCode?: string;
+            modelName?: string;
+            remark?: string;
+            usageType?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        NariReceivingRecordQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            /** Format: int64 */
+            boxId?: number;
+            /** Format: int64 */
+            logisticsTaskId?: number;
+            /** Format: date-time */
+            receivedTimeStart?: string;
+            /** Format: date-time */
+            receivedTimeEnd?: string;
+            receivingNo?: string;
+            remark?: string;
+            requestId?: string;
+            /** Format: int64 */
+            warehouseRecordBoxId?: number;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        NariLogisticsTaskResponse: {
+            /** Format: int64 */
+            id?: number;
+            activeCancelRequestId?: string;
+            agvCode?: string;
+            agvName?: string;
+            businessCode?: string;
+            callNo?: string;
+            /** Format: date-time */
+            cancelSentTime?: string;
+            /** Format: date-time */
+            completedTime?: string;
+            /** Format: int64 */
+            containerId?: number;
+            createRequestId?: string;
+            destinationLocationCode?: string;
+            /** Format: int64 */
+            destinationLocationId?: number;
+            destinationMode?: string;
+            /** Format: int64 */
+            destinationVehicleId?: number;
+            /** Format: int64 */
+            destinationVehicleSlotId?: number;
+            dispatchMode?: string;
+            dispatchRequestSnapshot?: string;
+            /** Format: int64 */
+            emptyBoxId?: number;
+            /** Format: int64 */
+            emptyDestinationLocationId?: number;
+            /** Format: int64 */
+            emptyOriginLocationId?: number;
+            intentKey?: string;
+            /** Format: date-time */
+            lastSentTime?: string;
+            /** Format: date-time */
+            nextCheckTime?: string;
+            orderNo?: string;
+            originLocationCode?: string;
+            /** Format: int64 */
+            originLocationId?: number;
+            /** Format: int64 */
+            originVehicleId?: number;
+            /** Format: int64 */
+            originVehicleSlotId?: number;
+            /** Format: int64 */
+            productionPlanId?: number;
+            /** Format: int64 */
+            queueNo?: number;
+            reason?: string;
+            schedulerTaskNo?: string;
+            /** Format: int32 */
+            sendAttemptCount?: number;
+            /** Format: date-time */
+            settledTime?: string;
+            /** Format: date-time */
+            statusUpdatedTime?: string;
+            taskNo?: string;
+            taskStatus?: string;
+            triggerMode?: string;
+            vendor?: string;
+            warehouseBoxSnapshot?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        NariProductionLineResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            areaId?: number;
+            enabled?: boolean;
+            lineCode?: string;
+            lineName?: string;
+            lineType?: string;
+            mesLineCode?: string;
+            remark?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        PageResultSysCodeRule: {
+            records?: components["schemas"]["SysCodeRule"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -8224,23 +9793,509 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        ApiResultNariLocationContainerModelResponse: {
+        ApiResultPageResultNariOperationRecordResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["NariLocationContainerModelResponse"];
+            data?: components["schemas"]["PageResultNariOperationRecordResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        ApiResultNariStorageZoneResponse: {
+        NariVehicleLoadQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            /** Format: int64 */
+            activeBoxId?: number;
+            /** Format: int64 */
+            activeVehicleSlotId?: number;
+            bindingStatus?: string;
+            /** Format: int64 */
+            boxId?: number;
+            relationMode?: string;
+            /** Format: int64 */
+            vehicleId?: number;
+            /** Format: int64 */
+            vehicleSlotId?: number;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        PageResultNariReceivingRecordResponse: {
+            records?: components["schemas"]["NariReceivingRecordResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        ApiResultPageResultNariContainerModelResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["NariStorageZoneResponse"];
+            data?: components["schemas"]["PageResultNariContainerModelResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
+        };
+        NariLocationUsageResponse: {
+            /** Format: int64 */
+            id?: number;
+            enabled?: boolean;
+            /** Format: int64 */
+            locationId?: number;
+            operationRole?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        EnvironmentMigrationTrack: {
+            name?: string;
+            historyTable?: string;
+            latestVersion?: string;
+            latestDescription?: string;
+            installedOn?: string;
+            /** Format: int32 */
+            appliedCount?: number;
+            available?: boolean;
+            message?: string;
+        };
+        NariLocationContainerModelUpdateRequest: {
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            containerModelId?: number;
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            locationId?: number;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultPageResultSysLoginLog: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysLoginLog"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLogisticsTaskQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、queueNo */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            activeCancelRequestId?: string;
+            agvCode?: string;
+            businessCode?: string;
+            callNo?: string;
+            /** Format: date-time */
+            cancelSentTimeStart?: string;
+            /** Format: date-time */
+            cancelSentTimeEnd?: string;
+            /** Format: date-time */
+            completedTimeStart?: string;
+            /** Format: date-time */
+            completedTimeEnd?: string;
+            /** Format: int64 */
+            containerId?: number;
+            createRequestId?: string;
+            destinationLocationCode?: string;
+            /** Format: int64 */
+            destinationLocationId?: number;
+            destinationMode?: string;
+            /** Format: int64 */
+            destinationVehicleId?: number;
+            /** Format: int64 */
+            destinationVehicleSlotId?: number;
+            dispatchMode?: string;
+            /** Format: int64 */
+            emptyBoxId?: number;
+            /** Format: int64 */
+            emptyDestinationLocationId?: number;
+            /** Format: int64 */
+            emptyOriginLocationId?: number;
+            intentKey?: string;
+            /** Format: date-time */
+            lastSentTimeStart?: string;
+            /** Format: date-time */
+            lastSentTimeEnd?: string;
+            /** Format: date-time */
+            nextCheckTimeStart?: string;
+            /** Format: date-time */
+            nextCheckTimeEnd?: string;
+            orderNo?: string;
+            originLocationCode?: string;
+            /** Format: int64 */
+            originLocationId?: number;
+            /** Format: int64 */
+            originVehicleId?: number;
+            /** Format: int64 */
+            originVehicleSlotId?: number;
+            /** Format: int64 */
+            productionPlanId?: number;
+            /** Format: int64 */
+            queueNo?: number;
+            schedulerTaskNo?: string;
+            /** Format: int32 */
+            sendAttemptCount?: number;
+            /** Format: date-time */
+            settledTimeStart?: string;
+            /** Format: date-time */
+            settledTimeEnd?: string;
+            /** Format: date-time */
+            statusUpdatedTimeStart?: string;
+            /** Format: date-time */
+            statusUpdatedTimeEnd?: string;
+            taskNo?: string;
+            taskStatus?: string;
+            triggerMode?: string;
+            vendor?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        ApiResultNariWarehouseRecordBoxResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariWarehouseRecordBoxResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLineProcessStorageZoneRequest: {
+            enabled: boolean;
+            mainProcessCode: string;
+            /** Format: int64 */
+            productionLineId: number;
+            remark?: string;
+            /** Format: int64 */
+            storageZoneId: number;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        PageResultSysAsyncTaskLog: {
+            records?: components["schemas"]["SysAsyncTaskLog"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        RoleRequest: {
+            roleCode: string;
+            roleName: string;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            menuIds?: number[];
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
+        };
+        NariLocationQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、locationCode、locationName */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            agvVendor?: string;
+            /** Format: int64 */
+            areaId?: number;
+            enabled?: boolean;
+            locationCode?: string;
+            locationName?: string;
+            locationType?: string;
+            /** Format: int64 */
+            storageZoneId?: number;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        ApiResultNariFixtureBoxOrderResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariFixtureBoxOrderResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariBoxBindingRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        NariProductionPlanQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、plannedStartTime、planNo、sequenceNo */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            /** Format: int64 */
+            deliveryStorageZoneId?: number;
+            mainProcessCode?: string;
+            orderNo?: string;
+            /** Format: date-time */
+            plannedStartTimeStart?: string;
+            /** Format: date-time */
+            plannedStartTimeEnd?: string;
+            planNo?: string;
+            planStatus?: string;
+            /** Format: int64 */
+            productionLineId?: number;
+            resourceCode?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        NariProductionLineUpdateRequest: {
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            areaId?: number;
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /** @description 不传保留原值；禁止清空 */
+            lineCode?: string;
+            /** @description 不传保留原值；禁止清空 */
+            lineName?: string;
+            /** @description 不传保留原值；禁止清空 */
+            lineType?: string;
+            /** @description 不传保留原值；null清空 */
+            mesLineCode?: string | null;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        NariBoxBindingUpdateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultTokenResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["TokenResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariReceivingRecordRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        ApiResultPageResultSysAsyncTask: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysAsyncTask"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        SysApiLog: {
+            /** Format: int64 */
+            logId?: number;
+            username?: string;
+            requestMethod?: string;
+            requestPath?: string;
+            queryString?: string;
+            requestContentType?: string;
+            requestBody?: string;
+            /** Format: int32 */
+            statusCode?: number;
+            /** Format: int64 */
+            durationMs?: number;
+            ipAddress?: string;
+            userAgent?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            archivedFlag?: boolean;
+            /** Format: date-time */
+            archivedTime?: string;
+        };
+        ApiResultNariResourceLineResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariResourceLineResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultNariFloorResponse: {
+            records?: components["schemas"]["NariFloorResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariFixtureBoxOrderUpdateRequest: {
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            boxId?: number;
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /** @description 不传保留原值；禁止清空 */
+            orderNo?: string;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultPageResultSysJobLog: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultSysJobLog"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        JobRequest: {
+            jobName: string;
+            jobGroup?: string;
+            jobScope?: string;
+            cronExpression: string;
+            jobType?: string;
+            jobData?: string;
+            concurrencyPolicy?: string;
+            /** Format: int32 */
+            timeoutSeconds?: number;
+            /** Format: int32 */
+            maxRetries?: number;
+            /** Format: int32 */
+            retryIntervalSeconds?: number;
+            idempotencyKeyExpression?: string;
+            failureStrategy?: string;
+            paramsSchemaJson?: string;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
+        };
+        PageResultSysOperationLog: {
+            records?: components["schemas"]["SysOperationLog"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        PageResultUserResponse: {
+            records?: components["schemas"]["UserResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
         };
         NariContainerStateResponse: {
             /** Format: int64 */
@@ -8274,97 +10329,6 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        PageResultSysApiLog: {
-            records?: components["schemas"]["SysApiLog"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        SysApiLog: {
-            /** Format: int64 */
-            logId?: number;
-            username?: string;
-            requestMethod?: string;
-            requestPath?: string;
-            queryString?: string;
-            requestContentType?: string;
-            requestBody?: string;
-            /** Format: int32 */
-            statusCode?: number;
-            /** Format: int64 */
-            durationMs?: number;
-            ipAddress?: string;
-            userAgent?: string;
-            errorMessage?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            archivedFlag?: boolean;
-            /** Format: date-time */
-            archivedTime?: string;
-        };
-        NariLocationContainerModelRequest: {
-            /** Format: int64 */
-            containerModelId: number;
-            enabled: boolean;
-            /** Format: int64 */
-            locationId: number;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        NariContainerQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、containerCode、containerName */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            containerCode?: string;
-            /** Format: int64 */
-            containerModelId?: number;
-            containerName?: string;
-            enabled?: boolean;
-            /** Format: int64 */
-            factoryId?: number;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        ChangePasswordRequest: {
-            oldPassword: string;
-            newPassword: string;
-        };
-        PageResultNariFactoryResponse: {
-            records?: components["schemas"]["NariFactoryResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
         NariFactoryResponse: {
             /** Format: int64 */
             id?: number;
@@ -8384,221 +10348,43 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        ApiResultPageResultSysConfig: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysConfig"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        SessionResponse: {
+        PageResultNariContainerModelResponse: {
+            records?: components["schemas"]["NariContainerModelResponse"][];
             /** Format: int64 */
-            userId?: number;
-            username?: string;
-            realName?: string;
-            roles?: components["schemas"]["SysRole"][];
-            menus?: components["schemas"]["SysMenu"][];
-            permissions?: string[];
-        };
-        ApiResultNariFactoryResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariFactoryResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariFloorQuery: {
-            /** Format: int64 */
-            page?: number;
+            total?: number;
             /** Format: int64 */
             size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、floorCode、floorName、floorNumber */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            enabled?: boolean;
             /** Format: int64 */
-            factoryId?: number;
-            floorCode?: string;
-            floorName?: string;
-            /** Format: int32 */
-            floorNumber?: number;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        ApiResultPageResultNariFixtureBoxOrderResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariFixtureBoxOrderResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultListJobHandlerOption: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["JobHandlerOption"][];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        JobHandlerOption: {
-            type?: string;
-            label?: string;
-            source?: string;
-        };
-        ApiResultNariVehicleSlotResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariVehicleSlotResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        SysDictType: {
+            current?: number;
             /** Format: int64 */
-            dictTypeId?: number;
-            dictCode?: string;
-            dictName?: string;
-            dictScope?: string;
+            pages?: number;
+        };
+        SysOperationLog: {
+            /** Format: int64 */
+            logId?: number;
+            username?: string;
+            operationType?: string;
+            requestMethod?: string;
+            requestPath?: string;
+            queryString?: string;
+            requestContentType?: string;
+            requestBody?: string;
             /** Format: int32 */
-            status?: number;
-            builtinFlag?: boolean;
-            remark?: string;
-            /** Format: int32 */
-            version?: number;
+            statusCode?: number;
+            /** Format: int64 */
+            durationMs?: number;
+            ipAddress?: string;
+            message?: string;
             /** Format: date-time */
             createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-        };
-        NariLocationContainerModelResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            containerModelId?: number;
-            enabled?: boolean;
-            /** Format: int64 */
-            locationId?: number;
-            remark?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
             /** Format: date */
             bizDate?: string;
             sourceSystem?: string;
             traceId?: string;
             idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        UserRoleSummary: {
-            /** Format: int64 */
-            roleId?: number;
-            roleCode?: string;
-            roleName?: string;
-            /** Format: int32 */
-            status?: number;
-        };
-        DictDisableImpactResponse: {
-            dictCode?: string;
-            dictName?: string;
-            /** Format: int64 */
-            activeItemCount?: number;
-            /** Format: int64 */
-            totalItemCount?: number;
-            /** Format: int64 */
-            knownUsageCount?: number;
-        };
-        ApiResultNariFloorResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariFloorResponse"];
+            archivedFlag?: boolean;
             /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultNariLocationStorageZoneResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariLocationStorageZoneResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        SysDictItem: {
-            /** Format: int64 */
-            dictItemId?: number;
-            dictCode?: string;
-            itemLabel?: string;
-            itemValue?: string;
-            tagType?: string;
-            /** Format: int32 */
-            sortNo?: number;
-            /** Format: int32 */
-            status?: number;
-            builtinFlag?: boolean;
-            remark?: string;
-            /** Format: int32 */
-            version?: number;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-        };
-        NariContainerModelRequest: {
-            /** Format: int32 */
-            boxCapacity?: number;
-            containerCategory: string;
-            enabled: boolean;
-            modelCode: string;
-            modelName: string;
-            remark?: string;
-            usageType: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        NariContainerModelResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int32 */
-            boxCapacity?: number;
-            containerCategory?: string;
-            enabled?: boolean;
-            modelCode?: string;
-            modelName?: string;
-            remark?: string;
-            usageType?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
+            archivedTime?: string;
         };
         DictItemRequest: {
             dictCode: string;
@@ -8617,83 +10403,55 @@ export interface components {
              */
             version?: number;
         };
-        NariContainerStateUpdateRequest: {
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        NariLocationQuery: {
+        NariFixtureBoxOrderQuery: {
             /** Format: int64 */
             page?: number;
             /** Format: int64 */
             size?: number;
             keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、locationCode、locationName */
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
             sortBy?: string;
             /**
              * @description 排序方向；未填写时默认 ASC
              * @enum {string}
              */
             sortOrder?: "ASC" | "DESC";
-            agvVendor?: string;
             /** Format: int64 */
-            areaId?: number;
+            boxId?: number;
             enabled?: boolean;
-            locationCode?: string;
-            locationName?: string;
-            locationType?: string;
-            /** Format: int64 */
-            storageZoneId?: number;
+            orderNo?: string;
             /** Format: date-time */
             startTime?: string;
             /** Format: date-time */
             endTime?: string;
         };
-        SysFile: {
+        PageResultSysAsyncTask: {
+            records?: components["schemas"]["SysAsyncTask"][];
             /** Format: int64 */
-            fileId?: number;
-            originalName?: string;
-            objectName?: string;
-            bucketName?: string;
-            contentType?: string;
+            total?: number;
             /** Format: int64 */
-            fileSize?: number;
-            fileGroup?: string;
-            uploader?: string;
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        SysDictType: {
+            /** Format: int64 */
+            dictTypeId?: number;
+            dictCode?: string;
+            dictName?: string;
+            dictScope?: string;
+            /** Format: int32 */
+            status?: number;
+            builtinFlag?: boolean;
             remark?: string;
+            /** Format: int32 */
+            version?: number;
             /** Format: date-time */
             createdTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            archivedFlag?: boolean;
             /** Format: date-time */
-            archivedTime?: string;
-            expiredFlag?: boolean;
-            /** Format: date-time */
-            expiredTime?: string;
-        };
-        NariFixtureBoxOrderUpdateRequest: {
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            boxId?: number;
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /** @description 不传保留原值；禁止清空 */
-            orderNo?: string;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
+            updatedTime?: string;
         };
         NariProductionPlanUpdateRequest: {
             /** @description 不传保留原值；null清空 */
@@ -8729,619 +10487,124 @@ export interface components {
              */
             version: number;
         };
-        ApiResultSysJob: {
+        ApiResultPageResultNariFactoryResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["SysJob"];
+            data?: components["schemas"]["PageResultNariFactoryResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        SysJob: {
+        PageResultNariFactoryResponse: {
+            records?: components["schemas"]["NariFactoryResponse"][];
             /** Format: int64 */
-            jobId?: number;
-            jobName?: string;
-            jobGroup?: string;
-            jobScope?: string;
-            sourceType?: string;
-            sourceRef?: string;
-            protectedFlag?: boolean;
-            cronExpression?: string;
-            jobType?: string;
-            jobData?: string;
-            concurrencyPolicy?: string;
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariBoxBindingResponse: {
+            /** Format: int64 */
+            id?: number;
+            activePanelCode?: string;
+            bindingMode?: string;
+            bindingStatus?: string;
+            /** Format: date-time */
+            boundTime?: string;
+            /** Format: int64 */
+            boxId?: number;
+            materialBatch?: string;
+            materialCode?: string;
+            orderNo?: string;
+            panelCode?: string;
             /** Format: int32 */
-            timeoutSeconds?: number;
-            /** Format: int32 */
-            maxRetries?: number;
-            /** Format: int32 */
-            retryIntervalSeconds?: number;
-            idempotencyKeyExpression?: string;
-            failureStrategy?: string;
-            paramsSchemaJson?: string;
-            /** Format: int32 */
-            status?: number;
-            remark?: string;
-            /** Format: int32 */
-            version?: number;
+            quantity?: number;
+            /** Format: date-time */
+            unboundTime?: string;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
             updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
         };
-        SysRole: {
+        NariAreaUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            areaCode?: string;
+            /** @description 不传保留原值；禁止清空 */
+            areaName?: string;
+            /** @description 不传保留原值；禁止清空 */
+            enabled?: boolean;
+            /**
+             * Format: int64
+             * @description 不传保留原值；禁止清空
+             */
+            floorId?: number;
+            /** @description 不传保留原值；null清空 */
+            remark?: string | null;
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        AsyncTaskRequest: {
+            taskType: string;
+            taskName: string;
+            paramsJson?: string;
+            idempotentKey?: string;
+            remark?: string;
+        };
+        ApiResultPageResultNariLogisticsTaskResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariLogisticsTaskResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLocationContainerModelResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            containerModelId?: number;
+            enabled?: boolean;
+            /** Format: int64 */
+            locationId?: number;
+            remark?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        LoginRequest: {
+            username: string;
+            password: string;
+        };
+        UserRoleSummary: {
             /** Format: int64 */
             roleId?: number;
             roleCode?: string;
             roleName?: string;
             /** Format: int32 */
             status?: number;
-            remark?: string;
-            /** Format: int32 */
-            version?: number;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-        };
-        NariLineProcessStorageZoneUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /** @description 不传保留原值；禁止清空 */
-            mainProcessCode?: string;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            productionLineId?: number;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            storageZoneId?: number;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        ApiResultNariLocationLineResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariLocationLineResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariLocationLineResponse: {
-            /** Format: int64 */
-            id?: number;
-            enabled?: boolean;
-            /** Format: int64 */
-            locationId?: number;
-            /** Format: int64 */
-            productionLineId?: number;
-            remark?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        ApiResultString: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: string;
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultNariLocationResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariLocationResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariContainerUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
-            containerCode?: string;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            containerModelId?: number;
-            /** @description 不传保留原值；禁止清空 */
-            containerName?: string;
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            factoryId?: number;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        ApiResultPageResultSysAsyncTask: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysAsyncTask"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultSysAsyncTask: {
-            records?: components["schemas"]["SysAsyncTask"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        NariLocationResponse: {
-            /** Format: int64 */
-            id?: number;
-            agvVendor?: string;
-            /** Format: int64 */
-            areaId?: number;
-            enabled?: boolean;
-            locationCode?: string;
-            locationName?: string;
-            locationType?: string;
-            remark?: string;
-            /** Format: int64 */
-            storageZoneId?: number;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        NariLocationUsageRequest: {
-            enabled: boolean;
-            /** Format: int64 */
-            locationId: number;
-            operationRole: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        NariStorageZoneResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            areaId?: number;
-            enabled?: boolean;
-            remark?: string;
-            storageCode?: string;
-            storageName?: string;
-            storageType?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        PageResultNariFixtureBoxOrderResponse: {
-            records?: components["schemas"]["NariFixtureBoxOrderResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        NariFixtureBoxOrderResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            boxId?: number;
-            enabled?: boolean;
-            orderNo?: string;
-            remark?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        NariVehicleLoadQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            /** Format: int64 */
-            activeBoxId?: number;
-            /** Format: int64 */
-            activeVehicleSlotId?: number;
-            bindingStatus?: string;
-            /** Format: int64 */
-            boxId?: number;
-            relationMode?: string;
-            /** Format: int64 */
-            vehicleId?: number;
-            /** Format: int64 */
-            vehicleSlotId?: number;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        ApiResultPageResultSysLoginLog: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysLoginLog"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariLocationStorageZoneQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            enabled?: boolean;
-            /** Format: int64 */
-            locationId?: number;
-            relationDirection?: string;
-            /** Format: int64 */
-            storageZoneId?: number;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        ApiResultListSysDept: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysDept"][];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariFixtureBoxOrderRequest: {
-            /** Format: int64 */
-            boxId: number;
-            enabled: boolean;
-            orderNo: string;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        Item: {
-            /**
-             * Format: int64
-             * @description 资源 ID
-             * @example 1
-             */
-            id: number;
-            /**
-             * Format: int32
-             * @description 读取资源时获得的版本
-             * @example 1
-             */
-            version: number;
-        };
-        ApiResultPageResultNariLocationStateResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariLocationStateResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariResourceLineResponse: {
-            /** Format: int64 */
-            id?: number;
-            enabled?: boolean;
-            /** Format: int64 */
-            productionLineId?: number;
-            remark?: string;
-            resourceCode?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        PageResultSysLoginLog: {
-            records?: components["schemas"]["SysLoginLog"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        ApiResultNariResourceLineResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariResourceLineResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultLifecycleOverviewResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["LifecycleOverviewResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultNariContainerResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariContainerResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultSysJob: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysJob"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultNariContainerModelResponse: {
-            records?: components["schemas"]["NariContainerModelResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        SysLoginLog: {
-            /** Format: int64 */
-            logId?: number;
-            username?: string;
-            successFlag?: boolean;
-            ipAddress?: string;
-            userAgent?: string;
-            message?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            archivedFlag?: boolean;
-            /** Format: date-time */
-            archivedTime?: string;
-        };
-        PageResultNariLocationResponse: {
-            records?: components["schemas"]["NariLocationResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        TokenResponse: {
-            token?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            /** Format: date-time */
-            refreshExpiresAt?: string;
-        };
-        SysCodeRule: {
-            /** Format: int64 */
-            ruleId?: number;
-            ruleCode?: string;
-            ruleName?: string;
-            prefix?: string;
-            datePattern?: string;
-            codeSeparator?: string;
-            /** Format: int32 */
-            sequenceLength?: number;
-            /** Format: int64 */
-            sequenceStart?: number;
-            /** Format: int64 */
-            sequenceStep?: number;
-            resetScope?: string;
-            /** Format: int32 */
-            status?: number;
-            remark?: string;
-            /** Format: int32 */
-            version?: number;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-        };
-        ApiResultNariBoxBindingResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariBoxBindingResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultMapStringObject: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: {
-                [key: string]: unknown;
-            };
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        NariLocationStateRequest: {
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        ApiResultListSysDictItem: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SysDictItem"][];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultSysDictChangeLog: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysDictChangeLog"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultMapStringListDictItemResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: {
-                [key: string]: components["schemas"]["DictItemResponse"][];
-            };
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        AuditLogQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            targetType?: string;
-            actionType?: string;
-            operator?: string;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        PageResultSysDictChangeLog: {
-            records?: components["schemas"]["SysDictChangeLog"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        SysDictChangeLog: {
-            /** Format: int64 */
-            logId?: number;
-            dictCode?: string;
-            targetType?: string;
-            /** Format: int64 */
-            targetId?: number;
-            actionType?: string;
-            beforeJson?: string;
-            afterJson?: string;
-            operator?: string;
-            /** Format: date-time */
-            createdTime?: string;
-        };
-        PageResultSysAsyncTaskLog: {
-            records?: components["schemas"]["SysAsyncTaskLog"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
         };
         SysAsyncTaskLog: {
             /** Format: int64 */
@@ -9361,8 +10624,32 @@ export interface components {
             /** Format: date-time */
             archivedTime?: string;
         };
-        PageResultSysRole: {
-            records?: components["schemas"]["SysRole"][];
+        NariWarehouseRecordResponse: {
+            /** Format: int64 */
+            id?: number;
+            applicationNo?: string;
+            /** Format: int64 */
+            objectId?: number;
+            requestId?: string;
+            sapDocumentNos?: string;
+            /** Format: int32 */
+            submittedVersion?: number;
+            /** Format: date-time */
+            succeededTime?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        PageResultSysJobLog: {
+            records?: components["schemas"]["SysJobLog"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -9371,175 +10658,6 @@ export interface components {
             current?: number;
             /** Format: int64 */
             pages?: number;
-        };
-        PageQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-        };
-        DictItemResponse: {
-            dictCode?: string;
-            label?: string;
-            value?: string;
-            tagType?: string;
-            /** Format: int32 */
-            sortNo?: number;
-        };
-        PageResultSysConfig: {
-            records?: components["schemas"]["SysConfig"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        UserRequest: {
-            username: string;
-            password?: string;
-            realName: string;
-            email?: string;
-            phone?: string;
-            /** Format: int32 */
-            status?: number;
-            remark?: string;
-            /** Format: int64 */
-            deptId?: number;
-            roleIds?: number[];
-            /**
-             * Format: int32
-             * @description 修改时必填，使用查询响应中的当前版本
-             * @example 1
-             */
-            version?: number;
-        };
-        NariLocationLineQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            enabled?: boolean;
-            /** Format: int64 */
-            locationId?: number;
-            /** Format: int64 */
-            productionLineId?: number;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        NariProductionPlanRequest: {
-            mainProcessCode?: string;
-            orderNo: string;
-            /** Format: int32 */
-            plannedQuantity: number;
-            /** Format: date-time */
-            plannedStartTime: string;
-            planNo: string;
-            planStatus: string;
-            /** Format: int64 */
-            productionLineId: number;
-            remark?: string;
-            resourceCode?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        NariContainerModelUpdateRequest: {
-            /**
-             * Format: int32
-             * @description 不传保留原值；null清空
-             */
-            boxCapacity?: number | null;
-            /** @description 不传保留原值；禁止清空 */
-            containerCategory?: string;
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /** @description 不传保留原值；禁止清空 */
-            modelCode?: string;
-            /** @description 不传保留原值；禁止清空 */
-            modelName?: string;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /** @description 不传保留原值；禁止清空 */
-            usageType?: string;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        ApiResultDictImportResult: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["DictImportResult"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        DictImportResult: {
-            /** Format: int32 */
-            createdTypes?: number;
-            /** Format: int32 */
-            updatedTypes?: number;
-            /** Format: int32 */
-            createdItems?: number;
-            /** Format: int32 */
-            updatedItems?: number;
-            /** Format: int32 */
-            skippedRows?: number;
-            errors?: string[];
-        };
-        ApiResultPageResultNariLocationLineResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariLocationLineResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        DictItemSortRequest: {
-            dictCode: string;
-            items: components["schemas"]["Item"][];
-        };
-        NariLineProcessStorageZoneQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            enabled?: boolean;
-            mainProcessCode?: string;
-            /** Format: int64 */
-            productionLineId?: number;
-            /** Format: int64 */
-            storageZoneId?: number;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
         };
         NariContainerStateQuery: {
             /** Format: int64 */
@@ -9572,45 +10690,26 @@ export interface components {
             /** Format: date-time */
             endTime?: string;
         };
-        ApiResultNariLocationUsageResponse: {
+        ApiResultCodePreviewResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["NariLocationUsageResponse"];
+            data?: components["schemas"]["CodePreviewResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        NariLocationUsageResponse: {
-            /** Format: int64 */
-            id?: number;
-            enabled?: boolean;
-            /** Format: int64 */
-            locationId?: number;
-            operationRole?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        ApiResultSysDept: {
+        ApiResultPageResultNariStorageZoneResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["SysDept"];
+            data?: components["schemas"]["PageResultNariStorageZoneResponse"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        PageResultNariLocationUsageResponse: {
-            records?: components["schemas"]["NariLocationUsageResponse"][];
+        PageResultNariStorageZoneResponse: {
+            records?: components["schemas"]["NariStorageZoneResponse"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -9620,20 +10719,112 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        NariContainerRequest: {
-            containerCode: string;
+        PageResultSysLoginLog: {
+            records?: components["schemas"]["SysLoginLog"][];
             /** Format: int64 */
-            containerModelId: number;
-            containerName: string;
-            enabled: boolean;
+            total?: number;
             /** Format: int64 */
-            factoryId: number;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        SysLoginLog: {
+            /** Format: int64 */
+            logId?: number;
+            username?: string;
+            successFlag?: boolean;
+            ipAddress?: string;
+            userAgent?: string;
+            message?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            archivedFlag?: boolean;
+            /** Format: date-time */
+            archivedTime?: string;
+        };
+        DashboardMetric: {
+            key?: string;
+            name?: string;
+            group?: string;
+            value?: number;
+            unit?: string;
+            text?: string;
+            tone?: string;
+        };
+        PageResultSysAuditLog: {
+            records?: components["schemas"]["SysAuditLog"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        SysAuditLog: {
+            /** Format: int64 */
+            auditId?: number;
+            targetType?: string;
+            targetId?: string;
+            targetName?: string;
+            actionType?: string;
+            summary?: string;
+            beforeJson?: string;
+            afterJson?: string;
+            operator?: string;
+            ipAddress?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            archivedFlag?: boolean;
+            /** Format: date-time */
+            archivedTime?: string;
+        };
+        PageResultNariOperationRecordResponse: {
+            records?: components["schemas"]["NariOperationRecordResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        ApiResultListLong: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: number[];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        /** @description 带乐观锁版本的标准批量操作请求，单次最多 1000 条 */
+        BatchVersionedIdsRequest: {
+            /** @description 待操作的资源及其当前版本 */
+            items: components["schemas"]["Item"][];
+        };
+        ApiResultNariVehicleSlotResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariVehicleSlotResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
         };
         NariVehicleSlotResponse: {
             /** Format: int64 */
@@ -9656,254 +10847,67 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        LoginResponse: {
-            token?: string;
+        ApiResultPageResultNariWarehouseRecordBoxResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariWarehouseRecordBoxResponse"];
             /** Format: date-time */
-            expiresAt?: string;
-            /** Format: date-time */
-            refreshExpiresAt?: string;
-            /** Format: int64 */
-            userId?: number;
-            username?: string;
-            realName?: string;
-            roles?: components["schemas"]["SysRole"][];
-            menus?: components["schemas"]["SysMenu"][];
-            permissions?: string[];
+            timestamp?: string;
+            traceId?: string;
         };
-        NariLocationUsageUpdateRequest: {
-            /** @description 不传保留原值；禁止清空 */
+        NariLocationStorageZoneResponse: {
+            /** Format: int64 */
+            id?: number;
             enabled?: boolean;
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
+            /** Format: int64 */
             locationId?: number;
-            /** @description 不传保留原值；禁止清空 */
-            operationRole?: string;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        PageResultNariAreaResponse: {
-            records?: components["schemas"]["NariAreaResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        NariStorageZoneUpdateRequest: {
-            /**
-             * Format: int64
-             * @description 不传保留原值；禁止清空
-             */
-            areaId?: number;
-            /** @description 不传保留原值；禁止清空 */
-            enabled?: boolean;
-            /** @description 不传保留原值；null清空 */
-            remark?: string | null;
-            /** @description 不传保留原值；禁止清空 */
-            storageCode?: string;
-            /** @description 不传保留原值；禁止清空 */
-            storageName?: string;
-            /** @description 不传保留原值；禁止清空 */
-            storageType?: string;
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        SysDept: {
-            /** Format: int64 */
-            deptId?: number;
-            /** Format: int64 */
-            parentId?: number;
-            ancestors?: string;
-            deptCode?: string;
-            deptName?: string;
-            leader?: string;
-            phone?: string;
-            email?: string;
-            /** Format: int32 */
-            sortNo?: number;
-            /** Format: int32 */
-            status?: number;
+            relationDirection?: string;
             remark?: string;
-            /** Format: int32 */
-            version?: number;
+            /** Format: int64 */
+            storageZoneId?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
             updatedTime?: string;
-            children?: components["schemas"]["SysDept"][];
-        };
-        NariVehicleSlotQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime、slotCode、slotName */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            enabled?: boolean;
-            slotCode?: string;
-            slotName?: string;
-            /** Format: int64 */
-            vehicleId?: number;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        NariBoxBindingQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            activePanelCode?: string;
-            bindingMode?: string;
-            bindingStatus?: string;
-            /** Format: int64 */
-            boxId?: number;
-            materialBatch?: string;
-            materialCode?: string;
-            orderNo?: string;
-            panelCode?: string;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        NariContainerStateRequest: {
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        CodeRuleRequest: {
-            ruleCode?: string;
-            ruleName: string;
-            prefix?: string;
-            datePattern?: string;
-            separator?: string;
-            /** Format: int32 */
-            sequenceLength?: number;
-            /** Format: int64 */
-            sequenceStart?: number;
-            /** Format: int64 */
-            sequenceStep?: number;
-            resetScope?: string;
-            /** Format: int32 */
-            status?: number;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 修改时必填，使用查询响应中的当前版本
-             * @example 1
-             */
-            version?: number;
-        };
-        ApiResultPageResultSysFile: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultSysFile"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultSysFile: {
-            records?: components["schemas"]["SysFile"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        ApiResultPageResultNariContainerResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariContainerResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultNariLocationContainerModelResponse: {
-            records?: components["schemas"]["NariLocationContainerModelResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        SysJobLog: {
-            /** Format: int64 */
-            logId?: number;
-            /** Format: int64 */
-            jobId?: number;
-            jobName?: string;
-            jobGroup?: string;
-            status?: string;
-            message?: string;
-            /** Format: date-time */
-            startedTime?: string;
-            /** Format: date-time */
-            finishedTime?: string;
-            /** Format: int64 */
-            durationMs?: number;
-            exceptionText?: string;
-            /** Format: date-time */
-            createdTime?: string;
             /** Format: date */
             bizDate?: string;
             sourceSystem?: string;
             traceId?: string;
             idempotentKey?: string;
-            archivedFlag?: boolean;
-            /** Format: date-time */
-            archivedTime?: string;
+            /** Format: int32 */
+            version?: number;
         };
-        ApiResultNariProductionLineResponse: {
+        ApiResultListSysRole: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["NariProductionLineResponse"];
+            data?: components["schemas"]["SysRole"][];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        ApiResultPageResultSysLifecycleCleanupLog: {
+        DictItemBatchStatusRequest: {
+            items: components["schemas"]["Item"][];
+            /** Format: int32 */
+            status: number;
+        };
+        PageResultNariContainerResponse: {
+            records?: components["schemas"]["NariContainerResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        ApiResultPageResultSysJob: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["PageResultSysLifecycleCleanupLog"];
+            data?: components["schemas"]["PageResultSysJob"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
@@ -9950,6 +10954,81 @@ export interface components {
             /** Format: date-time */
             archivedTime?: string;
         };
+        ApiResultNariWarehouseRecordResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariWarehouseRecordResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariWarehouseRecordBoxResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            activeBoxId?: number;
+            bindingSnapshot?: string;
+            /** Format: int64 */
+            boxId?: number;
+            /** Format: int32 */
+            boxVersion?: number;
+            /** Format: date-time */
+            cleanupCompletedTime?: string;
+            cleanupRequestId?: string;
+            /** Format: date-time */
+            cleanupSentTime?: string;
+            contentKey?: string;
+            materialBatch?: string;
+            materialCode?: string;
+            /** Format: date-time */
+            nextCheckTime?: string;
+            orderNo?: string;
+            /** Format: int32 */
+            quantity?: number;
+            reason?: string;
+            /** Format: int64 */
+            warehouseRecordId?: number;
+            wmsCleanupStatus?: string;
+            wmsScopeSnapshot?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        MenuRequest: {
+            /** Format: int64 */
+            parentId?: number;
+            menuName: string;
+            menuType: string;
+            path?: string;
+            component?: string;
+            /** @enum {string} */
+            terminalType?: "PC" | "MOBILE" | "OT";
+            externalUrl?: string;
+            permission?: string;
+            icon?: string;
+            /** Format: int32 */
+            sortNo?: number;
+            visible?: boolean;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            syncParentRoleAssignments?: boolean;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
+        };
         ApiResultNariLineProcessStorageZoneResponse: {
             /** Format: int32 */
             code?: number;
@@ -9981,147 +11060,6 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        SysMenu: {
-            /** Format: int64 */
-            menuId?: number;
-            /** Format: int64 */
-            parentId?: number;
-            menuName?: string;
-            menuType?: string;
-            path?: string;
-            component?: string;
-            terminalType?: string;
-            externalUrl?: string;
-            permission?: string;
-            icon?: string;
-            /** Format: int32 */
-            sortNo?: number;
-            visible?: boolean;
-            /** Format: int32 */
-            status?: number;
-            remark?: string;
-            /** Format: int32 */
-            version?: number;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-        };
-        NariBoxBindingResponse: {
-            /** Format: int64 */
-            id?: number;
-            activePanelCode?: string;
-            bindingMode?: string;
-            bindingStatus?: string;
-            /** Format: date-time */
-            boundTime?: string;
-            /** Format: int64 */
-            boxId?: number;
-            materialBatch?: string;
-            materialCode?: string;
-            orderNo?: string;
-            panelCode?: string;
-            /** Format: int32 */
-            quantity?: number;
-            /** Format: date-time */
-            unboundTime?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        PageResultNariLocationStateResponse: {
-            records?: components["schemas"]["NariLocationStateResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        PageResultNariContainerResponse: {
-            records?: components["schemas"]["NariContainerResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        PageResultNariStorageZoneResponse: {
-            records?: components["schemas"]["NariStorageZoneResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        NariContainerResponse: {
-            /** Format: int64 */
-            id?: number;
-            containerCode?: string;
-            /** Format: int64 */
-            containerModelId?: number;
-            containerName?: string;
-            enabled?: boolean;
-            /** Format: int64 */
-            factoryId?: number;
-            remark?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            updatedTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        /** @description 带乐观锁版本的标准批量操作请求，单次最多 1000 条 */
-        BatchVersionedIdsRequest: {
-            /** @description 待操作的资源及其当前版本 */
-            items: components["schemas"]["Item"][];
-        };
-        PageResultNariContainerStateResponse: {
-            records?: components["schemas"]["NariContainerStateResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        NariAreaRequest: {
-            areaCode: string;
-            areaName: string;
-            enabled: boolean;
-            /** Format: int64 */
-            floorId: number;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
         ApiResultPageResultNariLineProcessStorageZoneResponse: {
             /** Format: int32 */
             code?: number;
@@ -10142,98 +11080,6 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        NariLocationStateUpdateRequest: {
-            /**
-             * Format: int32
-             * @description 更新时必须提交当前版本
-             */
-            version: number;
-        };
-        NariFactoryRequest: {
-            enabled: boolean;
-            factoryCode: string;
-            factoryName: string;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 更新时必填；新增时留空
-             */
-            version?: number;
-        };
-        ApiResultNariFixtureBoxOrderResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariFixtureBoxOrderResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        ApiResultPageResultNariBoxBindingResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultNariBoxBindingResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        DictTypeRequest: {
-            dictCode: string;
-            dictName: string;
-            dictScope?: string;
-            /** Format: int32 */
-            status?: number;
-            remark?: string;
-            /**
-             * Format: int32
-             * @description 修改时必填，使用查询响应中的当前版本
-             * @example 1
-             */
-            version?: number;
-        };
-        ApiResultPageResultUserResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResultUserResponse"];
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
-        PageResultUserResponse: {
-            records?: components["schemas"]["UserResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        NariFixtureBoxOrderQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            /** Format: int64 */
-            boxId?: number;
-            enabled?: boolean;
-            orderNo?: string;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
         PageResultSysJob: {
             records?: components["schemas"]["SysJob"][];
             /** Format: int64 */
@@ -10245,8 +11091,22 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        PageResultNariBoxBindingResponse: {
-            records?: components["schemas"]["NariBoxBindingResponse"][];
+        NariStorageZoneRequest: {
+            /** Format: int64 */
+            areaId: number;
+            enabled: boolean;
+            remark?: string;
+            storageCode: string;
+            storageName: string;
+            storageType: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        PageResultSysDictChangeLog: {
+            records?: components["schemas"]["SysDictChangeLog"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -10256,99 +11116,17 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        PageResultNariLocationLineResponse: {
-            records?: components["schemas"]["NariLocationLineResponse"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        LoginRequest: {
-            username: string;
-            password: string;
-        };
-        LifecycleOverviewResponse: {
-            summary?: components["schemas"]["Summary"];
-            policies?: components["schemas"]["Policy"][];
-            jobs?: components["schemas"]["CleanupJob"][];
-        };
-        Summary: {
-            /** Format: int32 */
-            policyCount?: number;
-            /** Format: int32 */
-            enabledJobCount?: number;
-            /** Format: int32 */
-            totalJobCount?: number;
-            /** Format: int32 */
-            policiesWithHistoryCount?: number;
-            /** Format: int32 */
-            latestFailureCount?: number;
-            /** Format: date-time */
-            latestExecutionTime?: string;
-        };
-        CleanupJob: {
-            /** Format: int64 */
-            jobId?: number;
-            jobName?: string;
-            jobType?: string;
-            label?: string;
-            purpose?: string;
-            cronExpression?: string;
-            available?: boolean;
-            enabled?: boolean;
-        };
-        Policy: {
-            policyCode?: string;
-            label?: string;
-            targetDescription?: string;
-            effectDescription?: string;
-            /** Format: int32 */
-            retentionDays?: number;
-            jobType?: string;
-            latestStatus?: string;
-            latestTargetName?: string;
-            /** Format: int64 */
-            latestAffectedRows?: number;
-            /** Format: date-time */
-            latestStartedTime?: string;
-        };
-        ApiResultPageResultSysOperationLog: {
+        ApiResultVoid: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["PageResultSysOperationLog"];
+            data?: unknown;
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
         };
-        NariLocationUsageQuery: {
-            /** Format: int64 */
-            page?: number;
-            /** Format: int64 */
-            size?: number;
-            keyword?: string;
-            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
-            sortBy?: string;
-            /**
-             * @description 排序方向；未填写时默认 ASC
-             * @enum {string}
-             */
-            sortOrder?: "ASC" | "DESC";
-            enabled?: boolean;
-            /** Format: int64 */
-            locationId?: number;
-            operationRole?: string;
-            /** Format: date-time */
-            startTime?: string;
-            /** Format: date-time */
-            endTime?: string;
-        };
-        PageResultSysAuditLog: {
-            records?: components["schemas"]["SysAuditLog"][];
+        PageResultNariLogisticsTaskResponse: {
+            records?: components["schemas"]["NariLogisticsTaskResponse"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -10358,69 +11136,28 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        SysAuditLog: {
+        SysAsyncTask: {
             /** Format: int64 */
-            auditId?: number;
-            targetType?: string;
-            targetId?: string;
-            targetName?: string;
-            actionType?: string;
-            summary?: string;
-            beforeJson?: string;
-            afterJson?: string;
-            operator?: string;
-            ipAddress?: string;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date */
-            bizDate?: string;
-            sourceSystem?: string;
-            traceId?: string;
-            idempotentKey?: string;
-            archivedFlag?: boolean;
-            /** Format: date-time */
-            archivedTime?: string;
-        };
-        PageResultSysDictType: {
-            records?: components["schemas"]["SysDictType"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        PageResultSysOperationLog: {
-            records?: components["schemas"]["SysOperationLog"][];
-            /** Format: int64 */
-            total?: number;
-            /** Format: int64 */
-            size?: number;
-            /** Format: int64 */
-            current?: number;
-            /** Format: int64 */
-            pages?: number;
-        };
-        SysOperationLog: {
-            /** Format: int64 */
-            logId?: number;
-            username?: string;
-            operationType?: string;
-            requestMethod?: string;
-            requestPath?: string;
-            queryString?: string;
-            requestContentType?: string;
-            requestBody?: string;
+            taskId?: number;
+            taskType?: string;
+            taskName?: string;
+            status?: string;
             /** Format: int32 */
-            statusCode?: number;
+            progress?: number;
+            paramsJson?: string;
             /** Format: int64 */
-            durationMs?: number;
-            ipAddress?: string;
-            message?: string;
+            resultFileId?: number;
+            resultFileName?: string;
+            failureReason?: string;
+            operator?: string;
+            /** Format: date-time */
+            startedTime?: string;
+            /** Format: date-time */
+            finishedTime?: string;
             /** Format: date-time */
             createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
             /** Format: date */
             bizDate?: string;
             sourceSystem?: string;
@@ -10430,19 +11167,46 @@ export interface components {
             /** Format: date-time */
             archivedTime?: string;
         };
-        NariLocationContainerModelUpdateRequest: {
+        CodeRuleRequest: {
+            ruleCode?: string;
+            ruleName: string;
+            prefix?: string;
+            datePattern?: string;
+            separator?: string;
+            /** Format: int32 */
+            sequenceLength?: number;
+            /** Format: int64 */
+            sequenceStart?: number;
+            /** Format: int64 */
+            sequenceStep?: number;
+            resetScope?: string;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            /**
+             * Format: int32
+             * @description 修改时必填，使用查询响应中的当前版本
+             * @example 1
+             */
+            version?: number;
+        };
+        NariContainerUpdateRequest: {
+            /** @description 不传保留原值；禁止清空 */
+            containerCode?: string;
             /**
              * Format: int64
              * @description 不传保留原值；禁止清空
              */
             containerModelId?: number;
             /** @description 不传保留原值；禁止清空 */
+            containerName?: string;
+            /** @description 不传保留原值；禁止清空 */
             enabled?: boolean;
             /**
              * Format: int64
              * @description 不传保留原值；禁止清空
              */
-            locationId?: number;
+            factoryId?: number;
             /** @description 不传保留原值；null清空 */
             remark?: string | null;
             /**
@@ -10450,6 +11214,162 @@ export interface components {
              * @description 更新时必须提交当前版本
              */
             version: number;
+        };
+        ApiResultPageResultNariLocationStateResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariLocationStateResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultNariLocationStateResponse: {
+            records?: components["schemas"]["NariLocationStateResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        LifecycleCleanupLogQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            policyCode?: string;
+            targetName?: string;
+            status?: string;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        SysJobLog: {
+            /** Format: int64 */
+            logId?: number;
+            /** Format: int64 */
+            jobId?: number;
+            jobName?: string;
+            jobGroup?: string;
+            status?: string;
+            message?: string;
+            /** Format: date-time */
+            startedTime?: string;
+            /** Format: date-time */
+            finishedTime?: string;
+            /** Format: int64 */
+            durationMs?: number;
+            exceptionText?: string;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            archivedFlag?: boolean;
+            /** Format: date-time */
+            archivedTime?: string;
+        };
+        CodePreviewResponse: {
+            ruleCode?: string;
+            sequenceKey?: string;
+            /** Format: int64 */
+            nextValue?: number;
+            code?: string;
+        };
+        PageResultNariWarehouseRecordBoxResponse: {
+            records?: components["schemas"]["NariWarehouseRecordBoxResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        SysDictChangeLog: {
+            /** Format: int64 */
+            logId?: number;
+            dictCode?: string;
+            targetType?: string;
+            /** Format: int64 */
+            targetId?: number;
+            actionType?: string;
+            beforeJson?: string;
+            afterJson?: string;
+            operator?: string;
+            /** Format: date-time */
+            createdTime?: string;
+        };
+        ApiResultListSysDept: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SysDept"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        SysCodeRule: {
+            /** Format: int64 */
+            ruleId?: number;
+            ruleCode?: string;
+            ruleName?: string;
+            prefix?: string;
+            datePattern?: string;
+            codeSeparator?: string;
+            /** Format: int32 */
+            sequenceLength?: number;
+            /** Format: int64 */
+            sequenceStart?: number;
+            /** Format: int64 */
+            sequenceStep?: number;
+            resetScope?: string;
+            /** Format: int32 */
+            status?: number;
+            remark?: string;
+            /** Format: int32 */
+            version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+        };
+        TokenResponse: {
+            token?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: date-time */
+            refreshExpiresAt?: string;
+        };
+        PageResultSysConfig: {
+            records?: components["schemas"]["SysConfig"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        PageResultNariVehicleSlotResponse: {
+            records?: components["schemas"]["NariVehicleSlotResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
         };
     };
     responses: never;
@@ -20462,6 +21382,366 @@ export interface operations {
             };
         };
     };
+    NariWarehouseRecordGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariWarehouseRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariWarehouseRecordUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariWarehouseRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordDelete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordBoxGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariWarehouseRecordBoxResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordBoxUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariWarehouseRecordBoxUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariWarehouseRecordBoxResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordBoxDelete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
     NariVehicleSlotGet: {
         parameters: {
             query?: never;
@@ -21182,6 +22462,186 @@ export interface operations {
             };
         };
     };
+    NariReceivingRecordGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariReceivingRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariReceivingRecordUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariReceivingRecordUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariReceivingRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariReceivingRecordDelete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
     NariProductionPlanGet: {
         parameters: {
             query?: never;
@@ -21483,6 +22943,366 @@ export interface operations {
         };
     };
     NariProductionLineDelete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariOperationRecordGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariOperationRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariOperationRecordUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariOperationRecordUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariOperationRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariOperationRecordDelete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariLogisticsTaskGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLogisticsTaskResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariLogisticsTaskUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariLogisticsTaskUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLogisticsTaskResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariLogisticsTaskDelete: {
         parameters: {
             query: {
                 version: number;
@@ -27069,6 +28889,362 @@ export interface operations {
             };
         };
     };
+    NariWarehouseRecordPage: {
+        parameters: {
+            query: {
+                query: components["schemas"]["NariWarehouseRecordQuery"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultPageResultNariWarehouseRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariWarehouseRecordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariWarehouseRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordBatchDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordBoxPage: {
+        parameters: {
+            query: {
+                query: components["schemas"]["NariWarehouseRecordBoxQuery"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultPageResultNariWarehouseRecordBoxResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordBoxCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariWarehouseRecordBoxRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariWarehouseRecordBoxResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariWarehouseRecordBoxBatchDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
     NariVehicleSlotPage: {
         parameters: {
             query: {
@@ -27781,6 +29957,184 @@ export interface operations {
             };
         };
     };
+    NariReceivingRecordPage: {
+        parameters: {
+            query: {
+                query: components["schemas"]["NariReceivingRecordQuery"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultPageResultNariReceivingRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariReceivingRecordCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariReceivingRecordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariReceivingRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariReceivingRecordBatchDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
     NariProductionPlanPage: {
         parameters: {
             query: {
@@ -28078,6 +30432,362 @@ export interface operations {
         };
     };
     NariProductionLineBatchDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariOperationRecordPage: {
+        parameters: {
+            query: {
+                query: components["schemas"]["NariOperationRecordQuery"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultPageResultNariOperationRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariOperationRecordCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariOperationRecordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariOperationRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariOperationRecordBatchDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariLogisticsTaskPage: {
+        parameters: {
+            query: {
+                query: components["schemas"]["NariLogisticsTaskQuery"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultPageResultNariLogisticsTaskResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariLogisticsTaskCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariLogisticsTaskRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLogisticsTaskResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    NariLogisticsTaskBatchDelete: {
         parameters: {
             query?: never;
             header?: never;

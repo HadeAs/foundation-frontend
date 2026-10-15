@@ -135,7 +135,7 @@ describe('基础资料页面本地 DOM', () => {
     await wrapper.find('tbody tr[tabindex="0"]').trigger('keydown', { key: 'Enter' })
     expect(wrapper.emitted('select')).toEqual([[3]])
   })
-  it('候选忽略旧区域迟到响应，外部清除不打开弹窗', async () => {
+  it('候选忽略旧区域迟到响应，选择框图标在清除与搜索间切换', async () => {
     const old = pending<api.BasicPage>()
     vi.mocked(api.pageBasicData).mockReturnValueOnce(old.promise).mockResolvedValue({ records: [{ id: 2, areaId: 2, storageName: '新区域库' }], total: 1 })
     const picker = keep(mount(ReferencePicker, { props: { type: 'storage', areaId: 1 }, ...options }))
@@ -144,9 +144,19 @@ describe('基础资料页面本地 DOM', () => {
     expect(picker.text()).toContain('新区域库'); expect(picker.text()).not.toContain('旧区域库')
     const input = keep(mount(ReferenceInput, { props: { target: 'factory', label: '工厂', value: 1 }, ...options }))
     await flushPromises()
+    expect(input.find('.reference-action .anticon-close').exists()).toBe(true)
+    expect(input.find('.reference-action .anticon-search').exists()).toBe(false)
     await input.find('button[aria-label="清除工厂"]').trigger('click')
     expect(input.emitted('update:value')).toEqual([[undefined]])
     expect(input.findComponent(ReferencePicker).exists()).toBe(false)
+    await input.setProps({ value: undefined })
+    expect(input.find('.reference-action .anticon-search').exists()).toBe(true)
+    expect(input.find('.reference-action .anticon-close').exists()).toBe(false)
+    await input.find('button[aria-label="选择工厂"]').trigger('click')
+    expect(input.findComponent(ReferencePicker).exists()).toBe(true)
+    await input.setProps({ disabled: true, value: 1 })
+    expect(input.find('.reference-action .anticon-search').exists()).toBe(true)
+    expect(input.find('button[aria-label="清除工厂"]').exists()).toBe(false)
   })
 
   it('批量删除保留选中版本，拒绝时保留选择与确认弹窗', async () => {

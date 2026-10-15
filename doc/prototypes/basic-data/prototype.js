@@ -22,7 +22,7 @@
   };
   const icon = name => `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.grid}"/></svg>`;
   const tableState = (state,title,description='',action='') => `<div class="empty-state state-${state}" role="${state==='failure'?'alert':'status'}"><span class="state-symbol">${icon(state)}</span><strong>${escape(title)}</strong>${description?`<p>${escape(description)}</p>`:''}${action}</div>`;
-  const clearReferenceButton = (field,source,value) => `<button type="button" class="clear-related" data-action="clear-reference" data-key="${field.key}" data-source="${source}" aria-label="清除${field.label}" title="清除${field.label}" ${value?'':'hidden'}>${icon('close')}</button>`;
+  const referenceAction = (field,source,value,disabled=false) => `<button type="button" class="reference-action" data-action="${value&&!disabled?'clear-reference':source==='editor'?'field-pick':source==='manager'?'manager-pick':'filter-pick'}" data-key="${field.key}" data-source="${source}" aria-label="${value&&!disabled?'清除':'选择'}${field.label}" title="${value&&!disabled?'清除':'选择'}${field.label}" ${disabled?'disabled':''}>${icon(value&&!disabled?'close':'search')}</button>`;
   const menus = Object.keys(schema).filter(k=>!schema[k].owner);
   const tabs = ['locationLine','locationModel','locationUsage','locationStorage'];
   const lineTabs = ['resourceLine','lineProcessStorage'];
@@ -117,7 +117,7 @@
     const query=filterDraft;
     $('filters').innerHTML=`<input name="keyword" aria-label="名称或编码" placeholder="请输入${schema[pageKey].label}名称或编码" value="${escape(query.keyword||'')}">${schema[pageKey].filters.map(key=>{
       const f=fieldFor(pageKey,key);
-      if(f.kind==='relation')return `<div class="filter-reference"><button type="button" class="filter-related" data-action="filter-pick" data-key="${key}" aria-label="${f.label}"><span>${query[key]?escape(labelOf(f.target,lookup(f.target,query[key]))):`全部${f.label.replace('所属','')}`}</span>⌄</button>${clearReferenceButton(f,'filter',query[key])}</div>`;
+      if(f.kind==='relation')return `<div class="filter-reference"><button type="button" class="filter-related" data-action="filter-pick" data-key="${key}" aria-label="${f.label}"><span>${query[key]?escape(labelOf(f.target,lookup(f.target,query[key]))):`全部${f.label.replace('所属','')}`}</span></button>${referenceAction(f,'filter',query[key])}</div>`;
       return `<select name="${key}" aria-label="${f.label}"><option value="">全部${f.label}</option>${Object.entries(dictionaries[key]).map(([v,l])=>`<option value="${v}" ${query[key]===v?'selected':''}>${l}</option>`).join('')}</select>`;
     }).join('')}<select name="enabled" aria-label="状态"><option value="">全部状态</option><option value="true" ${query.enabled==='true'?'selected':''}>启用</option><option value="false" ${query.enabled==='false'?'selected':''}>停用</option></select><div class="query-actions"><button class="primary" type="submit">查询</button><button type="button" data-action="reset">重置</button><button type="button" data-action="refresh">刷新</button></div>`;
   }
@@ -150,7 +150,7 @@
   function readManagerFilters() { for(const el of $('managerFilters')?.querySelectorAll('[name]')||[])managerState.draft[el.name]=el.value.trim(); }
   function managerFilters() {
     const {type,draft}=managerState, key=schema[type].name, field=fieldFor(type,'storageZoneId');
-    return `<form id="managerFilters" class="filter-panel"><input name="${key}" aria-label="${fieldFor(type,key).label}" placeholder="请输入${fieldFor(type,key).label}" value="${escape(draft[key]||'')}">${field?`<div class="filter-reference"><button type="button" class="filter-related" data-action="manager-pick" data-key="storageZoneId" aria-label="配送存储区"><span>${draft.storageZoneId?escape(labelOf('storage',lookup('storage',draft.storageZoneId))):'全部配送存储区'}</span>⌄</button>${clearReferenceButton(field,'manager',draft.storageZoneId)}</div>`:''}<select name="enabled" aria-label="状态"><option value="">全部状态</option><option value="true" ${draft.enabled==='true'?'selected':''}>启用</option><option value="false" ${draft.enabled==='false'?'selected':''}>停用</option></select><div class="query-actions"><button type="submit" class="primary">查询</button><button type="button" data-action="manager-reset">重置</button><button type="button" data-action="manager-refresh">刷新</button></div></form>`;
+    return `<form id="managerFilters" class="filter-panel"><input name="${key}" aria-label="${fieldFor(type,key).label}" placeholder="请输入${fieldFor(type,key).label}" value="${escape(draft[key]||'')}">${field?`<div class="filter-reference"><button type="button" class="filter-related" data-action="manager-pick" data-key="storageZoneId" aria-label="配送存储区"><span>${draft.storageZoneId?escape(labelOf('storage',lookup('storage',draft.storageZoneId))):'全部配送存储区'}</span></button>${referenceAction(field,'manager',draft.storageZoneId)}</div>`:''}<select name="enabled" aria-label="状态"><option value="">全部状态</option><option value="true" ${draft.enabled==='true'?'selected':''}>启用</option><option value="false" ${draft.enabled==='false'?'selected':''}>停用</option></select><div class="query-actions"><button type="submit" class="primary">查询</button><button type="button" data-action="manager-reset">重置</button><button type="button" data-action="manager-refresh">刷新</button></div></form>`;
   }
   function syncManagerLock() {
     if(!managerState)return;
@@ -177,7 +177,7 @@
     const value=row[field.key]??'', id=`f-${field.key}`, locked=readonly||field.key===schema[type].owner;
     const required=field.required;
     let control;
-    if(field.kind==='relation')control=`<div class="related-control"><button type="button" id="${id}" data-action="field-pick" data-key="${field.key}" ${locked?'disabled':''}><span>${value?escape(choiceLabel(field.target,lookup(field.target,value))):`请选择${field.label}`}</span>${icon('search')}</button>${locked?'':clearReferenceButton(field,'editor',value)}</div>`;
+    if(field.kind==='relation')control=`<div class="related-control"><button type="button" id="${id}" data-action="field-pick" data-key="${field.key}" ${locked?'disabled':''}><span>${value?escape(choiceLabel(field.target,lookup(field.target,value))):`请选择${field.label}`}</span></button>${referenceAction(field,'editor',value,locked)}</div>`;
     else if(field.kind==='boolean')control=`<div class="switch-control"><input type="checkbox" role="switch" class="boolean-switch" id="${id}" ${value===true?'checked':''} ${locked?'disabled':''}><span class="switch-value" aria-hidden="true">${value===true?'启用':'停用'}</span></div>`;
     else if(field.kind==='enum')control=`<select id="${id}" ${locked?'disabled':''}><option value="">请选择${field.label}</option>${Object.entries(dictionaries[field.key]).map(([v,l])=>`<option value="${v}" ${value===v?'selected':''}>${l}</option>`).join('')}</select>`;
     else if(field.kind==='textarea')control=`<textarea id="${id}" maxlength="500" ${locked?'disabled':''}>${escape(value)}</textarea>`;
@@ -213,7 +213,7 @@
     trigger.disabled=!areaId;
     trigger.title=areaId?'':'请先选择所属区域';
     trigger.querySelector('span').textContent=storageZoneId?choiceLabel('storage',lookup('storage',storageZoneId)):areaId?'请选择静态归属存储区':'请先选择所属区域';
-    trigger.parentElement.querySelector('.clear-related').hidden=!storageZoneId;
+    trigger.parentElement.querySelector('.reference-action').outerHTML=referenceAction(fieldFor('location','storageZoneId'),'editor',storageZoneId,!areaId);
   }
   function formError(message) { $('formError').textContent=message; $('formError').hidden=false; }
   function validateDraft() {
@@ -282,7 +282,7 @@
       const changed=Number(editorState.draft[key])!==id;
       editorState.draft[key]=id;
       $(`f-${key}`).querySelector('span').textContent=id?choiceLabel(type,lookup(type,id)):`请选择${fieldFor(editorState.type,key).label}`;
-      $(`f-${key}`).parentElement.querySelector('.clear-related').hidden=!id;
+      $(`f-${key}`).parentElement.querySelector('.reference-action').outerHTML=referenceAction(fieldFor(editorState.type,key),'editor',id);
       if(editorState.type==='location'&&key==='areaId')syncStaticStorage(changed);
     } else if(source==='manager'){managerState.draft[key]=id||'';renderManager();}
     else {filterDraft[key]=id||''; renderFilters();}
@@ -294,7 +294,7 @@
       readDraft();editorState.draft[key]='';
       const trigger=$(`f-${key}`);
       trigger.querySelector('span').textContent=`请选择${fieldFor(editorState.type,key).label}`;
-      trigger.parentElement.querySelector('.clear-related').hidden=true;
+      trigger.parentElement.querySelector('.reference-action').outerHTML=referenceAction(fieldFor(editorState.type,key),'editor','');
       if(editorState.type==='location'&&key==='areaId')syncStaticStorage(true);
       trigger.focus();
     } else if(source==='manager') {

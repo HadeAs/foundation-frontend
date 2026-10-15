@@ -250,7 +250,7 @@ const tableComponents = { header: { cell: ResizableHeaderCell } }
 </script>
 
 <template>
-  <div ref="host" class="resizable-table-host" :class="$attrs.class">
+  <div ref="host" class="resizable-table-host" :class="$attrs.class" :style="bodyHeight === undefined ? undefined : { '--table-body-height': `${bodyHeight}px` }">
     <a-popover
       v-if="columnSettings && columns.length"
       :open="settingsOpen"
@@ -342,6 +342,7 @@ const tableComponents = { header: { cell: ResizableHeaderCell } }
 <style scoped>
 .resizable-table-host { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
 .resizable-table { height: 100%; }
+.resizable-table :deep(.ant-table-body) { height: var(--table-body-height); }
 .resizable-table :deep(.ant-table-thead > tr > th:last-child) { padding-right: 42px; }
 .column-settings-trigger {
   position: absolute;

@@ -173,6 +173,8 @@ void load(); void loadDictionaries()
 .keyword { flex: 1; min-width: 160px; }
 .filter-field { width: 175px; }
 .status-filter { width: 110px; }
+.status-filter :deep(.ant-select-clear) { top: 50%; inset-inline-end: 11px; width: 16px; height: 16px; margin-top: 0; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; }
+.status-filter :deep(.ant-select-clear .anticon) { font-size: 12px; line-height: 1; }
 .basic-data-page > .ant-alert { flex: none; margin-top: 8px; }
 .embedded { padding: 0; height: min(560px, 62vh); }
 .embedded > .query-panel { padding: 8px; }

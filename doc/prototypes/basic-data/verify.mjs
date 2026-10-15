@@ -257,7 +257,7 @@ try {
   assert.equal(get('manager').querySelectorAll('[role="tab"]').length,4);
   assert.equal(get('manager').querySelectorAll('tbody tr').length,2,'Only current location relations');
   click('[data-action="manager-create"]');assert.ok(get('f-locationId').disabled);
-  assert.equal(get('f-locationId').parentElement.querySelector('.clear-related'),null,'Locked owner has no clear button');
+  assert.equal(get('f-locationId').parentElement.querySelector('.reference-action').disabled,true,'Locked owner has no clear action');
   app.openPicker('line','productionLineId','editor');
   assert.equal(get('pickerTable').querySelectorAll('tbody tr').length,5);
   click('[data-action="picker-next"]');assert.equal(get('pickerTable').querySelectorAll('tbody tr').length,1);
@@ -271,8 +271,10 @@ try {
   assert.equal(get('pickerTable').querySelectorAll('th').length,3,'No action column');
   assert.equal(get('picker').querySelector('[data-action="clear-pick"]'),null,'No clear button in picker');
   app.closeDialog('picker');
+  assert.equal(get('f-productionLineId').parentElement.querySelector('.reference-action').dataset.action,'clear-reference','Selected value replaces search with clear');
   click('#editor [data-action="clear-reference"][data-key="productionLineId"]');
-  assert.equal(get('picker').open,false,'External clear does not open picker');
+  assert.equal(get('picker').open,false,'Inline clear does not open picker');
+  assert.equal(get('f-productionLineId').parentElement.querySelector('.reference-action').dataset.action,'field-pick','Cleared value restores search');
   assert.equal(app.getState().editorState.draft.productionLineId,'');
   await app.save();assert.match(get('formError').textContent,/服务产线/,'Required association remains validated after clearing');
   app.openPicker('line','productionLineId','editor');
@@ -300,12 +302,14 @@ try {
   app.closeDialog('editor');app.setScene('normal');
 
   app.openPicker('area','areaId','filter');click('#pickerTable tr[data-id="2"] td');
+  assert.equal(get('filters').querySelector('[data-key="areaId"].reference-action').dataset.action,'clear-reference','Selected filter shows clear');
   get('filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
   assert.equal(app.filteredRows().length,3);
   app.openPicker('area','areaId','filter');
   assert.equal(get('pickerTable').querySelector('.selected').dataset.id,'2','Filter selection is highlighted on reopen');
   app.closeDialog('picker');
   click('#filters [data-action="clear-reference"][data-key="areaId"]');
+  assert.equal(get('filters').querySelector('[data-key="areaId"].reference-action').dataset.action,'filter-pick','Cleared filter shows search');
   assert.equal(app.filteredRows().length,3,'Clearing filter does not query immediately');
   assert.equal(get('picker').open,false);
   get('filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));

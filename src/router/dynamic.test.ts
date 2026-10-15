@@ -70,12 +70,12 @@ describe('dynamic routes', () => {
   })
 
   it('resolves manually configured basic-data and runtime components', async () => {
-    const pages = ['factory', 'floor', 'area', 'production-line', 'storage-zone', 'location', 'container-model', 'container', 'vehicle-load', 'location-state', 'container-state', 'box-binding', 'production-plan']
+    const pages = ['factory', 'floor', 'area', 'production-line', 'storage-zone', 'location', 'container-model', 'container', 'vehicle-load', 'location-state', 'container-state', 'box-binding', 'production-plan', 'logistics-task', 'operation-record', 'warehouse-record', 'receiving-record']
     const routes = createMenuRoutes(pages.map((page, index) => ({
       menuId: 100 + index, menuName: page, menuType: 'MENU', status: 1,
       path: `business/${page}`, component: `/business/${page}`, terminalType: 'PC',
     })))
-    expect(routes).toHaveLength(13)
+    expect(routes).toHaveLength(17)
     for (const route of routes) {
       expect(typeof route.component).toBe('function')
       const module = await (route.component as () => Promise<{ default: { name?: string } }>)()
