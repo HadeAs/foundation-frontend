@@ -1,5 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { Button, Select, Switch, Table } from 'ant-design-vue'
+import { Button, Modal, Select, Switch, Table } from 'ant-design-vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as api from '@/api/basic-data'
 import { ApiError, CONFLICT_MESSAGE } from '@/api/http'
@@ -18,7 +18,10 @@ vi.mock('@/api/basic-data', async (original) => ({
   saveBasicData: vi.fn(),
   deleteBasicData: vi.fn(),
 }))
-const modalStub = { template: '<section><slot /><footer><slot name="footer" /></footer></section>' }
+const modalStub = {
+  props: ['open'],
+  template: '<section><slot /><footer><slot name="footer" /></footer></section>',
+}
 const options = { global: { stubs: { AModal: modalStub } } }
 const factory = { id: 1, version: 3, factoryCode: '0001', factoryName: '测试工厂', enabled: true }
 const wrappers: Array<{ unmount: () => void }> = []
@@ -53,6 +56,203 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 describe('基础资料页面本地 DOM', () => {
+  const trafficArea = {
+    id: 11,
+    version: 4,
+    areaCode: '0001',
+    areaName: '交管一区',
+    enabled: true,
+    remark: '通道交叉口',
+    status: 'OCCUPIED',
+    lockSource: 'PDA',
+    occupancyKey: '0001-TASK-01',
+    lastOperatorName: '测试操作员',
+    lastOperationTime: '2026-10-19T01:30:00Z',
+    createdTime: '2026-10-19T01:00:00Z',
+    updatedTime: '2026-10-19T02:00:00Z',
+  }
+  it('交管区域列表支持查询和新增，保留最后操作时间但不显示创建/更新时间或排序', async () => {
+    vi.mocked(api.pageBasicData).mockResolvedValue({ records: [trafficArea], total: 1 })
+    const wrapper = keep(mount(BasicDataGrid, { props: { type: 'trafficArea' }, ...options }))
+    await flushPromises()
+    const table = wrapper.findComponent(ResizableTable)
+    expect(table.props('columns').map((column) => column.key)).toEqual([
+      'areaCode',
+      'areaName',
+      'enabled',
+      'status',
+      'lockSource',
+      'occupancyKey',
+      'lastOperatorName',
+      'lastOperationTime',
+      'remark',
+      'action',
+    ])
+    expect(
+      table
+        .props('columns')
+        .filter((column) => column.sorter)
+        .map((column) => column.key),
+    ).toEqual([])
+    expect(wrapper.findComponent(ReferenceInput).exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('所属楼层')
+    expect(
+      wrapper.findAllComponents(Button).some((button) => /锁定|释放/.test(button.text())),
+    ).toBe(false)
+    expect(
+      table
+        .props('columns')
+        .slice(2, 8)
+        .map((column) => column.title),
+    ).toEqual(['启用状态', '运行状态', '锁定来源', '占用标识', '最后操作人', '最后操作时间'])
+    for (const value of ['占用', 'PDA', '0001-TASK-01', '测试操作员', '2026-10-19 09:30:00'])
+      expect(wrapper.text()).toContain(value)
+    expect(wrapper.text()).not.toMatch(/创建时间|更新时间|2026-10-19 09:00:00|2026-10-19 10:00:00/)
+    await wrapper.find('input[aria-label="查询关键字"]').setValue(' 0001 ')
+    wrapper.findComponent(Select).vm.$emit('update:value', 0)
+    await wrapper
+      .findAllComponents(Button)
+      .find((button) => button.text().replace(/\s/g, '') === '查询')!
+      .trigger('click')
+    await flushPromises()
+    expect(api.pageBasicData).toHaveBeenLastCalledWith(
+      'trafficArea',
+      expect.objectContaining({
+        keyword: '0001',
+        enabled: false,
+        page: 1,
+      }),
+    )
+    await wrapper
+      .findAllComponents(Button)
+      .find((button) => button.text().replace(/\s/g, '') === '新增')!
+      .trigger('click')
+    await flushPromises()
+    const editor = wrapper.findComponent(BasicDataEditor)
+    expect(editor.text()).not.toMatch(/运行状态|锁定来源|占用标识|最后操作人|最后操作时间/)
+    const save = editor
+      .findAllComponents(Button)
+      .find((button) => button.text().replace(/\s/g, '') === '保存')!
+    await save.trigger('click')
+    expect(api.saveBasicData).not.toHaveBeenCalled()
+    expect(editor.text()).toContain('请填写交管区域编码')
+    await editor.find('input[aria-label="交管区域编码"]').setValue('0002')
+    await editor.find('input[aria-label="交管区域名称"]').setValue('交管二区')
+    await save.trigger('click')
+    await flushPromises()
+    expect(api.saveBasicData).toHaveBeenCalledWith(
+      'trafficArea',
+      {
+        areaCode: '0002',
+        areaName: '交管二区',
+        enabled: true,
+      },
+      undefined,
+    )
+    expect(wrapper.findComponent(BasicDataEditor).exists()).toBe(false)
+  })
+  it('交管区域只读运行列区分空闲、占用、未知值与空值', async () => {
+    vi.mocked(api.pageBasicData).mockResolvedValue({
+      records: [
+        { ...trafficArea, status: 'FREE' },
+        { ...trafficArea, id: 12, status: 'NEW_STATUS', lockSource: 'NEW_SOURCE' },
+        { id: 13, areaCode: 'EMPTY', areaName: '无运行信息', enabled: false },
+      ],
+      total: 3,
+    })
+    const wrapper = keep(mount(BasicDataGrid, { props: { type: 'trafficArea' }, ...options }))
+    await flushPromises()
+    const rows = wrapper.findAll('.ant-table-tbody > tr.ant-table-row')
+    expect(rows).toHaveLength(3)
+    expect(rows[0]!.find('.ant-tag-success').exists()).toBe(true)
+    expect(rows[0]!.text()).toContain('空闲')
+    expect(rows[1]!.text()).toContain('NEW_STATUS')
+    expect(rows[1]!.text()).toContain('NEW_SOURCE')
+    const cells = rows[2]!.findAll('td')
+    expect(cells.slice(4, 9).map((cell) => cell.text())).toEqual(['—', '—', '—', '—', '—'])
+    expect(rows[2]!.text()).toContain('停用')
+  })
+  it('交管区域详情只读，编辑只提交基础字段并保留冲突草稿', async () => {
+    vi.mocked(api.getBasicData).mockResolvedValue(trafficArea)
+    const detail = keep(
+      mount(BasicDataEditor, {
+        props: { type: 'trafficArea', id: 11, readonly: true },
+        ...options,
+      }),
+    )
+    await flushPromises()
+    expect(detail.find('input[aria-label="交管区域编码"]').attributes('disabled')).toBeDefined()
+    expect(
+      detail
+        .findAllComponents(Button)
+        .some((button) => button.text().replace(/\s/g, '') === '保存'),
+    ).toBe(false)
+    expect(detail.text()).toContain('2026-10-19 10:00:00')
+    const wrapper = keep(
+      mount(BasicDataEditor, { props: { type: 'trafficArea', id: 11 }, ...options }),
+    )
+    await flushPromises()
+    expect(wrapper.text()).not.toMatch(/运行状态|锁定来源|占用标识|最后操作人|最后操作时间/)
+    await wrapper.find('input[aria-label="交管区域名称"]').setValue('交管新名称')
+    await wrapper.find('textarea[aria-label="备注"]').setValue('')
+    wrapper.findComponent(Switch).vm.$emit('update:checked', false)
+    const request = pending<typeof trafficArea>()
+    vi.mocked(api.saveBasicData).mockReturnValueOnce(request.promise)
+    const save = wrapper
+      .findAllComponents(Button)
+      .find((button) => button.text().replace(/\s/g, '') === '保存')!
+    await save.trigger('click')
+    await save.trigger('click')
+    expect(api.saveBasicData).toHaveBeenCalledTimes(1)
+    expect(save.props('loading')).toBe(true)
+    expect(api.saveBasicData).toHaveBeenCalledWith(
+      'trafficArea',
+      {
+        areaCode: '0001',
+        areaName: '交管新名称',
+        enabled: false,
+        remark: null,
+      },
+      trafficArea,
+    )
+    request.resolve(trafficArea)
+    await flushPromises()
+    expect(wrapper.emitted('saved')).toHaveLength(1)
+    vi.mocked(api.saveBasicData).mockRejectedValueOnce(new ApiError(CONFLICT_MESSAGE))
+    await save.trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain(CONFLICT_MESSAGE)
+    expect(wrapper.find<HTMLInputElement>('input[aria-label="交管区域名称"]').element.value).toBe(
+      '交管新名称',
+    )
+    expect(save.props('disabled')).toBe(true)
+  })
+  it.each([false, true])('交管区域删除（批量 %s）携带版本，失败不清空选中项', async (batch) => {
+    vi.mocked(api.pageBasicData).mockResolvedValue({ records: [trafficArea], total: 1 })
+    vi.mocked(api.deleteBasicData).mockRejectedValueOnce(new ApiError('交管区域存在引用'))
+    const wrapper = keep(mount(BasicDataGrid, { props: { type: 'trafficArea' }, ...options }))
+    await flushPromises()
+    const table = wrapper.findComponent(Table)
+    table.props('rowSelection')!.onChange!([11], [trafficArea])
+    await flushPromises()
+    await wrapper
+      .findAllComponents(Button)
+      .find((button) => button.text().replace(/\s/g, '') === (batch ? '批量删除' : '删除'))!
+      .trigger('click')
+    const confirm = wrapper
+      .findAllComponents(Button)
+      .find((button) => button.text().replace(/\s/g, '') === '确认删除')!
+    await confirm.trigger('click')
+    await flushPromises()
+    expect(api.deleteBasicData).toHaveBeenCalledWith('trafficArea', [trafficArea], batch)
+    expect(wrapper.text()).toContain('交管区域存在引用')
+    expect(table.props('rowSelection')!.selectedRowKeys).toEqual([11])
+    vi.mocked(api.deleteBasicData).mockResolvedValueOnce(undefined)
+    await confirm.trigger('click')
+    await flushPromises()
+    expect(wrapper.findComponent(Modal).props('open')).toBe(false)
+    expect(table.props('rowSelection')!.selectedRowKeys).toEqual([])
+  })
   it('查询、翻页、服务器排序、刷新保留已应用条件，重置清空', async () => {
     const wrapper = keep(mount(BasicDataGrid, { props: { type: 'factory' }, ...options }))
     await flushPromises()

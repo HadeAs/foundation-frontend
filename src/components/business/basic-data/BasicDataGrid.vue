@@ -86,7 +86,9 @@ const relationFailed = computed(() =>
 const columns = computed<TableColumnsType>(() => {
   const keys = [
     ...config.value.columns,
-    ...(!config.value.owner || props.type === 'fixtureOrder' || lineRelations.includes(props.type)
+    ...((!config.value.owner && props.type !== 'trafficArea') ||
+    props.type === 'fixtureOrder' ||
+    lineRelations.includes(props.type)
       ? ['createdTime', 'updatedTime']
       : []),
   ]
@@ -99,7 +101,8 @@ const columns = computed<TableColumnsType>(() => {
           ? '创建时间'
           : key === 'updatedTime'
             ? '更新时间'
-            : config.value.fields.find((field) => field.key === key)?.label,
+            : config.value.columnLabels?.[key] ||
+              config.value.fields.find((field) => field.key === key)?.label,
       width: key.endsWith('Time') ? 180 : key === 'enabled' ? 100 : key === 'remark' ? 220 : 170,
       ellipsis: true,
       sorter: sortableFields(props.type).includes(key),
@@ -228,6 +231,8 @@ function display(record: DataRecord, key: string) {
   const value = record[key]
   if (key === 'boxCapacity' && record.containerCategory !== 'VEHICLE_SLOT') return '—'
   if (value === undefined || value === null || value === '') return '—'
+  if (props.type === 'trafficArea' && key === 'status')
+    return value === 'FREE' ? '空闲' : value === 'OCCUPIED' ? '占用' : String(value)
   const field = config.value.fields.find((item) => item.key === key)
   if (field?.target) return relationLabel(field.target, value, relations.value)
   if (field?.dict)
@@ -455,6 +460,17 @@ void loadDictionaries()
             >{{
               record.enabled === true ? '启用' : record.enabled === false ? '停用' : '未知'
             }}</ATag
+          >
+          <ATag
+            v-else-if="type === 'trafficArea' && column.key === 'status'"
+            :color="
+              record.status === 'FREE'
+                ? 'success'
+                : record.status === 'OCCUPIED'
+                  ? 'warning'
+                  : undefined
+            "
+            >{{ display(record, 'status') }}</ATag
           >
           <strong
             v-else-if="column.key === config.name"

@@ -21,6 +21,7 @@ type BusinessResponse =
   | Schema['NariFactoryResponse']
   | Schema['NariFloorResponse']
   | Schema['NariAreaResponse']
+  | Schema['NariTrafficAreaResponse']
   | Schema['NariProductionLineResponse']
   | Schema['NariStorageZoneResponse']
   | Schema['NariLocationResponse']

@@ -16,9 +16,9 @@ type ContractSchema = {
   required?: string[]
 }
 const schemas = contract.components.schemas as unknown as Record<string, ContractSchema>
-describe('基础资料 V9 字段与查询契约', () => {
+describe('基础资料字段与最新查询契约', () => {
   for (const type of Object.keys(objects) as ObjectType[])
-    it(`${type} 的字段、必填、筛选及排序与 V9 一致`, () => {
+    it(`${type} 的字段、必填、筛选及排序与当前 OpenAPI 一致`, () => {
       const config = objects[type]
       const request = schemas[`Nari${config.schema}Request`]!
       const query = schemas[`Nari${config.schema}Query`]!
@@ -77,6 +77,40 @@ describe('基础资料 V9 字段与查询契约', () => {
       expect(body).not.toHaveProperty('version')
     })
 
+  it('交管区域只维护基础字段，编码保留前导零，不提交运行状态', () => {
+    expect(sortableFields('trafficArea')).toEqual(['id', 'createdTime', 'updatedTime'])
+    const draft = {
+      areaCode: ' 0001 ',
+      areaName: ' 交管一区 ',
+      enabled: false,
+      remark: '',
+      status: 'OCCUPIED',
+      lockSource: 'PDA',
+      occupancyKey: 'TASK-01',
+      lastOperatorName: 'admin',
+      lastOperationTime: '2026-10-19T01:30:00Z',
+      version: 3,
+    }
+    expect(buildRequest('trafficArea', draft)).toEqual({
+      areaCode: '0001',
+      areaName: '交管一区',
+      enabled: false,
+    })
+    expect(buildRequest('trafficArea', draft, undefined, true)).toEqual({
+      areaCode: '0001',
+      areaName: '交管一区',
+      enabled: false,
+      remark: null,
+    })
+    expect(validateDraft('trafficArea', draft)).toEqual({})
+    expect(validateDraft('trafficArea', { ...draft, areaCode: ' ' })).toHaveProperty('areaCode')
+    expect(validateDraft('trafficArea', { ...draft, areaName: 'a'.repeat(129) })).toHaveProperty(
+      'areaName',
+    )
+    expect(validateDraft('trafficArea', { ...draft, remark: 'a'.repeat(501) })).toHaveProperty(
+      'remark',
+    )
+  })
   it('容量只随大类显示，更新隐藏/清空字段传 null，新增省略', () => {
     for (const usage of ['TRANSFER_CART', 'MAGAZINE']) {
       expect(

@@ -80,6 +80,7 @@ describe('dynamic routes', () => {
       'factory',
       'floor',
       'area',
+      'traffic-area',
       'production-line',
       'storage-zone',
       'location',
@@ -106,7 +107,7 @@ describe('dynamic routes', () => {
         terminalType: 'PC',
       })),
     )
-    expect(routes).toHaveLength(17)
+    expect(routes).toHaveLength(18)
     for (const route of routes) {
       expect(typeof route.component).toBe('function')
       const module = await (route.component as () => Promise<{ default: { name?: string } }>)()

@@ -2,6 +2,7 @@ export type ObjectType =
   | 'factory'
   | 'floor'
   | 'area'
+  | 'trafficArea'
   | 'line'
   | 'storage'
   | 'location'
@@ -39,6 +40,7 @@ export interface ObjectConfig {
   searchKey?: string
   fields: Field[]
   columns: string[]
+  columnLabels?: Record<string, string>
   filters: string[]
 }
 
@@ -103,6 +105,34 @@ export const objects: Record<ObjectType, ObjectConfig> = {
     ],
     columns: ['areaCode', 'areaName', 'floorId', 'enabled', 'remark'],
     filters: ['floorId'],
+  },
+  trafficArea: {
+    label: '交管区域',
+    resource: 'nari-traffic-area',
+    schema: 'TrafficArea',
+    code: 'areaCode',
+    name: 'areaName',
+    fields: [field('areaCode', '交管区域编码'), field('areaName', '交管区域名称'), enabled, remark],
+    columns: [
+      'areaCode',
+      'areaName',
+      'enabled',
+      'status',
+      'lockSource',
+      'occupancyKey',
+      'lastOperatorName',
+      'lastOperationTime',
+      'remark',
+    ],
+    columnLabels: {
+      enabled: '启用状态',
+      status: '运行状态',
+      lockSource: '锁定来源',
+      occupancyKey: '占用标识',
+      lastOperatorName: '最后操作人',
+      lastOperationTime: '最后操作时间',
+    },
+    filters: [],
   },
   line: {
     label: '产线',
@@ -335,7 +365,7 @@ export function visibleFields(type: ObjectType, record: DataRecord) {
   )
 }
 export function sortableFields(type: ObjectType) {
-  if (type === 'fixtureOrder' || lineRelations.includes(type))
+  if (type === 'trafficArea' || type === 'fixtureOrder' || lineRelations.includes(type))
     return ['id', 'createdTime', 'updatedTime']
   const config = objects[type]
   return [
