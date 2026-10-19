@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-  HolderOutlined,
-  PushpinOutlined,
-  SettingOutlined,
-} from '@ant-design/icons-vue'
+import { HolderOutlined, PushpinOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import {
   Button as AButton,
   Checkbox as ACheckbox,
@@ -12,30 +8,25 @@ import {
   type TableColumnsType,
   type TableProps,
 } from 'ant-design-vue'
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  onUpdated,
-  ref,
-  watch,
-} from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, watch } from 'vue'
 
 import ResizableHeaderCell from './ResizableHeaderCell.vue'
 import { getTableScrollWidth, isActionColumn } from './table-columns'
 
 defineOptions({ inheritAttrs: false })
 
-const props = withDefaults(defineProps<{
-  columns: TableColumnsType
-  columnSettings?: boolean
-  minColumnWidth?: number
-  scroll?: TableProps['scroll']
-}>(), {
-  columnSettings: true,
-  minColumnWidth: 56,
-})
+const props = withDefaults(
+  defineProps<{
+    columns: TableColumnsType
+    columnSettings?: boolean
+    minColumnWidth?: number
+    scroll?: TableProps['scroll']
+  }>(),
+  {
+    columnSettings: true,
+    minColumnWidth: 56,
+  },
+)
 
 type ColumnFixed = 'left' | 'right' | false
 
@@ -56,7 +47,11 @@ let resizeObserver: ResizeObserver | undefined
 function outerHeight(element: HTMLElement | null) {
   if (!element) return 0
   const style = getComputedStyle(element)
-  return element.offsetHeight + Number.parseFloat(style.marginTop) + Number.parseFloat(style.marginBottom)
+  return (
+    element.offsetHeight +
+    Number.parseFloat(style.marginTop) +
+    Number.parseFloat(style.marginBottom)
+  )
 }
 
 async function measureBodyHeight() {
@@ -65,7 +60,10 @@ async function measureBodyHeight() {
   const height = host.value.clientHeight
   const header = host.value.querySelector<HTMLElement>('.ant-table-thead')
   const pagination = host.value.querySelector<HTMLElement>('.ant-table-pagination')
-  const nextHeight = Math.max(80, Math.floor(height - outerHeight(header) - outerHeight(pagination) - 2))
+  const nextHeight = Math.max(
+    80,
+    Math.floor(height - outerHeight(header) - outerHeight(pagination) - 2),
+  )
   if (bodyHeight.value !== nextHeight) bodyHeight.value = nextHeight
   if (header) {
     const hostRect = host.value.getBoundingClientRect()
@@ -114,10 +112,14 @@ function syncColumnSettings(columns: TableColumnsType) {
   )
 }
 
-watch(() => props.columns, (columns) => {
-  syncWidths(columns)
-  syncColumnSettings(columns)
-}, { immediate: true, deep: true })
+watch(
+  () => props.columns,
+  (columns) => {
+    syncWidths(columns)
+    syncColumnSettings(columns)
+  },
+  { immediate: true, deep: true },
+)
 
 function resizeColumn(key: string, width: number) {
   widths.value = { ...widths.value, [key]: width }
@@ -129,7 +131,7 @@ function makeResizable(columns: TableColumnsType, parentKey = ''): TableColumnsT
     const actionColumn = isActionColumn(column)
     const baseWidth = column.width ?? (actionColumn ? 140 : undefined)
     const numericWidth = typeof baseWidth === 'number'
-    const width = numericWidth ? widths.value[key] ?? baseWidth : baseWidth
+    const width = numericWidth ? (widths.value[key] ?? baseWidth) : baseWidth
     const originalHeaderCell = column.customHeaderCell
     const children = 'children' in column ? makeResizable(column.children, `${key}.`) : undefined
 
@@ -137,7 +139,8 @@ function makeResizable(columns: TableColumnsType, parentKey = ''): TableColumnsT
       ...column,
       width,
       children,
-      fixed: column.fixed === false ? undefined : column.fixed ?? (actionColumn ? 'right' : undefined),
+      fixed:
+        column.fixed === false ? undefined : (column.fixed ?? (actionColumn ? 'right' : undefined)),
       customHeaderCell: (currentColumn) => ({
         ...(originalHeaderCell?.(currentColumn) ?? {}),
         width: numericWidth ? width : undefined,
@@ -149,20 +152,26 @@ function makeResizable(columns: TableColumnsType, parentKey = ''): TableColumnsT
   })
 }
 
-const columnsByKey = computed(() => new Map(
-  props.columns.map((column, index) => [getColumnKey(column, index), column]),
-))
-const configuredColumns = computed<TableColumnsType>(() => columnOrder.value.flatMap((key) => {
-  const column = columnsByKey.value.get(key)
-  if (!column || hiddenColumnKeys.value.includes(key)) return []
-  return [{
-    ...column,
-    ...(Object.hasOwn(fixedColumns.value, key) ? { fixed: fixedColumns.value[key] } : {}),
-  }]
-}))
+const columnsByKey = computed(
+  () => new Map(props.columns.map((column, index) => [getColumnKey(column, index), column])),
+)
+const configuredColumns = computed<TableColumnsType>(() =>
+  columnOrder.value.flatMap((key) => {
+    const column = columnsByKey.value.get(key)
+    if (!column || hiddenColumnKeys.value.includes(key)) return []
+    return [
+      {
+        ...column,
+        ...(Object.hasOwn(fixedColumns.value, key) ? { fixed: fixedColumns.value[key] } : {}),
+      },
+    ]
+  }),
+)
 const resizableColumns = computed(() => makeResizable(configuredColumns.value))
-const allColumnsVisible = computed(() =>
-  draftOrder.value.length > 0 && draftOrder.value.every((key) => !draftHiddenKeys.value.includes(key)),
+const allColumnsVisible = computed(
+  () =>
+    draftOrder.value.length > 0 &&
+    draftOrder.value.every((key) => !draftHiddenKeys.value.includes(key)),
 )
 const someColumnsVisible = computed(() =>
   draftOrder.value.some((key) => !draftHiddenKeys.value.includes(key)),
@@ -242,7 +251,7 @@ const tableScroll = computed<TableProps['scroll']>(() => {
   const width = getTableScrollWidth(resizableColumns.value, props.minColumnWidth)
   return {
     ...scroll,
-    x: typeof scroll.x === 'number' ? Math.max(scroll.x, width) : scroll.x ?? width,
+    x: typeof scroll.x === 'number' ? Math.max(scroll.x, width) : (scroll.x ?? width),
     y: scroll.y ?? bodyHeight.value,
   }
 })
@@ -250,7 +259,12 @@ const tableComponents = { header: { cell: ResizableHeaderCell } }
 </script>
 
 <template>
-  <div ref="host" class="resizable-table-host" :class="$attrs.class" :style="bodyHeight === undefined ? undefined : { '--table-body-height': `${bodyHeight}px` }">
+  <div
+    ref="host"
+    class="resizable-table-host"
+    :class="[$attrs.class, { 'with-column-settings': columnSettings }]"
+    :style="bodyHeight === undefined ? undefined : { '--table-body-height': `${bodyHeight}px` }"
+  >
     <a-popover
       v-if="columnSettings && columns.length"
       :open="settingsOpen"
@@ -311,7 +325,9 @@ const tableComponents = { header: { cell: ResizableHeaderCell } }
             <a-button type="text" @click="resetColumnSettings">恢复默认</a-button>
             <span class="column-settings-footer-spacer"></span>
             <a-button type="text" @click="settingsOpen = false">取消</a-button>
-            <a-button type="text" class="column-settings-confirm" @click="confirmColumnSettings">确认</a-button>
+            <a-button type="text" class="column-settings-confirm" @click="confirmColumnSettings"
+              >确认</a-button
+            >
           </div>
         </div>
       </template>
@@ -340,10 +356,21 @@ const tableComponents = { header: { cell: ResizableHeaderCell } }
 </template>
 
 <style scoped>
-.resizable-table-host { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
-.resizable-table { height: 100%; }
-.resizable-table :deep(.ant-table-body) { height: var(--table-body-height); }
-.resizable-table :deep(.ant-table-thead > tr > th:last-child) { padding-right: 42px; }
+.resizable-table-host {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.resizable-table {
+  height: 100%;
+}
+.resizable-table :deep(.ant-table-body) {
+  height: var(--table-body-height);
+}
+.with-column-settings .resizable-table :deep(.ant-table-thead > tr > th:last-child) {
+  padding-right: 42px;
+}
 .column-settings-trigger {
   position: absolute;
   z-index: 12;
@@ -358,11 +385,30 @@ const tableComponents = { header: { cell: ResizableHeaderCell } }
   background: transparent;
   cursor: pointer;
 }
-.column-settings-trigger:hover { color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, transparent); }
-.column-settings-panel { width: 276px; margin: -12px -16px; color: var(--shell-ink); font-size: 14px; background: var(--shell-panel); }
-.column-settings-all { padding: 8px 12px; border-bottom: 1px solid var(--shell-line); font-weight: 600; }
-.column-settings-all :deep(.ant-checkbox-wrapper) { color: var(--brand); }
-.column-settings-list { max-height: min(360px, 56vh); overflow-y: auto; padding-block: 2px; }
+.column-settings-trigger:hover {
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+}
+.column-settings-panel {
+  width: 276px;
+  margin: -12px -16px;
+  color: var(--shell-ink);
+  font-size: 14px;
+  background: var(--shell-panel);
+}
+.column-settings-all {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--shell-line);
+  font-weight: 600;
+}
+.column-settings-all :deep(.ant-checkbox-wrapper) {
+  color: var(--brand);
+}
+.column-settings-list {
+  max-height: min(360px, 56vh);
+  overflow-y: auto;
+  padding-block: 2px;
+}
 .column-settings-item {
   display: grid;
   min-height: 32px;
@@ -370,12 +416,25 @@ const tableComponents = { header: { cell: ResizableHeaderCell } }
   align-items: center;
   gap: 6px;
   grid-template-columns: 18px 14px minmax(0, 1fr) 24px 24px;
-  transition: background-color 120ms ease, opacity 120ms ease;
+  transition:
+    background-color 120ms ease,
+    opacity 120ms ease;
 }
-.column-settings-item:hover { background: var(--shell-hover); }
-.column-settings-item.dragging { opacity: 0.45; }
-.column-drag-handle { color: var(--shell-muted); cursor: grab; }
-.column-settings-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.column-settings-item:hover {
+  background: var(--shell-hover);
+}
+.column-settings-item.dragging {
+  opacity: 0.45;
+}
+.column-drag-handle {
+  color: var(--shell-muted);
+  cursor: grab;
+}
+.column-settings-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .column-pin {
   display: inline-grid;
   width: 24px;
@@ -387,11 +446,32 @@ const tableComponents = { header: { cell: ResizableHeaderCell } }
   background: transparent;
   cursor: pointer;
 }
-.column-pin:hover, .column-pin.active { color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, transparent); }
-.column-pin-left :deep(.anticon) { transform: rotate(-45deg); }
-.column-pin-right :deep(.anticon) { transform: rotate(45deg); }
-.column-settings-footer { display: flex; padding: 3px 5px; align-items: center; border-top: 1px solid var(--shell-line); }
-.column-settings-footer :deep(.ant-btn) { height: 28px; padding-inline: 8px; font-size: 13px; }
-.column-settings-footer-spacer { flex: 1; }
-.column-settings-confirm { color: var(--brand); }
+.column-pin:hover,
+.column-pin.active {
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+}
+.column-pin-left :deep(.anticon) {
+  transform: rotate(-45deg);
+}
+.column-pin-right :deep(.anticon) {
+  transform: rotate(45deg);
+}
+.column-settings-footer {
+  display: flex;
+  padding: 3px 5px;
+  align-items: center;
+  border-top: 1px solid var(--shell-line);
+}
+.column-settings-footer :deep(.ant-btn) {
+  height: 28px;
+  padding-inline: 8px;
+  font-size: 13px;
+}
+.column-settings-footer-spacer {
+  flex: 1;
+}
+.column-settings-confirm {
+  color: var(--brand);
+}
 </style>

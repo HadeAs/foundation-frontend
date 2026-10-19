@@ -10,8 +10,18 @@ describe('createLatestRequest', () => {
     let finishFirst!: (value: string) => void
     let finishSecond!: (value: string) => void
 
-    const first = runLatest(() => new Promise<string>((resolve) => { finishFirst = resolve }))
-    const second = runLatest(() => new Promise<string>((resolve) => { finishSecond = resolve }))
+    const first = runLatest(
+      () =>
+        new Promise<string>((resolve) => {
+          finishFirst = resolve
+        }),
+    )
+    const second = runLatest(
+      () =>
+        new Promise<string>((resolve) => {
+          finishSecond = resolve
+        }),
+    )
     expect(loading.value).toBe(true)
 
     finishFirst('旧结果')
@@ -29,8 +39,19 @@ describe('createLatestRequest', () => {
     let finishVisible!: (value: string) => void
     let finishSilent!: (value: string) => void
 
-    const visible = runLatest(() => new Promise<string>((resolve) => { finishVisible = resolve }))
-    const silent = runLatest(() => new Promise<string>((resolve) => { finishSilent = resolve }), false)
+    const visible = runLatest(
+      () =>
+        new Promise<string>((resolve) => {
+          finishVisible = resolve
+        }),
+    )
+    const silent = runLatest(
+      () =>
+        new Promise<string>((resolve) => {
+          finishSilent = resolve
+        }),
+      false,
+    )
 
     finishVisible('旧结果')
     await expect(visible).resolves.toBeUndefined()

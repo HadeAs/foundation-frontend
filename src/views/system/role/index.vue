@@ -42,7 +42,12 @@ import { createLatestRequest } from '@/utils/latest-request'
 import { includeAncestorMenuIds } from './permissions'
 
 type RoleForm = RoleRequest & { roleId?: number }
-type MenuTreeOption = { key: number; title: string; disableCheckbox?: boolean; children?: MenuTreeOption[] }
+type MenuTreeOption = {
+  key: number
+  title: string
+  disableCheckbox?: boolean
+  children?: MenuTreeOption[]
+}
 
 const keyword = ref('')
 const records = ref<SysRole[]>([])
@@ -85,10 +90,10 @@ function defaultForm(): RoleForm {
 
 const form = reactive<RoleForm>(defaultForm())
 const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
-const modalTitle = computed(() => editingId.value === undefined ? '新增角色' : '编辑角色')
-const permissionTitle = computed(() => permissionRole.value?.roleName
-  ? `菜单权限 · ${permissionRole.value.roleName}`
-  : '菜单权限')
+const modalTitle = computed(() => (editingId.value === undefined ? '新增角色' : '编辑角色'))
+const permissionTitle = computed(() =>
+  permissionRole.value?.roleName ? `菜单权限 · ${permissionRole.value.roleName}` : '菜单权限',
+)
 
 const rules: FormProps['rules'] = {
   roleName: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
@@ -99,18 +104,22 @@ function toMenuOptions(nodes: MenuNode[]): MenuTreeOption[] {
   return nodes.flatMap((node) => {
     if (node.menuId === undefined) return []
     const children = toMenuOptions(node.children)
-    return [{
-      key: node.menuId,
-      title: node.menuName || '未命名菜单',
-      disableCheckbox: node.fullPath === '/dashboard',
-      children: children.length ? children : undefined,
-    }]
+    return [
+      {
+        key: node.menuId,
+        title: node.menuName || '未命名菜单',
+        disableCheckbox: node.fullPath === '/dashboard',
+        children: children.length ? children : undefined,
+      },
+    ]
   })
 }
 
 async function load() {
   try {
-    const result = await runLatestLoad(() => pageRoles(currentPage.value, pageSize.value, keyword.value))
+    const result = await runLatestLoad(() =>
+      pageRoles(currentPage.value, pageSize.value, keyword.value),
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -232,13 +241,14 @@ async function openPermission(record: SysRole) {
     const [menus, ids] = await Promise.all([listMenus(), getRoleMenuIds(record.roleId)])
     const menuTree = buildMenuTree(menus, false, false)
     allMenus.value = menus
-    dashboardMenuId.value = menus.find((menu) => menu.path === '/dashboard' || menu.path === 'dashboard')?.menuId
+    dashboardMenuId.value = menus.find(
+      (menu) => menu.path === '/dashboard' || menu.path === 'dashboard',
+    )?.menuId
     menuOptions.value = toMenuOptions(menuTree)
-    const selectedIds = dashboardMenuId.value === undefined
-      ? ids
-      : [...new Set([...ids, dashboardMenuId.value])]
-    checkedMenuIds.value = selectedIds.filter((id) =>
-      menus.find((menu) => menu.menuId === id)?.menuType !== 'DIR',
+    const selectedIds =
+      dashboardMenuId.value === undefined ? ids : [...new Set([...ids, dashboardMenuId.value])]
+    checkedMenuIds.value = selectedIds.filter(
+      (id) => menus.find((menu) => menu.menuId === id)?.menuType !== 'DIR',
     )
   } catch {
     message.error('菜单权限获取失败，请稍后重试')
@@ -252,9 +262,10 @@ async function savePermission() {
   if (roleId === undefined || permissionLoading.value) return
   permissionSubmitting.value = true
   try {
-    const selectedIds = dashboardMenuId.value === undefined
-      ? checkedMenuIds.value
-      : [...new Set([...checkedMenuIds.value, dashboardMenuId.value])]
+    const selectedIds =
+      dashboardMenuId.value === undefined
+        ? checkedMenuIds.value
+        : [...new Set([...checkedMenuIds.value, dashboardMenuId.value])]
     const menuIds = includeAncestorMenuIds(allMenus.value, selectedIds)
     await assignRoleMenus(roleId, menuIds, permissionRole.value?.version)
     message.success('菜单权限已保存')
@@ -339,13 +350,17 @@ load()
                 cancel-text="取消"
                 @confirm="remove(record)"
               >
-                <a-button type="link" danger size="small" :loading="deletingId === record.roleId">删除</a-button>
+                <a-button type="link" danger size="small" :loading="deletingId === record.roleId"
+                  >删除</a-button
+                >
               </a-popconfirm>
             </div>
           </template>
         </template>
         <template #emptyText>
-          <div class="empty-table"><SafetyCertificateOutlined /><span>暂无符合条件的角色</span></div>
+          <div class="empty-table">
+            <SafetyCertificateOutlined /><span>暂无符合条件的角色</span>
+          </div>
         </template>
       </ResizableTable>
     </section>
@@ -410,29 +425,120 @@ load()
 </template>
 
 <style scoped>
-.query-field { width: min(520px, 58%); }
-.role-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.role-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.role-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.role-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.role-table :deep(.ant-pagination) { margin: 13px; }
-.role-name { font-weight: 600; }
-.role-code { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
-.cell-text { display: block; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
-.empty-value { color: color-mix(in srgb, var(--shell-muted) 55%, transparent); }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
-.empty-table :deep(.anticon) { font-size: 30px; }
-.role-form { padding-top: 8px; }
-.form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.full-field { grid-column: 1 / -1; }
-.switch-field { display: flex; min-height: 34px; align-items: center; gap: 9px; color: var(--shell-muted); }
-.permission-intro { margin: 8px 0 12px; color: var(--shell-muted); }
-.permission-tree { min-height: 300px; max-height: 440px; overflow: auto; padding: 12px 14px; border: 1px solid var(--shell-border); background: var(--shell-hover); }
-.permission-tree :deep(.ant-tree) { color: var(--shell-ink); background: transparent; }
-.permission-tree :deep(.ant-tree-treenode) { min-height: 30px; align-items: center; }
-.permission-tree :deep(.ant-tree-switcher) { display: flex; flex: 0 0 24px; align-items: center; justify-content: center; }
-.permission-tree :deep(.ant-tree-checkbox) { align-self: center; margin-block: 0; }
-.permission-tree :deep(.ant-tree-node-content-wrapper) { display: flex; min-height: 30px; align-items: center; }
-.permission-empty { display: flex; min-height: 274px; align-items: center; justify-content: center; color: var(--shell-muted); }
+.query-field {
+  width: min(520px, 58%);
+}
+.role-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.role-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.role-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.role-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.role-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.role-name {
+  font-weight: 600;
+}
+.role-code {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+}
+.cell-text {
+  display: block;
+  overflow: hidden;
+  color: var(--shell-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.empty-value {
+  color: color-mix(in srgb, var(--shell-muted) 55%, transparent);
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--shell-muted);
+}
+.empty-table :deep(.anticon) {
+  font-size: 30px;
+}
+.role-form {
+  padding-top: 8px;
+}
+.form-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.switch-field {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  color: var(--shell-muted);
+}
+.permission-intro {
+  margin: 8px 0 12px;
+  color: var(--shell-muted);
+}
+.permission-tree {
+  min-height: 300px;
+  max-height: 440px;
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--shell-border);
+  background: var(--shell-hover);
+}
+.permission-tree :deep(.ant-tree) {
+  color: var(--shell-ink);
+  background: transparent;
+}
+.permission-tree :deep(.ant-tree-treenode) {
+  min-height: 30px;
+  align-items: center;
+}
+.permission-tree :deep(.ant-tree-switcher) {
+  display: flex;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+}
+.permission-tree :deep(.ant-tree-checkbox) {
+  align-self: center;
+  margin-block: 0;
+}
+.permission-tree :deep(.ant-tree-node-content-wrapper) {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+}
+.permission-empty {
+  display: flex;
+  min-height: 274px;
+  align-items: center;
+  justify-content: center;
+  color: var(--shell-muted);
+}
 </style>

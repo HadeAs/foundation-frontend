@@ -1,33 +1,148 @@
 /* Local runtime-page exceptions; the shared industrial theme remains unchanged. */
-.runtime-filters { display:block; }
-.filter-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
-.filter-row > input { width:170px; flex:1 1 150px; max-width:240px; }
-.filter-row .filter-reference { width:210px; flex:1 1 170px; max-width:240px; }
-.filter-row select { width:145px; }
-.filter-more { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
-.filter-more[hidden] { display:none; }
-.reference-cell strong { display:block; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.reference-cell small { display:block; color:var(--muted); font-size:11px; white-space:nowrap; }
-.runtime-tag { display:inline-flex; align-items:center; gap:5px; padding:2px 7px; border-radius:3px; font-size:12px; max-width:100%; }
-.runtime-tag::before { content:""; width:5px; height:5px; border-radius:50%; background:currentColor; flex-shrink:0; }
-.runtime-tag.neutral { color:#657a7e; background:#edf2f3; }
-.runtime-tag.good { color:#218564; background:#e9f5ef; }
-.runtime-tag.info { color:#4277bd; background:#eef3fd; }
-.runtime-tag.warn { color:#a76a12; background:#fff5e2; }
-.runtime-tag.teal { color:#087f85; background:#e4f5f5; }
-.detail-heading { font-size:14px; margin:0 0 12px; }
-.detail-meta { border-top:1px solid var(--border); margin-top:16px; padding-top:12px; }
-.detail-meta summary { color:var(--muted); cursor:pointer; font-size:12px; margin-bottom:10px; }
-.runtime-table td { font-variant-numeric:tabular-nums; }
-.runtime-table .actions { width:76px; }
-.runtime-table th,.runtime-table td { white-space:nowrap; }
-.runtime-table .reference-cell { white-space:normal; }
-.runtime-table .plain-cell { overflow:hidden; text-overflow:ellipsis; }
-.runtime-picker-search { padding:0 0 12px; border:0; }
-.runtime-picker-current { padding:8px 10px; margin-bottom:10px; border:1px solid #a3d5d8; color:var(--brand); background:#e7f3f4; font-size:12px; }
-.fixture-filter { margin:0 14px 0; padding:10px 0; border:0; }
-.fixture-filter input { max-width:300px; }
-.fixture-state { min-height:170px; }
-.fixture-table-wrap { overflow:auto; max-height:360px; }
-.fixture-dialog-controls { margin-left:auto; display:flex; gap:8px; }
-.fixture-detail { padding:0; }
+.runtime-filters {
+  display: block;
+}
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.filter-row > input {
+  width: 170px;
+  flex: 1 1 150px;
+  max-width: 240px;
+}
+.filter-row .filter-reference {
+  width: 210px;
+  flex: 1 1 170px;
+  max-width: 240px;
+}
+.filter-row select {
+  width: 145px;
+}
+.filter-more {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.filter-more[hidden] {
+  display: none;
+}
+.reference-cell strong {
+  display: block;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reference-cell small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.runtime-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 12px;
+  max-width: 100%;
+}
+.runtime-tag::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.runtime-tag.neutral {
+  color: #657a7e;
+  background: #edf2f3;
+}
+.runtime-tag.good {
+  color: #218564;
+  background: #e9f5ef;
+}
+.runtime-tag.info {
+  color: #4277bd;
+  background: #eef3fd;
+}
+.runtime-tag.warn {
+  color: #a76a12;
+  background: #fff5e2;
+}
+.runtime-tag.teal {
+  color: #087f85;
+  background: #e4f5f5;
+}
+.detail-heading {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.detail-meta {
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+  padding-top: 12px;
+}
+.detail-meta summary {
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.runtime-table td {
+  font-variant-numeric: tabular-nums;
+}
+.runtime-table .actions {
+  width: 76px;
+}
+.runtime-table th,
+.runtime-table td {
+  white-space: nowrap;
+}
+.runtime-table .reference-cell {
+  white-space: normal;
+}
+.runtime-table .plain-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.runtime-picker-search {
+  padding: 0 0 12px;
+  border: 0;
+}
+.runtime-picker-current {
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border: 1px solid #a3d5d8;
+  color: var(--brand);
+  background: #e7f3f4;
+  font-size: 12px;
+}
+.fixture-filter {
+  margin: 0 14px 0;
+  padding: 10px 0;
+  border: 0;
+}
+.fixture-filter input {
+  max-width: 300px;
+}
+.fixture-state {
+  min-height: 170px;
+}
+.fixture-table-wrap {
+  overflow: auto;
+  max-height: 360px;
+}
+.fixture-dialog-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.fixture-detail {
+  padding: 0;
+}

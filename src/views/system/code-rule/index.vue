@@ -118,17 +118,23 @@ function defaultForm(): CodeRuleForm {
 
 const form = reactive<CodeRuleForm>(defaultForm())
 const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
-const modalTitle = computed(() => editingId.value === undefined ? '新增编码规则' : '编辑编码规则')
-const resultTitle = computed(() => resultMode.value === 'preview' ? '编码预览' : '取号结果')
+const modalTitle = computed(() => (editingId.value === undefined ? '新增编码规则' : '编辑编码规则'))
+const resultTitle = computed(() => (resultMode.value === 'preview' ? '编码预览' : '取号结果'))
 const rowSelection = computed<TableProps<SysCodeRule>['rowSelection']>(() => ({
   selectedRowKeys: selectedIds.value,
   fixed: true,
   columnWidth: 48,
-  onChange: (keys) => { selectedIds.value = keys.map(Number) },
+  onChange: (keys) => {
+    selectedIds.value = keys.map(Number)
+  },
 }))
 const rules: FormProps['rules'] = {
   ruleCode: [
-    { pattern: /^[A-Za-z][A-Za-z0-9_-]*$/, message: '规则编码须以字母开头，仅支持字母、数字、下划线和短横线', trigger: 'blur' },
+    {
+      pattern: /^[A-Za-z][A-Za-z0-9_-]*$/,
+      message: '规则编码须以字母开头，仅支持字母、数字、下划线和短横线',
+      trigger: 'blur',
+    },
   ],
   ruleName: [{ required: true, message: '请输入规则名称', trigger: 'blur' }],
   sequenceLength: [{ required: true, message: '请输入流水号位数', trigger: 'change' }],
@@ -159,14 +165,20 @@ function toRequest(): CodeRuleRequest {
 
 function formatExpression(record: SysCodeRule) {
   const separator = record.codeSeparator || ''
-  const parts = [record.prefix, record.datePattern, `{流水号:${record.sequenceLength || 1}位}`].filter(Boolean)
+  const parts = [
+    record.prefix,
+    record.datePattern,
+    `{流水号:${record.sequenceLength || 1}位}`,
+  ].filter(Boolean)
   return parts.join(separator)
 }
 
 async function load() {
   selectedIds.value = []
   try {
-    const result = await runLatestLoad(() => pageCodeRules(currentPage.value, pageSize.value, keyword.value, status.value))
+    const result = await runLatestLoad(() =>
+      pageCodeRules(currentPage.value, pageSize.value, keyword.value, status.value),
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -270,9 +282,11 @@ function removeSelected() {
     cancelText: '取消',
     onOk: async () => {
       try {
-        await batchDeleteCodeRules(selectedIds.value.map((id) =>
-          versionedId(id, records.value.find((record) => record.ruleId === id)?.version),
-        ))
+        await batchDeleteCodeRules(
+          selectedIds.value.map((id) =>
+            versionedId(id, records.value.find((record) => record.ruleId === id)?.version),
+          ),
+        )
         selectedIds.value = []
         message.success('编码规则已批量删除')
         await load()
@@ -334,7 +348,12 @@ load()
           placeholder="请输入规则名称或规则编码"
           @press-enter="search"
         />
-        <a-select v-model:value="status" allow-clear placeholder="全部状态" :options="statusOptions" />
+        <a-select
+          v-model:value="status"
+          allow-clear
+          placeholder="全部状态"
+          :options="statusOptions"
+        />
       </div>
       <div class="query-actions">
         <a-button type="primary" :loading="loading" @click="search">查询</a-button>
@@ -374,7 +393,9 @@ load()
             <code class="rule-code">{{ record.ruleCode || '—' }}</code>
           </template>
           <template v-else-if="column.key === 'format'">
-            <code class="format-code" :title="formatExpression(record)">{{ formatExpression(record) }}</code>
+            <code class="format-code" :title="formatExpression(record)">{{
+              formatExpression(record)
+            }}</code>
           </template>
           <template v-else-if="column.key === 'resetScope'">
             <a-tag>{{ resetLabels[record.resetScope] || record.resetScope || '不重置' }}</a-tag>
@@ -394,14 +415,16 @@ load()
                 size="small"
                 :loading="resultLoadingCode === `preview:${record.ruleCode}`"
                 @click="runPreview(record)"
-              >预览</a-button>
+                >预览</a-button
+              >
               <a-button
                 type="link"
                 size="small"
                 :disabled="record.status === 0"
                 :loading="resultLoadingCode === `next:${record.ruleCode}`"
                 @click="takeNext(record)"
-              >取号</a-button>
+                >取号</a-button
+              >
               <a-button type="link" size="small" @click="openEdit(record)">编辑</a-button>
               <a-popconfirm
                 title="确认删除该编码规则？"
@@ -410,7 +433,9 @@ load()
                 cancel-text="取消"
                 @confirm="remove(record)"
               >
-                <a-button type="link" danger size="small" :loading="deletingId === record.ruleId">删除</a-button>
+                <a-button type="link" danger size="small" :loading="deletingId === record.ruleId"
+                  >删除</a-button
+                >
               </a-popconfirm>
             </div>
           </template>
@@ -471,7 +496,12 @@ load()
             </div>
           </a-form-item>
           <a-form-item class="full-field" label="备注" name="remark">
-            <a-textarea v-model:value="form.remark" :rows="3" :maxlength="255" placeholder="请输入备注信息" />
+            <a-textarea
+              v-model:value="form.remark"
+              :rows="3"
+              :maxlength="255"
+              placeholder="请输入备注信息"
+            />
           </a-form-item>
         </div>
       </a-form>
@@ -482,9 +512,18 @@ load()
         <span>生成编码</span>
         <code>{{ codeResult?.code || '—' }}</code>
         <dl>
-          <div><dt>规则编码</dt><dd>{{ codeResult?.ruleCode || '—' }}</dd></div>
-          <div><dt>序列键</dt><dd>{{ codeResult?.sequenceKey || '—' }}</dd></div>
-          <div><dt>流水值</dt><dd>{{ codeResult?.nextValue ?? '—' }}</dd></div>
+          <div>
+            <dt>规则编码</dt>
+            <dd>{{ codeResult?.ruleCode || '—' }}</dd>
+          </div>
+          <div>
+            <dt>序列键</dt>
+            <dd>{{ codeResult?.sequenceKey || '—' }}</dd>
+          </div>
+          <div>
+            <dt>流水值</dt>
+            <dd>{{ codeResult?.nextValue ?? '—' }}</dd>
+          </div>
         </dl>
       </div>
     </a-modal>
@@ -492,32 +531,134 @@ load()
 </template>
 
 <style scoped>
-.query-fields { display: grid; width: min(660px, 64%); grid-template-columns: minmax(280px, 1fr) 140px; gap: 8px; }
-.code-rule-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.code-rule-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.code-rule-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.code-rule-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.code-rule-table :deep(.ant-pagination) { margin: 13px; }
-.rule-code, .format-code { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
-.format-code { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cell-text { color: var(--shell-muted); white-space: nowrap; }
-.status-cell { display: inline-flex; align-items: center; gap: 6px; }
-.status-cell i { width: 7px; height: 7px; border-radius: 50%; background: #26aa80; }
-.status-cell.disabled i { background: #a8b0b0; }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--shell-muted); }
-.rule-form { padding-top: 8px; }
-.form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.form-grid :deep(.ant-input-number) { width: 100%; }
-.full-field { grid-column: 1 / -1; }
-.switch-field { display: flex; min-height: 34px; align-items: center; gap: 9px; color: var(--shell-muted); }
-.result-panel { padding: 12px 4px 4px; }
-.result-panel > span { color: var(--shell-muted); font-size: 13px; }
-.result-panel > code { display: block; margin-top: 8px; padding: 16px; overflow-wrap: anywhere; color: var(--brand-deep); background: var(--shell-hover); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 22px; font-weight: 600; }
-.result-panel dl { display: grid; margin: 16px 0 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.result-panel dl div { padding-inline: 12px; border-right: 1px solid var(--shell-border); }
-.result-panel dl div:first-child { padding-left: 0; }
-.result-panel dl div:last-child { border-right: 0; }
-.result-panel dt { color: var(--shell-muted); font-size: 12px; }
-.result-panel dd { margin: 5px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.query-fields {
+  display: grid;
+  width: min(660px, 64%);
+  grid-template-columns: minmax(280px, 1fr) 140px;
+  gap: 8px;
+}
+.code-rule-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.code-rule-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.code-rule-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.code-rule-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.code-rule-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.rule-code,
+.format-code {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+}
+.format-code {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-text {
+  color: var(--shell-muted);
+  white-space: nowrap;
+}
+.status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.status-cell i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #26aa80;
+}
+.status-cell.disabled i {
+  background: #a8b0b0;
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  color: var(--shell-muted);
+}
+.rule-form {
+  padding-top: 8px;
+}
+.form-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.form-grid :deep(.ant-input-number) {
+  width: 100%;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.switch-field {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  color: var(--shell-muted);
+}
+.result-panel {
+  padding: 12px 4px 4px;
+}
+.result-panel > span {
+  color: var(--shell-muted);
+  font-size: 13px;
+}
+.result-panel > code {
+  display: block;
+  margin-top: 8px;
+  padding: 16px;
+  overflow-wrap: anywhere;
+  color: var(--brand-deep);
+  background: var(--shell-hover);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 22px;
+  font-weight: 600;
+}
+.result-panel dl {
+  display: grid;
+  margin: 16px 0 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.result-panel dl div {
+  padding-inline: 12px;
+  border-right: 1px solid var(--shell-border);
+}
+.result-panel dl div:first-child {
+  padding-left: 0;
+}
+.result-panel dl div:last-child {
+  border-right: 0;
+}
+.result-panel dt {
+  color: var(--shell-muted);
+  font-size: 12px;
+}
+.result-panel dd {
+  margin: 5px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

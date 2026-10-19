@@ -35,7 +35,9 @@ import { canDeleteFile, fileGroups, formatFileSize } from './policy'
 
 const maxFileSize = 100 * 1024 * 1024
 const uploadGroups = fileGroups.filter((item) => !item.managed)
-const groupLabels: Record<string, string> = Object.fromEntries(fileGroups.map((item) => [item.value, item.label]))
+const groupLabels: Record<string, string> = Object.fromEntries(
+  fileGroups.map((item) => [item.value, item.label]),
+)
 
 const keyword = ref('')
 const group = ref<string>()
@@ -72,7 +74,9 @@ const rowSelection = computed<TableProps<SysFile>['rowSelection']>(() => ({
   selectedRowKeys: selectedIds.value,
   fixed: true,
   columnWidth: 48,
-  onChange: (keys) => { selectedIds.value = keys.map(Number) },
+  onChange: (keys) => {
+    selectedIds.value = keys.map(Number)
+  },
   getCheckboxProps: (record) => ({
     disabled: !canDeleteFile(record.fileGroup, record.expiredFlag === true),
   }),
@@ -81,7 +85,9 @@ const rowSelection = computed<TableProps<SysFile>['rowSelection']>(() => ({
 async function load() {
   selectedIds.value = []
   try {
-    const result = await runLatestLoad(() => pageFiles(currentPage.value, pageSize.value, keyword.value, group.value))
+    const result = await runLatestLoad(() =>
+      pageFiles(currentPage.value, pageSize.value, keyword.value, group.value),
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -166,7 +172,8 @@ async function download(record: SysFile) {
 }
 
 async function remove(record: SysFile) {
-  if (record.fileId === undefined || !canDeleteFile(record.fileGroup, record.expiredFlag === true)) return
+  if (record.fileId === undefined || !canDeleteFile(record.fileGroup, record.expiredFlag === true))
+    return
   deletingId.value = record.fileId
   try {
     await deleteFile(record.fileId)
@@ -207,7 +214,12 @@ load()
   <main class="management-page">
     <section class="query-panel">
       <div class="query-fields">
-        <a-input v-model:value="keyword" allow-clear placeholder="请输入文件名称、对象路径或上传人" @press-enter="search" />
+        <a-input
+          v-model:value="keyword"
+          allow-clear
+          placeholder="请输入文件名称、对象路径或上传人"
+          @press-enter="search"
+        />
         <a-select v-model:value="group" allow-clear placeholder="全部分组" :options="fileGroups" />
       </div>
       <div class="query-actions">
@@ -245,19 +257,31 @@ load()
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'originalName'">
-            <strong class="file-name" :title="record.originalName">{{ record.originalName || '—' }}</strong>
+            <strong class="file-name" :title="record.originalName">{{
+              record.originalName || '—'
+            }}</strong>
           </template>
           <template v-else-if="column.key === 'fileGroup'">
-            <a-tag :color="fileGroups.find((item) => item.value === record.fileGroup)?.managed ? 'blue' : 'cyan'">
+            <a-tag
+              :color="
+                fileGroups.find((item) => item.value === record.fileGroup)?.managed
+                  ? 'blue'
+                  : 'cyan'
+              "
+            >
               {{ groupLabels[record.fileGroup] || record.fileGroup || '未知' }}
             </a-tag>
           </template>
           <template v-else-if="column.key === 'contentType'">
             <span class="cell-text">{{ record.contentType || '—' }}</span>
           </template>
-          <template v-else-if="column.key === 'fileSize'">{{ formatFileSize(record.fileSize) }}</template>
+          <template v-else-if="column.key === 'fileSize'">{{
+            formatFileSize(record.fileSize)
+          }}</template>
           <template v-else-if="column.key === 'objectName'">
-            <code class="object-name" :title="record.objectName">{{ record.objectName || '—' }}</code>
+            <code class="object-name" :title="record.objectName">{{
+              record.objectName || '—'
+            }}</code>
           </template>
           <template v-else-if="column.key === 'bucketName'">
             <span class="cell-text">{{ record.bucketName || '—' }}</span>
@@ -273,7 +297,13 @@ load()
           </template>
           <template v-else-if="column.key === 'action'">
             <div class="row-actions">
-              <a-button type="link" size="small" :loading="downloadingId === record.fileId" @click="download(record)">下载</a-button>
+              <a-button
+                type="link"
+                size="small"
+                :loading="downloadingId === record.fileId"
+                @click="download(record)"
+                >下载</a-button
+              >
               <a-popconfirm
                 title="确认删除该文件？"
                 description="文件内容将从 MinIO 中永久删除。"
@@ -287,7 +317,8 @@ load()
                   size="small"
                   :disabled="!canDeleteFile(record.fileGroup, record.expiredFlag === true)"
                   :loading="deletingId === record.fileId"
-                >删除</a-button>
+                  >删除</a-button
+                >
               </a-popconfirm>
             </div>
           </template>
@@ -310,7 +341,11 @@ load()
         <label>文件</label>
         <div class="file-picker">
           <a-button @click="fileInput?.click()">选择文件</a-button>
-          <span :title="selectedFile?.name">{{ selectedFile ? `${selectedFile.name}（${formatFileSize(selectedFile.size)}）` : '未选择文件' }}</span>
+          <span :title="selectedFile?.name">{{
+            selectedFile
+              ? `${selectedFile.name}（${formatFileSize(selectedFile.size)}）`
+              : '未选择文件'
+          }}</span>
           <input ref="fileInput" type="file" hidden @change="selectFile" />
         </div>
         <small>单文件最大 100 MB，不限制文件扩展名。</small>
@@ -320,26 +355,91 @@ load()
         <small>手工上传仅允许进入手工上传、文档资料和图片分组。</small>
 
         <label>备注</label>
-        <a-textarea v-model:value="uploadRemark" :rows="3" :maxlength="255" placeholder="请输入备注信息" />
+        <a-textarea
+          v-model:value="uploadRemark"
+          :rows="3"
+          :maxlength="255"
+          placeholder="请输入备注信息"
+        />
       </div>
     </a-modal>
   </main>
 </template>
 
 <style scoped>
-.query-fields { display: grid; width: min(700px, 66%); grid-template-columns: minmax(300px, 1fr) 150px; gap: 8px; }
-.file-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.file-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.file-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.file-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.file-table :deep(.ant-pagination) { margin: 13px; }
-.file-name, .cell-text, .object-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cell-text { color: var(--shell-muted); }
-.object-name { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--shell-muted); }
-.upload-form { display: grid; padding-top: 8px; gap: 8px; }
-.upload-form label { margin-top: 7px; color: var(--shell-ink); font-weight: 500; }
-.upload-form small { color: var(--shell-muted); }
-.file-picker { display: flex; min-width: 0; align-items: center; gap: 10px; }
-.file-picker > span { min-width: 0; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
+.query-fields {
+  display: grid;
+  width: min(700px, 66%);
+  grid-template-columns: minmax(300px, 1fr) 150px;
+  gap: 8px;
+}
+.file-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.file-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.file-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.file-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.file-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.file-name,
+.cell-text,
+.object-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-text {
+  color: var(--shell-muted);
+}
+.object-name {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  color: var(--shell-muted);
+}
+.upload-form {
+  display: grid;
+  padding-top: 8px;
+  gap: 8px;
+}
+.upload-form label {
+  margin-top: 7px;
+  color: var(--shell-ink);
+  font-weight: 500;
+}
+.upload-form small {
+  color: var(--shell-muted);
+}
+.file-picker {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+.file-picker > span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--shell-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

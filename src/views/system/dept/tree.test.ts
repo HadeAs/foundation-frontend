@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { collectDeptNames, collectExpandableDeptIds, normalizeDeptTree, toDeptOptions } from './tree'
+import {
+  collectDeptNames,
+  collectExpandableDeptIds,
+  normalizeDeptTree,
+  toDeptOptions,
+} from './tree'
 
 describe('department tree helpers', () => {
   const tree = normalizeDeptTree([
@@ -20,6 +25,10 @@ describe('department tree helpers', () => {
   })
 
   it('collects names from every department level', () => {
-    expect([...collectDeptNames(tree)]).toEqual([[3, '工厂'], [1, '总部'], [2, '信息部']])
+    expect([...collectDeptNames(tree)]).toEqual([
+      [3, '工厂'],
+      [1, '总部'],
+      [2, '信息部'],
+    ])
   })
 })

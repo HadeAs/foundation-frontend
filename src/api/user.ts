@@ -15,12 +15,14 @@ export async function pageUsers(page: number, size: number, keyword?: string) {
 }
 
 export async function createUser(request: UserRequest) {
-  return unwrapResult(
-    await apiClient.post<ApiResult<SysUser>>('/api/v1/system/users', request),
-  )
+  return unwrapResult(await apiClient.post<ApiResult<SysUser>>('/api/v1/system/users', request))
 }
 
-export async function updateUser(userId: number, request: UserRequest, version: number | undefined) {
+export async function updateUser(
+  userId: number,
+  request: UserRequest,
+  version: number | undefined,
+) {
   return unwrapResult(
     await apiClient.put<ApiResult<SysUser>>(`/api/v1/system/users/${userId}`, {
       ...request,
@@ -35,7 +37,11 @@ export function deleteUser(userId: number, version: number | undefined) {
   })
 }
 
-export function resetUserPassword(userId: number, newPassword: string, version: number | undefined) {
+export function resetUserPassword(
+  userId: number,
+  newPassword: string,
+  version: number | undefined,
+) {
   return apiClient.post(`/api/v1/system/users/${userId}/password/reset`, {
     newPassword,
     version: requireVersion(version),

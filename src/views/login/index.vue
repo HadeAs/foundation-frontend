@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-  LockOutlined,
-  SafetyCertificateOutlined,
-  UserOutlined,
-} from '@ant-design/icons-vue'
+import { LockOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons-vue'
 import {
   Button as AButton,
   Form as AForm,
@@ -107,12 +103,7 @@ async function handleSubmit() {
           <span>请输入账号信息以进入管理平台</span>
         </div>
 
-        <a-form
-          :model="form"
-          layout="vertical"
-          autocomplete="on"
-          @finish="handleSubmit"
-        >
+        <a-form :model="form" layout="vertical" autocomplete="on" @finish="handleSubmit">
           <a-form-item
             label="用户名"
             name="username"
@@ -361,9 +352,15 @@ async function handleSubmit() {
   border-radius: 50%;
 }
 
-.ring-a { inset: 0; }
-.ring-b { inset: 62px; }
-.ring-c { inset: 132px; }
+.ring-a {
+  inset: 0;
+}
+.ring-b {
+  inset: 62px;
+}
+.ring-c {
+  inset: 132px;
+}
 
 .radar-sweep {
   inset: 0;
@@ -390,9 +387,18 @@ async function handleSubmit() {
   letter-spacing: 0.16em;
 }
 
-.label-a { top: 79px; left: 186px; }
-.label-b { top: 216px; left: 70px; }
-.label-c { top: 292px; left: 300px; }
+.label-a {
+  top: 79px;
+  left: 186px;
+}
+.label-b {
+  top: 216px;
+  left: 70px;
+}
+.label-c {
+  top: 292px;
+  left: 300px;
+}
 
 .system-footer {
   position: absolute;
@@ -430,9 +436,7 @@ async function handleSubmit() {
   min-height: 720px;
   padding: 64px 72px;
   place-items: center;
-  background:
-    linear-gradient(90deg, rgba(16, 53, 53, 0.035) 1px, transparent 1px),
-    #f6f8f8;
+  background: linear-gradient(90deg, rgba(16, 53, 53, 0.035) 1px, transparent 1px), #f6f8f8;
   background-size: 92px 100%;
 }
 
@@ -558,16 +562,27 @@ async function handleSubmit() {
 }
 
 @keyframes sweep {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse {
-  70%, 100% { box-shadow: 0 0 0 10px rgba(54, 208, 162, 0); }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px rgba(54, 208, 162, 0);
+  }
 }
 
 @keyframes enter {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(-8px); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-8px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -579,7 +594,11 @@ async function handleSubmit() {
 }
 
 @media (max-height: 760px) {
-  .system-story { margin-top: 76px; }
-  .capability-strip { margin-top: 32px; }
+  .system-story {
+    margin-top: 76px;
+  }
+  .capability-strip {
+    margin-top: 32px;
+  }
 }
 </style>

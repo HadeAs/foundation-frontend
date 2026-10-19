@@ -14,12 +14,14 @@ export async function listMenus(keyword?: string) {
 }
 
 export async function createMenu(request: MenuRequest) {
-  return unwrapResult(
-    await apiClient.post<ApiResult<SysMenu>>('/api/v1/system/menus', request),
-  )
+  return unwrapResult(await apiClient.post<ApiResult<SysMenu>>('/api/v1/system/menus', request))
 }
 
-export async function updateMenu(menuId: number, request: MenuRequest, version: number | undefined) {
+export async function updateMenu(
+  menuId: number,
+  request: MenuRequest,
+  version: number | undefined,
+) {
   return unwrapResult(
     await apiClient.put<ApiResult<SysMenu>>(`/api/v1/system/menus/${menuId}`, {
       ...request,

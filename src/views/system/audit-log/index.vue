@@ -77,7 +77,6 @@ const columns: TableColumnsType = [
   { title: '操作', key: 'action', width: 78, align: 'center' },
 ]
 
-
 function actionName(value?: string) {
   return actionLabels[value || ''] || value || '未知'
 }
@@ -88,16 +87,18 @@ function targetName(value?: string) {
 
 async function load() {
   try {
-    const result = await runLatestLoad(() => pageAuditLogs(
-      currentPage.value,
-      pageSize.value,
-      keyword.value,
-      targetType.value,
-      actionType.value,
-      operator.value,
-      timeRange.value?.[0].toISOString(),
-      timeRange.value?.[1].toISOString(),
-    ))
+    const result = await runLatestLoad(() =>
+      pageAuditLogs(
+        currentPage.value,
+        pageSize.value,
+        keyword.value,
+        targetType.value,
+        actionType.value,
+        operator.value,
+        timeRange.value?.[0].toISOString(),
+        timeRange.value?.[1].toISOString(),
+      ),
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -137,9 +138,24 @@ load()
   <main class="management-page">
     <section class="query-panel">
       <div class="query-fields">
-        <a-input v-model:value="keyword" allow-clear placeholder="请输入目标、摘要、IP 或 Trace ID" @press-enter="search" />
-        <a-input v-model:value="targetType" allow-clear placeholder="目标类型" @press-enter="search" />
-        <a-input v-model:value="actionType" allow-clear placeholder="动作类型" @press-enter="search" />
+        <a-input
+          v-model:value="keyword"
+          allow-clear
+          placeholder="请输入目标、摘要、IP 或 Trace ID"
+          @press-enter="search"
+        />
+        <a-input
+          v-model:value="targetType"
+          allow-clear
+          placeholder="目标类型"
+          @press-enter="search"
+        />
+        <a-input
+          v-model:value="actionType"
+          allow-clear
+          placeholder="动作类型"
+          @press-enter="search"
+        />
         <a-input v-model:value="operator" allow-clear placeholder="操作人" @press-enter="search" />
         <a-range-picker
           v-model:value="timeRange"
@@ -175,7 +191,9 @@ load()
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'createdTime'">{{ formatDateTime(record.createdTime) }}</template>
+          <template v-if="column.key === 'createdTime'">{{
+            formatDateTime(record.createdTime)
+          }}</template>
           <template v-else-if="column.key === 'operator'">
             <strong>{{ record.operator || '未知用户' }}</strong>
           </template>
@@ -216,15 +234,52 @@ load()
 
     <a-modal v-model:open="detailOpen" title="审计日志详情" :width="1000" :footer="null">
       <dl class="log-detail">
-        <div><dt>审计时间</dt><dd>{{ formatDateTime(detailLog?.createdTime) }}</dd></div>
-        <div><dt>操作人</dt><dd>{{ detailLog?.operator || '未知用户' }}</dd></div>
-        <div><dt>动作类型</dt><dd><a-tag :color="actionColors[detailLog?.actionType || ''] || 'default'">{{ actionName(detailLog?.actionType) }}</a-tag></dd></div>
-        <div><dt>IP 地址</dt><dd>{{ detailLog?.ipAddress || '—' }}</dd></div>
-        <div><dt>目标类型</dt><dd><a-tag class="target-type-tag" :title="detailLog?.targetType">{{ targetName(detailLog?.targetType) }}</a-tag></dd></div>
-        <div><dt>目标编号</dt><dd><code>{{ detailLog?.targetId || '—' }}</code></dd></div>
-        <div><dt>目标名称</dt><dd>{{ detailLog?.targetName || '—' }}</dd></div>
-        <div><dt>来源系统</dt><dd>{{ detailLog?.sourceSystem || '—' }}</dd></div>
-        <div class="full-detail"><dt>变更摘要</dt><dd class="long-text">{{ detailLog?.summary || '—' }}</dd></div>
+        <div>
+          <dt>审计时间</dt>
+          <dd>{{ formatDateTime(detailLog?.createdTime) }}</dd>
+        </div>
+        <div>
+          <dt>操作人</dt>
+          <dd>{{ detailLog?.operator || '未知用户' }}</dd>
+        </div>
+        <div>
+          <dt>动作类型</dt>
+          <dd>
+            <a-tag :color="actionColors[detailLog?.actionType || ''] || 'default'">{{
+              actionName(detailLog?.actionType)
+            }}</a-tag>
+          </dd>
+        </div>
+        <div>
+          <dt>IP 地址</dt>
+          <dd>{{ detailLog?.ipAddress || '—' }}</dd>
+        </div>
+        <div>
+          <dt>目标类型</dt>
+          <dd>
+            <a-tag class="target-type-tag" :title="detailLog?.targetType">{{
+              targetName(detailLog?.targetType)
+            }}</a-tag>
+          </dd>
+        </div>
+        <div>
+          <dt>目标编号</dt>
+          <dd>
+            <code>{{ detailLog?.targetId || '—' }}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>目标名称</dt>
+          <dd>{{ detailLog?.targetName || '—' }}</dd>
+        </div>
+        <div>
+          <dt>来源系统</dt>
+          <dd>{{ detailLog?.sourceSystem || '—' }}</dd>
+        </div>
+        <div class="full-detail">
+          <dt>变更摘要</dt>
+          <dd class="long-text">{{ detailLog?.summary || '—' }}</dd>
+        </div>
       </dl>
 
       <div class="change-grid">
@@ -239,42 +294,178 @@ load()
       </div>
 
       <dl class="log-detail detail-footer">
-        <div><dt>业务日期</dt><dd>{{ detailLog?.bizDate || '—' }}</dd></div>
-        <div><dt>归档状态</dt><dd>{{ detailLog?.archivedFlag ? '已归档' : '未归档' }}</dd></div>
-        <div><dt>归档时间</dt><dd>{{ formatDateTime(detailLog?.archivedTime) }}</dd></div>
-        <div><dt>审计编号</dt><dd>{{ detailLog?.auditId ?? '—' }}</dd></div>
-        <div class="half-detail"><dt>Trace ID</dt><dd><code>{{ detailLog?.traceId || '—' }}</code></dd></div>
-        <div class="half-detail"><dt>幂等键</dt><dd><code>{{ detailLog?.idempotentKey || '—' }}</code></dd></div>
+        <div>
+          <dt>业务日期</dt>
+          <dd>{{ detailLog?.bizDate || '—' }}</dd>
+        </div>
+        <div>
+          <dt>归档状态</dt>
+          <dd>{{ detailLog?.archivedFlag ? '已归档' : '未归档' }}</dd>
+        </div>
+        <div>
+          <dt>归档时间</dt>
+          <dd>{{ formatDateTime(detailLog?.archivedTime) }}</dd>
+        </div>
+        <div>
+          <dt>审计编号</dt>
+          <dd>{{ detailLog?.auditId ?? '—' }}</dd>
+        </div>
+        <div class="half-detail">
+          <dt>Trace ID</dt>
+          <dd>
+            <code>{{ detailLog?.traceId || '—' }}</code>
+          </dd>
+        </div>
+        <div class="half-detail">
+          <dt>幂等键</dt>
+          <dd>
+            <code>{{ detailLog?.idempotentKey || '—' }}</code>
+          </dd>
+        </div>
       </dl>
     </a-modal>
   </main>
 </template>
 
 <style scoped>
-.query-fields { display: grid; min-width: 0; flex: 1; grid-template-columns: minmax(220px, 1fr) 125px 125px 125px 320px; gap: 8px; }
-.query-actions { flex: none; }
-.log-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.log-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.log-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.log-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.log-table :deep(.ant-pagination) { margin: 13px; }
-.audit-type-tag { display: inline-block; max-width: 100%; margin-inline-end: 0; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; white-space: nowrap; }
-.target-type-tag { color: var(--brand-deep); border-color: color-mix(in srgb, var(--brand) 34%, var(--shell-border)); background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.code-cell, .cell-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.code-cell { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
-.cell-text { color: var(--shell-muted); }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--shell-muted); }
-.log-detail { display: grid; margin: 8px 0 0; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--shell-border); border-left: 1px solid var(--shell-border); }
-.log-detail > div { min-width: 0; padding: 10px 12px; border-right: 1px solid var(--shell-border); border-bottom: 1px solid var(--shell-border); }
-.log-detail dt { color: var(--shell-muted); font-size: 12px; }
-.log-detail dd { min-width: 0; margin: 4px 0 0; overflow-wrap: anywhere; }
-.log-detail code { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
-.log-detail .full-detail { grid-column: 1 / -1; }
-.long-text { max-height: 100px; overflow: auto; white-space: pre-wrap; }
-.log-detail .half-detail { grid-column: span 2; }
-.change-grid { display: grid; margin-top: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.change-grid section { min-width: 0; border: 1px solid var(--shell-border); background: var(--shell-hover); }
-.change-grid h2 { margin: 0; padding: 8px 11px; color: var(--shell-ink); border-bottom: 1px solid var(--shell-border); background: var(--shell-panel); font-size: 14px; font-weight: 600; }
-.change-grid pre { min-height: 150px; max-height: 260px; margin: 0; padding: 11px; overflow: auto; color: var(--shell-ink); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
-.detail-footer { margin-top: 12px; }
+.query-fields {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  grid-template-columns: minmax(220px, 1fr) 125px 125px 125px 320px;
+  gap: 8px;
+}
+.query-actions {
+  flex: none;
+}
+.log-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.log-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.log-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.log-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.log-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.audit-type-tag {
+  display: inline-block;
+  max-width: 100%;
+  margin-inline-end: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.target-type-tag {
+  color: var(--brand-deep);
+  border-color: color-mix(in srgb, var(--brand) 34%, var(--shell-border));
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.code-cell,
+.cell-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.code-cell {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+}
+.cell-text {
+  color: var(--shell-muted);
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  color: var(--shell-muted);
+}
+.log-detail {
+  display: grid;
+  margin: 8px 0 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--shell-border);
+  border-left: 1px solid var(--shell-border);
+}
+.log-detail > div {
+  min-width: 0;
+  padding: 10px 12px;
+  border-right: 1px solid var(--shell-border);
+  border-bottom: 1px solid var(--shell-border);
+}
+.log-detail dt {
+  color: var(--shell-muted);
+  font-size: 12px;
+}
+.log-detail dd {
+  min-width: 0;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.log-detail code {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+}
+.log-detail .full-detail {
+  grid-column: 1 / -1;
+}
+.long-text {
+  max-height: 100px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.log-detail .half-detail {
+  grid-column: span 2;
+}
+.change-grid {
+  display: grid;
+  margin-top: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.change-grid section {
+  min-width: 0;
+  border: 1px solid var(--shell-border);
+  background: var(--shell-hover);
+}
+.change-grid h2 {
+  margin: 0;
+  padding: 8px 11px;
+  color: var(--shell-ink);
+  border-bottom: 1px solid var(--shell-border);
+  background: var(--shell-panel);
+  font-size: 14px;
+  font-weight: 600;
+}
+.change-grid pre {
+  min-height: 150px;
+  max-height: 260px;
+  margin: 0;
+  padding: 11px;
+  overflow: auto;
+  color: var(--shell-ink);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.detail-footer {
+  margin-top: 12px;
+}
 </style>

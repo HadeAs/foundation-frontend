@@ -1,24 +1,13 @@
 import type { components } from '@/types/api'
 
-import {
-  apiClient,
-  type ApiResult,
-  requireVersion,
-  type VersionedId,
-  unwrapResult,
-} from './http'
+import { apiClient, type ApiResult, requireVersion, type VersionedId, unwrapResult } from './http'
 
 export type CodeRuleRequest = components['schemas']['CodeRuleRequest']
 export type SysCodeRule = components['schemas']['SysCodeRule']
 export type CodePreviewResponse = components['schemas']['CodePreviewResponse']
 export type CodeRulePage = components['schemas']['PageResultSysCodeRule']
 
-export async function pageCodeRules(
-  page: number,
-  size: number,
-  keyword?: string,
-  status?: number,
-) {
+export async function pageCodeRules(page: number, size: number, keyword?: string, status?: number) {
   return unwrapResult(
     await apiClient.get<ApiResult<CodeRulePage>>('/api/v1/system/code-rules', {
       params: { page, size, keyword: keyword?.trim() || undefined, status },

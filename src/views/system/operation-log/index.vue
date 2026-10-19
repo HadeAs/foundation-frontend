@@ -30,9 +30,22 @@ const operationOptions = [
   { label: '删除', value: 'DELETE' },
   { label: '其他', value: 'OTHER' },
 ]
-const operationLabels: Record<string, string> = Object.fromEntries(operationOptions.map((item) => [item.value, item.label]))
-const operationColors: Record<string, string> = { CREATE: 'green', UPDATE: 'blue', DELETE: 'red', OTHER: 'default' }
-const methodColors: Record<string, string> = { GET: 'blue', POST: 'green', PUT: 'orange', PATCH: 'gold', DELETE: 'red' }
+const operationLabels: Record<string, string> = Object.fromEntries(
+  operationOptions.map((item) => [item.value, item.label]),
+)
+const operationColors: Record<string, string> = {
+  CREATE: 'green',
+  UPDATE: 'blue',
+  DELETE: 'red',
+  OTHER: 'default',
+}
+const methodColors: Record<string, string> = {
+  GET: 'blue',
+  POST: 'green',
+  PUT: 'orange',
+  PATCH: 'gold',
+  DELETE: 'red',
+}
 
 const keyword = ref('')
 const operationType = ref<string>()
@@ -47,7 +60,13 @@ const detailLog = ref<SysOperationLog>()
 const columns: TableColumnsType = [
   { title: '操作时间', dataIndex: 'createdTime', key: 'createdTime', width: 165 },
   { title: '操作用户', dataIndex: 'username', key: 'username', width: 120 },
-  { title: '操作类型', dataIndex: 'operationType', key: 'operationType', width: 100, align: 'center' },
+  {
+    title: '操作类型',
+    dataIndex: 'operationType',
+    key: 'operationType',
+    width: 100,
+    align: 'center',
+  },
   { title: '方法', dataIndex: 'requestMethod', key: 'requestMethod', width: 82, align: 'center' },
   { title: '请求路径', dataIndex: 'requestPath', key: 'requestPath', width: 300 },
   { title: '状态码', dataIndex: 'statusCode', key: 'statusCode', width: 90, align: 'center' },
@@ -67,14 +86,16 @@ const exportFilters = computed(() => ({
 
 async function load() {
   try {
-    const result = await runLatestLoad(() => pageOperationLogs(
-      currentPage.value,
-      pageSize.value,
-      keyword.value,
-      operationType.value,
-      timeRange.value?.[0].toISOString(),
-      timeRange.value?.[1].toISOString(),
-    ))
+    const result = await runLatestLoad(() =>
+      pageOperationLogs(
+        currentPage.value,
+        pageSize.value,
+        keyword.value,
+        operationType.value,
+        timeRange.value?.[0].toISOString(),
+        timeRange.value?.[1].toISOString(),
+      ),
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -112,8 +133,18 @@ load()
   <main class="management-page">
     <section class="query-panel">
       <div class="query-fields">
-        <a-input v-model:value="keyword" allow-clear placeholder="请输入用户、请求路径、IP 或 Trace ID" @press-enter="search" />
-        <a-select v-model:value="operationType" allow-clear placeholder="全部类型" :options="operationOptions" />
+        <a-input
+          v-model:value="keyword"
+          allow-clear
+          placeholder="请输入用户、请求路径、IP 或 Trace ID"
+          @press-enter="search"
+        />
+        <a-select
+          v-model:value="operationType"
+          allow-clear
+          placeholder="全部类型"
+          :options="operationOptions"
+        />
         <a-range-picker
           v-model:value="timeRange"
           show-time
@@ -154,7 +185,9 @@ load()
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'createdTime'">{{ formatDateTime(record.createdTime) }}</template>
+          <template v-if="column.key === 'createdTime'">{{
+            formatDateTime(record.createdTime)
+          }}</template>
           <template v-else-if="column.key === 'username'">
             <strong>{{ record.username || '未知用户' }}</strong>
           </template>
@@ -164,15 +197,23 @@ load()
             </a-tag>
           </template>
           <template v-else-if="column.key === 'requestMethod'">
-            <a-tag :color="methodColors[record.requestMethod] || 'default'">{{ record.requestMethod || '—' }}</a-tag>
+            <a-tag :color="methodColors[record.requestMethod] || 'default'">{{
+              record.requestMethod || '—'
+            }}</a-tag>
           </template>
           <template v-else-if="column.key === 'requestPath'">
-            <code class="path-cell" :title="record.requestPath">{{ record.requestPath || '—' }}</code>
+            <code class="path-cell" :title="record.requestPath">{{
+              record.requestPath || '—'
+            }}</code>
           </template>
           <template v-else-if="column.key === 'statusCode'">
-            <a-tag :color="getHttpStatusTone(record.statusCode)">{{ record.statusCode ?? '—' }}</a-tag>
+            <a-tag :color="getHttpStatusTone(record.statusCode)">{{
+              record.statusCode ?? '—'
+            }}</a-tag>
           </template>
-          <template v-else-if="column.key === 'durationMs'">{{ record.durationMs ?? 0 }} ms</template>
+          <template v-else-if="column.key === 'durationMs'"
+            >{{ record.durationMs ?? 0 }} ms</template
+          >
           <template v-else-if="column.key === 'ipAddress'">
             <span class="cell-text">{{ record.ipAddress || '—' }}</span>
           </template>
@@ -192,46 +233,191 @@ load()
 
     <a-modal v-model:open="detailOpen" title="操作日志详情" :width="820" :footer="null">
       <dl class="log-detail">
-        <div><dt>操作时间</dt><dd>{{ formatDateTime(detailLog?.createdTime) }}</dd></div>
-        <div><dt>操作用户</dt><dd>{{ detailLog?.username || '未知用户' }}</dd></div>
-        <div><dt>操作类型</dt><dd>{{ operationLabels[detailLog?.operationType || ''] || detailLog?.operationType || '未知' }}</dd></div>
-        <div><dt>请求方法</dt><dd>{{ detailLog?.requestMethod || '—' }}</dd></div>
-        <div><dt>状态码</dt><dd><a-tag :color="getHttpStatusTone(detailLog?.statusCode)">{{ detailLog?.statusCode ?? '—' }}</a-tag></dd></div>
-        <div><dt>执行耗时</dt><dd>{{ detailLog?.durationMs ?? 0 }} ms</dd></div>
-        <div><dt>IP 地址</dt><dd>{{ detailLog?.ipAddress || '—' }}</dd></div>
-        <div><dt>来源系统</dt><dd>{{ detailLog?.sourceSystem || '—' }}</dd></div>
-        <div class="full-detail"><dt>请求路径</dt><dd><code>{{ detailLog?.requestPath || '—' }}</code></dd></div>
-        <div class="full-detail"><dt>请求体</dt><dd><pre>{{ detailLog?.requestBody || '—' }}</pre></dd></div>
-        <div class="full-detail"><dt>操作消息</dt><dd class="long-text">{{ detailLog?.message || '—' }}</dd></div>
-        <div><dt>业务日期</dt><dd>{{ detailLog?.bizDate || '—' }}</dd></div>
-        <div><dt>归档状态</dt><dd>{{ detailLog?.archivedFlag ? '已归档' : '未归档' }}</dd></div>
-        <div><dt>归档时间</dt><dd>{{ formatDateTime(detailLog?.archivedTime) }}</dd></div>
-        <div><dt>日志编号</dt><dd>{{ detailLog?.logId ?? '—' }}</dd></div>
-        <div class="half-detail"><dt>Trace ID</dt><dd><code>{{ detailLog?.traceId || '—' }}</code></dd></div>
-        <div class="half-detail"><dt>幂等键</dt><dd><code>{{ detailLog?.idempotentKey || '—' }}</code></dd></div>
+        <div>
+          <dt>操作时间</dt>
+          <dd>{{ formatDateTime(detailLog?.createdTime) }}</dd>
+        </div>
+        <div>
+          <dt>操作用户</dt>
+          <dd>{{ detailLog?.username || '未知用户' }}</dd>
+        </div>
+        <div>
+          <dt>操作类型</dt>
+          <dd>
+            {{
+              operationLabels[detailLog?.operationType || ''] || detailLog?.operationType || '未知'
+            }}
+          </dd>
+        </div>
+        <div>
+          <dt>请求方法</dt>
+          <dd>{{ detailLog?.requestMethod || '—' }}</dd>
+        </div>
+        <div>
+          <dt>状态码</dt>
+          <dd>
+            <a-tag :color="getHttpStatusTone(detailLog?.statusCode)">{{
+              detailLog?.statusCode ?? '—'
+            }}</a-tag>
+          </dd>
+        </div>
+        <div>
+          <dt>执行耗时</dt>
+          <dd>{{ detailLog?.durationMs ?? 0 }} ms</dd>
+        </div>
+        <div>
+          <dt>IP 地址</dt>
+          <dd>{{ detailLog?.ipAddress || '—' }}</dd>
+        </div>
+        <div>
+          <dt>来源系统</dt>
+          <dd>{{ detailLog?.sourceSystem || '—' }}</dd>
+        </div>
+        <div class="full-detail">
+          <dt>请求路径</dt>
+          <dd>
+            <code>{{ detailLog?.requestPath || '—' }}</code>
+          </dd>
+        </div>
+        <div class="full-detail">
+          <dt>请求体</dt>
+          <dd>
+            <pre>{{ detailLog?.requestBody || '—' }}</pre>
+          </dd>
+        </div>
+        <div class="full-detail">
+          <dt>操作消息</dt>
+          <dd class="long-text">{{ detailLog?.message || '—' }}</dd>
+        </div>
+        <div>
+          <dt>业务日期</dt>
+          <dd>{{ detailLog?.bizDate || '—' }}</dd>
+        </div>
+        <div>
+          <dt>归档状态</dt>
+          <dd>{{ detailLog?.archivedFlag ? '已归档' : '未归档' }}</dd>
+        </div>
+        <div>
+          <dt>归档时间</dt>
+          <dd>{{ formatDateTime(detailLog?.archivedTime) }}</dd>
+        </div>
+        <div>
+          <dt>日志编号</dt>
+          <dd>{{ detailLog?.logId ?? '—' }}</dd>
+        </div>
+        <div class="half-detail">
+          <dt>Trace ID</dt>
+          <dd>
+            <code>{{ detailLog?.traceId || '—' }}</code>
+          </dd>
+        </div>
+        <div class="half-detail">
+          <dt>幂等键</dt>
+          <dd>
+            <code>{{ detailLog?.idempotentKey || '—' }}</code>
+          </dd>
+        </div>
       </dl>
     </a-modal>
   </main>
 </template>
 
 <style scoped>
-.query-fields { display: grid; width: min(940px, 76%); grid-template-columns: minmax(280px, 1fr) 140px 345px; gap: 8px; }
-.log-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.log-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.log-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.log-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.log-table :deep(.ant-pagination) { margin: 13px; }
-.path-cell, .trace-cell, .cell-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.path-cell, .trace-cell { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
-.cell-text { color: var(--shell-muted); }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--shell-muted); }
-.log-detail { display: grid; margin: 8px 0 0; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--shell-border); border-left: 1px solid var(--shell-border); }
-.log-detail > div { min-width: 0; padding: 10px 12px; border-right: 1px solid var(--shell-border); border-bottom: 1px solid var(--shell-border); }
-.log-detail dt { color: var(--shell-muted); font-size: 12px; }
-.log-detail dd { min-width: 0; margin: 4px 0 0; overflow-wrap: anywhere; }
-.log-detail code { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
-.log-detail .full-detail { grid-column: 1 / -1; }
-.log-detail pre { max-height: 140px; margin: 0; overflow: auto; color: var(--shell-ink); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; white-space: pre-wrap; }
-.long-text { max-height: 100px; overflow: auto; white-space: pre-wrap; }
-.log-detail .half-detail { grid-column: span 2; }
+.query-fields {
+  display: grid;
+  width: min(940px, 76%);
+  grid-template-columns: minmax(280px, 1fr) 140px 345px;
+  gap: 8px;
+}
+.log-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.log-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.log-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.log-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.log-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.path-cell,
+.trace-cell,
+.cell-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.path-cell,
+.trace-cell {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+}
+.cell-text {
+  color: var(--shell-muted);
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  color: var(--shell-muted);
+}
+.log-detail {
+  display: grid;
+  margin: 8px 0 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--shell-border);
+  border-left: 1px solid var(--shell-border);
+}
+.log-detail > div {
+  min-width: 0;
+  padding: 10px 12px;
+  border-right: 1px solid var(--shell-border);
+  border-bottom: 1px solid var(--shell-border);
+}
+.log-detail dt {
+  color: var(--shell-muted);
+  font-size: 12px;
+}
+.log-detail dd {
+  min-width: 0;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.log-detail code {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+}
+.log-detail .full-detail {
+  grid-column: 1 / -1;
+}
+.log-detail pre {
+  max-height: 140px;
+  margin: 0;
+  overflow: auto;
+  color: var(--shell-ink);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+.long-text {
+  max-height: 100px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.log-detail .half-detail {
+  grid-column: span 2;
+}
 </style>

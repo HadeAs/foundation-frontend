@@ -37,7 +37,7 @@ export function buildMetricGroups(metrics: DashboardMetric[]): DashboardChartIte
       key,
       label: groupNames[key.toLowerCase()] || (key === 'other' ? '其他指标' : key),
       count,
-      ratio: metrics.length ? count / metrics.length * 100 : 0,
+      ratio: metrics.length ? (count / metrics.length) * 100 : 0,
     }))
     .sort((left, right) => right.count - left.count || left.key.localeCompare(right.key))
 }
@@ -45,16 +45,15 @@ export function buildMetricGroups(metrics: DashboardMetric[]): DashboardChartIte
 export function buildToneSegments(metrics: DashboardMetric[]): DashboardChartItem[] {
   const counts = new Map<keyof typeof toneMeta, number>()
   for (const metric of metrics) {
-    const tone = metric.tone && metric.tone in toneMeta
-      ? metric.tone as keyof typeof toneMeta
-      : 'primary'
+    const tone =
+      metric.tone && metric.tone in toneMeta ? (metric.tone as keyof typeof toneMeta) : 'primary'
     counts.set(tone, (counts.get(tone) || 0) + 1)
   }
   return [...counts.entries()].map(([key, count]) => ({
     key,
     label: toneMeta[key].label,
     count,
-    ratio: metrics.length ? count / metrics.length * 100 : 0,
+    ratio: metrics.length ? (count / metrics.length) * 100 : 0,
     color: toneMeta[key].color,
   }))
 }
@@ -62,10 +61,12 @@ export function buildToneSegments(metrics: DashboardMetric[]): DashboardChartIte
 export function buildDonutGradient(segments: DashboardChartItem[]) {
   if (!segments.length) return 'conic-gradient(var(--shell-border) 0 100%)'
   let start = 0
-  return `conic-gradient(${segments.map((segment) => {
-    const end = start + segment.ratio
-    const stop = `${segment.color} ${start}% ${end}%`
-    start = end
-    return stop
-  }).join(', ')})`
+  return `conic-gradient(${segments
+    .map((segment) => {
+      const end = start + segment.ratio
+      const stop = `${segment.color} ${start}% ${end}%`
+      start = end
+      return stop
+    })
+    .join(', ')})`
 }

@@ -13,10 +13,16 @@ describe('乐观锁请求契约', () => {
   it('批量删除提交资源 ID 与版本', async () => {
     const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: {} })
 
-    await batchDeleteJobs([{ id: 1, version: 2 }, { id: 3, version: 4 }])
+    await batchDeleteJobs([
+      { id: 1, version: 2 },
+      { id: 3, version: 4 },
+    ])
 
     expect(post).toHaveBeenCalledWith('/api/v1/system/jobs/batch/delete', {
-      items: [{ id: 1, version: 2 }, { id: 3, version: 4 }],
+      items: [
+        { id: 1, version: 2 },
+        { id: 3, version: 4 },
+      ],
     })
   })
 

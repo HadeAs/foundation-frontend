@@ -15,12 +15,14 @@ export async function pageRoles(page: number, size: number, keyword?: string) {
 }
 
 export async function createRole(request: RoleRequest) {
-  return unwrapResult(
-    await apiClient.post<ApiResult<SysRole>>('/api/v1/system/roles', request),
-  )
+  return unwrapResult(await apiClient.post<ApiResult<SysRole>>('/api/v1/system/roles', request))
 }
 
-export async function updateRole(roleId: number, request: RoleRequest, version: number | undefined) {
+export async function updateRole(
+  roleId: number,
+  request: RoleRequest,
+  version: number | undefined,
+) {
   return unwrapResult(
     await apiClient.put<ApiResult<SysRole>>(`/api/v1/system/roles/${roleId}`, {
       ...request,

@@ -4,7 +4,9 @@ import { nextTick, toRaw, watch, type Ref } from 'vue'
 export function useUnsavedChanges(source: object, open: Ref<boolean>) {
   let baseline = ''
   const snapshot = () => JSON.stringify(toRaw(source))
-  const markClean = () => { baseline = snapshot() }
+  const markClean = () => {
+    baseline = snapshot()
+  }
 
   watch(open, async (visible) => {
     if (!visible) return
@@ -23,7 +25,9 @@ export function useUnsavedChanges(source: object, open: Ref<boolean>) {
       okText: '放弃修改',
       cancelText: '继续编辑',
       okType: 'danger',
-      onOk: () => { open.value = false },
+      onOk: () => {
+        open.value = false
+      },
     })
   }
 

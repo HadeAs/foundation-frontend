@@ -16,11 +16,13 @@ export function toDeptOptions(nodes: DeptNode[], excludedId?: number): DeptOptio
   return nodes.flatMap((node) => {
     if (node.deptId === undefined || node.deptId === excludedId) return []
     const children = toDeptOptions(node.children || [], excludedId)
-    return [{
-      value: node.deptId,
-      title: node.deptName || node.deptCode || '未命名部门',
-      children: children.length ? children : undefined,
-    }]
+    return [
+      {
+        value: node.deptId,
+        title: node.deptName || node.deptCode || '未命名部门',
+        children: children.length ? children : undefined,
+      },
+    ]
   })
 }
 
@@ -32,8 +34,12 @@ export function collectExpandableDeptIds(nodes: DeptNode[]): number[] {
 }
 
 export function collectDeptNames(nodes: DeptNode[]): Map<number, string> {
-  return new Map(nodes.flatMap((node) => [
-    ...(node.deptId === undefined ? [] : [[node.deptId, node.deptName || node.deptCode || '未命名部门'] as const]),
-    ...collectDeptNames(node.children || []),
-  ]))
+  return new Map(
+    nodes.flatMap((node) => [
+      ...(node.deptId === undefined
+        ? []
+        : [[node.deptId, node.deptName || node.deptCode || '未命名部门'] as const]),
+      ...collectDeptNames(node.children || []),
+    ]),
+  )
 }

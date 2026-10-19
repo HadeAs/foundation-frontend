@@ -14,18 +14,18 @@ export async function listDeptTree(keyword?: string) {
 }
 
 export async function getDept(deptId: number) {
-  return unwrapResult(
-    await apiClient.get<ApiResult<SysDept>>(`/api/v1/system/depts/${deptId}`),
-  )
+  return unwrapResult(await apiClient.get<ApiResult<SysDept>>(`/api/v1/system/depts/${deptId}`))
 }
 
 export async function createDept(request: DeptRequest) {
-  return unwrapResult(
-    await apiClient.post<ApiResult<SysDept>>('/api/v1/system/depts', request),
-  )
+  return unwrapResult(await apiClient.post<ApiResult<SysDept>>('/api/v1/system/depts', request))
 }
 
-export async function updateDept(deptId: number, request: DeptRequest, version: number | undefined) {
+export async function updateDept(
+  deptId: number,
+  request: DeptRequest,
+  version: number | undefined,
+) {
   return unwrapResult(
     await apiClient.put<ApiResult<SysDept>>(`/api/v1/system/depts/${deptId}`, {
       ...request,

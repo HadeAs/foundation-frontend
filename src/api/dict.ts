@@ -1,12 +1,6 @@
 import type { components } from '@/types/api'
 
-import {
-  apiClient,
-  type ApiResult,
-  requireVersion,
-  type VersionedId,
-  unwrapResult,
-} from './http'
+import { apiClient, type ApiResult, requireVersion, type VersionedId, unwrapResult } from './http'
 
 export type DictTypeRequest = components['schemas']['DictTypeRequest']
 export type DictItemRequest = components['schemas']['DictItemRequest']
@@ -131,10 +125,10 @@ export async function updateDictItem(
   version: number | undefined,
 ) {
   const result = unwrapResult(
-    await apiClient.put<ApiResult<SysDictItem>>(
-      `/api/v1/system/dicts/items/${dictItemId}`,
-      { ...request, version: requireVersion(version) },
-    ),
+    await apiClient.put<ApiResult<SysDictItem>>(`/api/v1/system/dicts/items/${dictItemId}`, {
+      ...request,
+      version: requireVersion(version),
+    }),
   )
   clearDictItemCache()
   return result
@@ -148,10 +142,7 @@ export async function deleteDictItem(dictItemId: number, version: number | undef
   return result
 }
 
-export async function saveDictItemOrder(
-  dictCode: string,
-  items: VersionedId[],
-) {
+export async function saveDictItemOrder(dictCode: string, items: VersionedId[]) {
   const result = await apiClient.post('/api/v1/system/dicts/items/sort', { dictCode, items })
   clearDictItemCache(dictCode)
   return result
@@ -192,11 +183,7 @@ export async function importDict(file: File, overwrite = true) {
   return result
 }
 
-export async function pageDictChangeLogs(
-  page: number,
-  size: number,
-  dictCode?: string,
-) {
+export async function pageDictChangeLogs(page: number, size: number, dictCode?: string) {
   return unwrapResult(
     await apiClient.get<ApiResult<DictLogPage>>('/api/v1/system/dicts/logs', {
       params: { page, size, dictCode },

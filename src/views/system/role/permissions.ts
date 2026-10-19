@@ -1,9 +1,9 @@
 import type { SysMenu } from '@/api/menu'
 
 export function includeAncestorMenuIds(menus: SysMenu[], selectedIds: number[]) {
-  const menuById = new Map(menus.flatMap((menu) =>
-    menu.menuId === undefined ? [] : [[menu.menuId, menu] as const],
-  ))
+  const menuById = new Map(
+    menus.flatMap((menu) => (menu.menuId === undefined ? [] : [[menu.menuId, menu] as const])),
+  )
   const result = new Set(selectedIds)
 
   for (const selectedId of selectedIds) {

@@ -1,14 +1,6 @@
-import axios, {
-  AxiosError,
-  type InternalAxiosRequestConfig,
-  type AxiosResponse,
-} from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios'
 
-import {
-  clearStoredSession,
-  readStoredSession,
-  writeStoredSession,
-} from '@/auth/session'
+import { clearStoredSession, readStoredSession, writeStoredSession } from '@/auth/session'
 import type { components } from '@/types/api'
 import {
   acquireRequestAction,
@@ -95,11 +87,10 @@ async function refreshToken() {
   const current = readStoredSession()
   if (!current?.token) throw new ApiError('登录状态已失效，请重新登录')
 
-  const response = await axios.post<ApiResult<TokenResponse>>(
-    '/api/v1/auth/refresh',
-    undefined,
-    { headers: { Authorization: `Bearer ${current.token}` }, timeout: 15_000 },
-  )
+  const response = await axios.post<ApiResult<TokenResponse>>('/api/v1/auth/refresh', undefined, {
+    headers: { Authorization: `Bearer ${current.token}` },
+    timeout: 15_000,
+  })
   const next = response.data.data
   if (!next?.token) throw new ApiError(response.data.message || '刷新登录状态失败')
 

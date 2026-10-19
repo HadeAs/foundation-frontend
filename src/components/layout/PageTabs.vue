@@ -1,66 +1,61 @@
 <script setup lang="ts">
-import { CloseOutlined, PushpinOutlined } from "@ant-design/icons-vue";
-import { Dropdown as ADropdown, Menu as AMenu } from "ant-design-vue";
-import { computed, nextTick, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { CloseOutlined, PushpinOutlined } from '@ant-design/icons-vue'
+import { Dropdown as ADropdown, Menu as AMenu } from 'ant-design-vue'
+import { computed, nextTick, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import { useTabsStore } from "@/stores/tabs";
-import { resolveMenuIcon } from "@/components/layout/menu-icons";
+import { useTabsStore } from '@/stores/tabs'
+import { resolveMenuIcon } from '@/components/layout/menu-icons'
 
-const tabs = useTabsStore();
-const route = useRoute();
-const router = useRouter();
+const tabs = useTabsStore()
+const route = useRoute()
+const router = useRouter()
 
-const currentPath = computed(() => route.path);
-const tabsElement = ref<HTMLElement>();
+const currentPath = computed(() => route.path)
+const tabsElement = ref<HTMLElement>()
 
 async function revealCurrentTab() {
-  await nextTick();
+  await nextTick()
   const active = Array.from(
-    tabsElement.value?.querySelectorAll<HTMLElement>("[data-tab-path]") || [],
-  ).find((element) => element.dataset.tabPath === currentPath.value);
-  active?.scrollIntoView?.({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    tabsElement.value?.querySelectorAll<HTMLElement>('[data-tab-path]') || [],
+  ).find((element) => element.dataset.tabPath === currentPath.value)
+  active?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
 }
 
-watch(currentPath, revealCurrentTab, { immediate: true });
+watch(currentPath, revealCurrentTab, { immediate: true })
 
 function tabIcon(path: string) {
-  return resolveMenuIcon(router.resolve(path).meta.icon);
+  return resolveMenuIcon(router.resolve(path).meta.icon)
 }
 
 function nextPathAfterClose(path: string) {
-  const index = tabs.items.findIndex((tab) => tab.path === path);
-  return tabs.items[index - 1]?.path || tabs.items[index + 1]?.path || "/";
+  const index = tabs.items.findIndex((tab) => tab.path === path)
+  return tabs.items[index - 1]?.path || tabs.items[index + 1]?.path || '/'
 }
 
 async function close(path: string) {
-  const next = nextPathAfterClose(path);
-  tabs.remove(path);
-  if (currentPath.value === path) await router.push(next);
+  const next = nextPathAfterClose(path)
+  tabs.remove(path)
+  if (currentPath.value === path) await router.push(next)
 }
 
 async function handleAction(key: string, path: string) {
-  if (key === "refresh") {
-    if (currentPath.value !== path) await router.push(path);
-    router.go(0);
-    return;
+  if (key === 'refresh') {
+    if (currentPath.value !== path) await router.push(path)
+    router.go(0)
+    return
   }
-  if (key === "close") return close(path);
+  if (key === 'close') return close(path)
 
-  if (key === "others") tabs.closeOthers(path);
-  if (key === "right") tabs.closeRight(path);
-  if (!tabs.items.some((tab) => tab.path === currentPath.value))
-    await router.push(path);
+  if (key === 'others') tabs.closeOthers(path)
+  if (key === 'right') tabs.closeRight(path)
+  if (!tabs.items.some((tab) => tab.path === currentPath.value)) await router.push(path)
 }
 </script>
 
 <template>
   <nav ref="tabsElement" class="page-tabs" aria-label="已打开页面">
-    <a-dropdown
-      v-for="tab in tabs.items"
-      :key="tab.path"
-      :trigger="['contextmenu']"
-    >
+    <a-dropdown v-for="tab in tabs.items" :key="tab.path" :trigger="['contextmenu']">
       <div
         class="page-tab"
         :class="{ active: currentPath === tab.path }"
@@ -84,7 +79,9 @@ async function handleAction(key: string, path: string) {
           @click.stop="close(tab.path)"
           @keydown.enter.stop="close(tab.path)"
           @keydown.space.prevent.stop="close(tab.path)"
-        ><CloseOutlined /></button>
+        >
+          <CloseOutlined />
+        </button>
       </div>
       <template #overlay>
         <a-menu

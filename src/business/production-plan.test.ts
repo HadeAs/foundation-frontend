@@ -1,13 +1,25 @@
 import dayjs from 'dayjs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { planDateQuery, planMaintenanceReason, planStatusDisplay, todayPlanRange } from './production-plan'
+import {
+  planDateQuery,
+  planMaintenanceReason,
+  planStatusDisplay,
+  todayPlanRange,
+} from './production-plan'
 
 afterEach(() => vi.useRealTimers())
 describe('生产计划日期与状态边界', () => {
   it('当天与现有系统上海时区一致，范围包含完整一天，清空则不筛日期', () => {
-    vi.useFakeTimers(); vi.setSystemTime(new Date('2026-10-14T16:01:00Z'))
-    expect(planDateQuery(todayPlanRange())).toEqual({ plannedStartTimeStart: '2026-10-15T00:00:00.000+08:00', plannedStartTimeEnd: '2026-10-15T23:59:59.999+08:00' })
-    expect(planDateQuery([dayjs('2026-10-01'), dayjs('2026-10-14')])).toEqual({ plannedStartTimeStart: '2026-10-01T00:00:00.000+08:00', plannedStartTimeEnd: '2026-10-14T23:59:59.999+08:00' })
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-14T16:01:00Z'))
+    expect(planDateQuery(todayPlanRange())).toEqual({
+      plannedStartTimeStart: '2026-10-15T00:00:00.000+08:00',
+      plannedStartTimeEnd: '2026-10-15T23:59:59.999+08:00',
+    })
+    expect(planDateQuery([dayjs('2026-10-01'), dayjs('2026-10-14')])).toEqual({
+      plannedStartTimeStart: '2026-10-01T00:00:00.000+08:00',
+      plannedStartTimeEnd: '2026-10-14T23:59:59.999+08:00',
+    })
     expect(planDateQuery(null)).toEqual({})
   })
   it('计划状态按确认映射，缺失依据保留原值，不猜测 PLANNED 阶段', () => {

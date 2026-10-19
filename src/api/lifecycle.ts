@@ -25,17 +25,20 @@ export async function pageLifecycleCleanupLogs(
   endTime?: string,
 ) {
   return unwrapResult(
-    await apiClient.get<ApiResult<LifecycleCleanupLogPage>>('/api/v1/system/lifecycle/cleanup-logs', {
-      params: {
-        page,
-        size,
-        keyword: keyword?.trim() || undefined,
-        policyCode: policyCode?.trim() || undefined,
-        targetName: targetName?.trim() || undefined,
-        status: status?.trim() || undefined,
-        startTime,
-        endTime,
+    await apiClient.get<ApiResult<LifecycleCleanupLogPage>>(
+      '/api/v1/system/lifecycle/cleanup-logs',
+      {
+        params: {
+          page,
+          size,
+          keyword: keyword?.trim() || undefined,
+          policyCode: policyCode?.trim() || undefined,
+          targetName: targetName?.trim() || undefined,
+          status: status?.trim() || undefined,
+          startTime,
+          endTime,
+        },
       },
-    }),
+    ),
   )
 }

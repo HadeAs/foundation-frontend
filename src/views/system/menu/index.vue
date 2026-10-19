@@ -1,9 +1,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'MenuManagementView' })
 
-import {
-  AppstoreOutlined,
-} from '@ant-design/icons-vue'
+import { AppstoreOutlined } from '@ant-design/icons-vue'
 import {
   Button as AButton,
   Form as AForm,
@@ -107,11 +105,13 @@ function collectExpandableMenuIds(nodes: TableMenu[]): number[] {
 
 const treeRows = computed(() => toTableRows(buildMenuTree(records.value, false, false)))
 const expandableIds = computed(() => collectExpandableMenuIds(treeRows.value))
-const allExpanded = computed(() =>
-  expandableIds.value.length > 0 && expandableIds.value.every((id) => expandedKeys.value.includes(id)),
+const allExpanded = computed(
+  () =>
+    expandableIds.value.length > 0 &&
+    expandableIds.value.every((id) => expandedKeys.value.includes(id)),
 )
 const parentTree = computed(() => buildMenuTree(records.value, false, false))
-const modalTitle = computed(() => editingId.value ? '编辑菜单' : '新增菜单')
+const modalTitle = computed(() => (editingId.value ? '编辑菜单' : '新增菜单'))
 const iconOptions = menuIconNames.map((name) => ({ label: name, value: name }))
 
 function toParentOptions(nodes: MenuNode[]): ParentOption[] {
@@ -120,11 +120,13 @@ function toParentOptions(nodes: MenuNode[]): ParentOption[] {
       return []
     }
     const children = toParentOptions(node.children)
-    return [{
-      value: node.menuId,
-      title: node.menuName || '未命名目录',
-      children: children.length ? children : undefined,
-    }]
+    return [
+      {
+        value: node.menuId,
+        title: node.menuName || '未命名目录',
+        children: children.length ? children : undefined,
+      },
+    ]
   })
 }
 
@@ -221,7 +223,9 @@ function clean(value?: string) {
 }
 
 function terminalLabel(value?: string) {
-  return ({ PC: 'PC', MOBILE: '移动端', OT: '工控端' } as Record<string, string>)[value || 'PC'] || value
+  return (
+    ({ PC: 'PC', MOBILE: '移动端', OT: '工控端' } as Record<string, string>)[value || 'PC'] || value
+  )
 }
 
 function toRequest(): MenuRequest {
@@ -299,9 +303,7 @@ load()
         />
       </div>
       <div class="query-actions">
-        <a-button type="primary" :loading="loading" @click="load">
-          查询
-        </a-button>
+        <a-button type="primary" :loading="loading" @click="load"> 查询 </a-button>
         <a-button :disabled="loading" @click="resetQuery">重置</a-button>
         <a-button :disabled="loading" @click="load">刷新</a-button>
       </div>
@@ -315,9 +317,7 @@ load()
             {{ allExpanded ? '全部收起' : '全部展开' }}
           </a-button>
         </div>
-        <a-button type="primary" @click="openCreate()">
-          新增菜单
-        </a-button>
+        <a-button type="primary" @click="openCreate()"> 新增菜单 </a-button>
       </header>
 
       <ResizableTable
@@ -362,7 +362,8 @@ load()
               target="_blank"
               rel="noopener noreferrer"
               @click.stop
-            >{{ record.externalUrl }}</a>
+              >{{ record.externalUrl }}</a
+            >
             <span v-else class="empty-value">—</span>
           </template>
           <template v-else-if="column.key === 'visible'">
@@ -376,12 +377,15 @@ load()
           </template>
           <template v-else-if="column.key === 'action'">
             <div class="row-actions">
-              <a-button v-if="record.menuType === 'DIR'" type="link" size="small" @click="openCreate(record)">
+              <a-button
+                v-if="record.menuType === 'DIR'"
+                type="link"
+                size="small"
+                @click="openCreate(record)"
+              >
                 新增下级
               </a-button>
-              <a-button type="link" size="small" @click="openEdit(record)">
-                编辑
-              </a-button>
+              <a-button type="link" size="small" @click="openEdit(record)"> 编辑 </a-button>
               <a-popconfirm
                 title="确认删除该菜单？"
                 description="存在子菜单时后端将拒绝删除。"
@@ -414,113 +418,211 @@ load()
       @cancel="requestFormClose"
     >
       <a-form ref="formRef" class="menu-form" layout="vertical" :model="form" :rules="rules">
-          <div class="form-grid">
-            <a-form-item label="菜单类型" name="menuType">
-              <a-radio-group v-model:value="form.menuType" button-style="solid">
-                <a-radio-button value="DIR">目录</a-radio-button>
-                <a-radio-button value="MENU">菜单</a-radio-button>
-              </a-radio-group>
-            </a-form-item>
-            <a-form-item label="上级目录" name="parentId">
-              <a-tree-select
-                v-model:value="form.parentId"
-                allow-clear
-                tree-default-expand-all
-                placeholder="不选择则为顶级菜单"
-                :tree-data="parentOptions"
-              />
-            </a-form-item>
-            <a-form-item label="菜单名称" name="menuName">
-              <a-input v-model:value="form.menuName" :maxlength="50" placeholder="请输入中文菜单名称" />
-            </a-form-item>
-            <a-form-item label="菜单图标" name="icon">
-              <a-select
-                v-model:value="form.icon"
-                allow-clear
-                show-search
-                option-filter-prop="label"
-                placeholder="搜索 Ant Design 图标"
-                :options="iconOptions"
-              >
-                <template #option="option">
-                  <span class="icon-option"><component :is="resolveMenuIcon(option.value)" />{{ option.label }}</span>
-                </template>
-              </a-select>
-            </a-form-item>
-            <a-form-item label="终端类型" name="terminalType">
-              <a-select
-                v-model:value="form.terminalType"
-                :options="[
-                  { label: 'PC', value: 'PC' },
-                  { label: '移动端', value: 'MOBILE' },
-                  { label: '工控端', value: 'OT' },
-                ]"
-              />
-            </a-form-item>
-            <a-form-item label="当前路径" name="path">
-              <a-input
-                v-model:value="form.path"
-                :placeholder="form.menuType === 'MENU' ? '例如 report；完整路由将拼接上级路径' : '例如 system；下级路由将拼接此路径'"
-              />
-            </a-form-item>
-            <template v-if="form.menuType === 'MENU'">
-              <a-form-item label="外部链接" name="externalUrl">
-                <a-input v-model:value="form.externalUrl" placeholder="可选，例如 https://example.com" />
-              </a-form-item>
-              <template v-if="!form.externalUrl?.trim()">
-                <a-form-item label="组件目录" name="component">
-                  <a-input v-model:value="form.component" placeholder="例如 /system/user" />
-                </a-form-item>
+        <div class="form-grid">
+          <a-form-item label="菜单类型" name="menuType">
+            <a-radio-group v-model:value="form.menuType" button-style="solid">
+              <a-radio-button value="DIR">目录</a-radio-button>
+              <a-radio-button value="MENU">菜单</a-radio-button>
+            </a-radio-group>
+          </a-form-item>
+          <a-form-item label="上级目录" name="parentId">
+            <a-tree-select
+              v-model:value="form.parentId"
+              allow-clear
+              tree-default-expand-all
+              placeholder="不选择则为顶级菜单"
+              :tree-data="parentOptions"
+            />
+          </a-form-item>
+          <a-form-item label="菜单名称" name="menuName">
+            <a-input
+              v-model:value="form.menuName"
+              :maxlength="50"
+              placeholder="请输入中文菜单名称"
+            />
+          </a-form-item>
+          <a-form-item label="菜单图标" name="icon">
+            <a-select
+              v-model:value="form.icon"
+              allow-clear
+              show-search
+              option-filter-prop="label"
+              placeholder="搜索 Ant Design 图标"
+              :options="iconOptions"
+            >
+              <template #option="option">
+                <span class="icon-option"
+                  ><component :is="resolveMenuIcon(option.value)" />{{ option.label }}</span
+                >
               </template>
-              <a-form-item label="权限标识" name="permission">
-                <a-input v-model:value="form.permission" placeholder="可选，例如 system:user:view" />
+            </a-select>
+          </a-form-item>
+          <a-form-item label="终端类型" name="terminalType">
+            <a-select
+              v-model:value="form.terminalType"
+              :options="[
+                { label: 'PC', value: 'PC' },
+                { label: '移动端', value: 'MOBILE' },
+                { label: '工控端', value: 'OT' },
+              ]"
+            />
+          </a-form-item>
+          <a-form-item label="当前路径" name="path">
+            <a-input
+              v-model:value="form.path"
+              :placeholder="
+                form.menuType === 'MENU'
+                  ? '例如 report；完整路由将拼接上级路径'
+                  : '例如 system；下级路由将拼接此路径'
+              "
+            />
+          </a-form-item>
+          <template v-if="form.menuType === 'MENU'">
+            <a-form-item label="外部链接" name="externalUrl">
+              <a-input
+                v-model:value="form.externalUrl"
+                placeholder="可选，例如 https://example.com"
+              />
+            </a-form-item>
+            <template v-if="!form.externalUrl?.trim()">
+              <a-form-item label="组件目录" name="component">
+                <a-input v-model:value="form.component" placeholder="例如 /system/user" />
               </a-form-item>
             </template>
-            <a-form-item label="排序号" name="sortNo">
-              <a-input-number v-model:value="form.sortNo" :min="0" :max="9999" :precision="0" />
+            <a-form-item label="权限标识" name="permission">
+              <a-input v-model:value="form.permission" placeholder="可选，例如 system:user:view" />
             </a-form-item>
-            <a-form-item label="显示状态" name="visible">
-              <div class="switch-field">
-                <a-switch v-model:checked="form.visible" />
-                <span>{{ form.visible ? '菜单可见' : '菜单隐藏' }}</span>
-              </div>
-            </a-form-item>
-            <a-form-item label="启用状态" name="status">
-              <div class="switch-field">
-                <a-switch v-model:checked="form.status" :checked-value="1" :un-checked-value="0" />
-                <span>{{ form.status === 1 ? '已启用' : '已禁用' }}</span>
-              </div>
-            </a-form-item>
-            <a-form-item class="full-field" label="备注" name="remark">
-              <a-textarea v-model:value="form.remark" :rows="2" :maxlength="200" placeholder="请输入备注信息" />
-            </a-form-item>
-          </div>
+          </template>
+          <a-form-item label="排序号" name="sortNo">
+            <a-input-number v-model:value="form.sortNo" :min="0" :max="9999" :precision="0" />
+          </a-form-item>
+          <a-form-item label="显示状态" name="visible">
+            <div class="switch-field">
+              <a-switch v-model:checked="form.visible" />
+              <span>{{ form.visible ? '菜单可见' : '菜单隐藏' }}</span>
+            </div>
+          </a-form-item>
+          <a-form-item label="启用状态" name="status">
+            <div class="switch-field">
+              <a-switch v-model:checked="form.status" :checked-value="1" :un-checked-value="0" />
+              <span>{{ form.status === 1 ? '已启用' : '已禁用' }}</span>
+            </div>
+          </a-form-item>
+          <a-form-item class="full-field" label="备注" name="remark">
+            <a-textarea
+              v-model:value="form.remark"
+              :rows="2"
+              :maxlength="200"
+              placeholder="请输入备注信息"
+            />
+          </a-form-item>
+        </div>
       </a-form>
     </a-modal>
   </main>
 </template>
 
 <style scoped>
-.query-field { width: min(520px, 58%); }
-.menu-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.menu-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.menu-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.menu-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.menu-name { display: flex; min-width: 0; align-items: center; gap: 8px; font-weight: 500; }
-.menu-name :deep(.anticon) { flex: none; color: var(--brand); font-size: 17px; }
-.menu-name span, .path-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.path-text { display: block; color: var(--shell-muted); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
-.external-link { color: var(--brand); }
-.empty-value { color: color-mix(in srgb, var(--shell-muted) 55%, transparent); }
-.status-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #28a87d; }
-.status-dot.disabled { background: #9ba8a8; }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
-.empty-table :deep(.anticon) { font-size: 30px; }
-.menu-form { padding-top: 8px; }
-.form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.form-grid :deep(.ant-input-number) { width: 100%; }
-.full-field { grid-column: 1 / -1; }
-.switch-field { display: flex; min-height: 34px; align-items: center; gap: 9px; color: var(--shell-muted); }
-.icon-option { display: inline-flex; align-items: center; gap: 9px; }
+.query-field {
+  width: min(520px, 58%);
+}
+.menu-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.menu-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.menu-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.menu-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.menu-name {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.menu-name :deep(.anticon) {
+  flex: none;
+  color: var(--brand);
+  font-size: 17px;
+}
+.menu-name span,
+.path-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.path-text {
+  display: block;
+  color: var(--shell-muted);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+}
+.external-link {
+  color: var(--brand);
+}
+.empty-value {
+  color: color-mix(in srgb, var(--shell-muted) 55%, transparent);
+}
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #28a87d;
+}
+.status-dot.disabled {
+  background: #9ba8a8;
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--shell-muted);
+}
+.empty-table :deep(.anticon) {
+  font-size: 30px;
+}
+.menu-form {
+  padding-top: 8px;
+}
+.form-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.form-grid :deep(.ant-input-number) {
+  width: 100%;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.switch-field {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  color: var(--shell-muted);
+}
+.icon-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
 </style>

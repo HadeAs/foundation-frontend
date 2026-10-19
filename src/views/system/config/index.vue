@@ -56,8 +56,12 @@ const scopeOptions = [
   { label: '系统', value: 'FOUNDATION' },
   { label: '业务', value: 'BUSINESS' },
 ]
-const typeLabels: Record<string, string> = Object.fromEntries(typeOptions.map((item) => [item.value, item.label]))
-const scopeLabels: Record<string, string> = Object.fromEntries(scopeOptions.map((item) => [item.value, item.label]))
+const typeLabels: Record<string, string> = Object.fromEntries(
+  typeOptions.map((item) => [item.value, item.label]),
+)
+const scopeLabels: Record<string, string> = Object.fromEntries(
+  scopeOptions.map((item) => [item.value, item.label]),
+)
 
 const keyword = ref('')
 const group = ref('')
@@ -99,17 +103,19 @@ function defaultForm(): ConfigForm {
 
 const form = reactive<ConfigForm>(defaultForm())
 const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
-const modalTitle = computed(() => editingId.value === undefined ? '新增参数' : '编辑参数')
+const modalTitle = computed(() => (editingId.value === undefined ? '新增参数' : '编辑参数'))
 
 const rules: FormProps['rules'] = {
   configKey: [{ required: true, message: '请输入参数键', trigger: 'blur' }],
-  configValue: [{
-    validator: async () => {
-      const error = getConfigValueError(form.configType, form.configValue)
-      if (error) throw new Error(error)
+  configValue: [
+    {
+      validator: async () => {
+        const error = getConfigValueError(form.configType, form.configValue)
+        if (error) throw new Error(error)
+      },
+      trigger: 'blur',
     },
-    trigger: 'blur',
-  }],
+  ],
   configType: [{ required: true, message: '请选择参数类型', trigger: 'change' }],
   configScope: [{ required: true, message: '请选择参数范围', trigger: 'change' }],
 }
@@ -133,7 +139,9 @@ function toRequest(source: ConfigForm): ConfigRequest {
 
 async function load() {
   try {
-    const result = await runLatestLoad(() => pageConfigs(currentPage.value, pageSize.value, keyword.value, group.value, scope.value))
+    const result = await runLatestLoad(() =>
+      pageConfigs(currentPage.value, pageSize.value, keyword.value, group.value, scope.value),
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -172,7 +180,9 @@ function openEdit(record: SysConfig) {
   if (record.configId === undefined || record.editable === false) return
   editingId.value = record.configId
   Object.assign(form, defaultForm(), record, {
-    configType: typeOptions.some((item) => item.value === record.configType) ? record.configType : 'string',
+    configType: typeOptions.some((item) => item.value === record.configType)
+      ? record.configType
+      : 'string',
     configScope: record.configScope === 'FOUNDATION' ? 'FOUNDATION' : 'BUSINESS',
     editable: true,
     sensitiveFlag: record.sensitiveFlag === true,
@@ -246,7 +256,12 @@ load()
           placeholder="请输入参数键或参数值"
           @press-enter="search"
         />
-        <a-input v-model:value="group" allow-clear placeholder="请输入参数分组" @press-enter="search" />
+        <a-input
+          v-model:value="group"
+          allow-clear
+          placeholder="请输入参数分组"
+          @press-enter="search"
+        />
         <a-select
           v-model:value="scope"
           allow-clear
@@ -311,7 +326,13 @@ load()
           </template>
           <template v-else-if="column.key === 'action'">
             <div class="row-actions">
-              <a-button type="link" size="small" :disabled="record.editable === false" @click="openEdit(record)">编辑</a-button>
+              <a-button
+                type="link"
+                size="small"
+                :disabled="record.editable === false"
+                @click="openEdit(record)"
+                >编辑</a-button
+              >
               <a-popconfirm
                 title="确认删除该参数？"
                 description="删除后可能影响依赖该参数的系统功能。"
@@ -325,7 +346,8 @@ load()
                   size="small"
                   :disabled="record.editable === false"
                   :loading="deletingId === record.configId"
-                >删除</a-button>
+                  >删除</a-button
+                >
               </a-popconfirm>
             </div>
           </template>
@@ -350,13 +372,21 @@ load()
       <a-form ref="formRef" class="config-form" layout="vertical" :model="form" :rules="rules">
         <div class="form-grid">
           <a-form-item label="参数键" name="configKey">
-            <a-input v-model:value="form.configKey" :maxlength="128" placeholder="例如 system.upload.max-size" />
+            <a-input
+              v-model:value="form.configKey"
+              :maxlength="128"
+              placeholder="例如 system.upload.max-size"
+            />
           </a-form-item>
           <a-form-item label="参数类型" name="configType">
             <a-select v-model:value="form.configType" :options="typeOptions" />
           </a-form-item>
           <a-form-item label="参数分组" name="configGroup">
-            <a-input v-model:value="form.configGroup" :maxlength="64" placeholder="请输入参数分组" />
+            <a-input
+              v-model:value="form.configGroup"
+              :maxlength="64"
+              placeholder="请输入参数分组"
+            />
           </a-form-item>
           <a-form-item label="参数范围" name="configScope">
             <a-select v-model:value="form.configScope" :options="scopeOptions" />
@@ -383,7 +413,12 @@ load()
             </a-form-item>
           </div>
           <a-form-item class="full-field" label="备注" name="remark">
-            <a-textarea v-model:value="form.remark" :rows="3" :maxlength="255" placeholder="请输入备注信息" />
+            <a-textarea
+              v-model:value="form.remark"
+              :rows="3"
+              :maxlength="255"
+              placeholder="请输入备注信息"
+            />
           </a-form-item>
         </div>
       </a-form>
@@ -392,20 +427,80 @@ load()
 </template>
 
 <style scoped>
-.query-fields { display: grid; width: min(820px, 70%); grid-template-columns: minmax(260px, 2fr) minmax(150px, 1fr) 130px; gap: 8px; }
-.config-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.config-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.config-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.config-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.config-table :deep(.ant-pagination) { margin: 13px; }
-.config-key { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
-.cell-text { display: block; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
-.empty-table :deep(.anticon) { font-size: 30px; }
-.config-form { padding-top: 8px; }
-.form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.full-field { grid-column: 1 / -1; }
-.form-pair { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.switch-field { display: flex; min-height: 34px; align-items: center; gap: 9px; color: var(--shell-muted); }
+.query-fields {
+  display: grid;
+  width: min(820px, 70%);
+  grid-template-columns: minmax(260px, 2fr) minmax(150px, 1fr) 130px;
+  gap: 8px;
+}
+.config-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.config-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.config-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.config-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.config-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.config-key {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+}
+.cell-text {
+  display: block;
+  overflow: hidden;
+  color: var(--shell-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--shell-muted);
+}
+.empty-table :deep(.anticon) {
+  font-size: 30px;
+}
+.config-form {
+  padding-top: 8px;
+}
+.form-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.form-pair {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.switch-field {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  color: var(--shell-muted);
+}
 </style>

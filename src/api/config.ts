@@ -27,12 +27,14 @@ export async function pageConfigs(
 }
 
 export async function createConfig(request: ConfigRequest) {
-  return unwrapResult(
-    await apiClient.post<ApiResult<SysConfig>>('/api/v1/system/configs', request),
-  )
+  return unwrapResult(await apiClient.post<ApiResult<SysConfig>>('/api/v1/system/configs', request))
 }
 
-export async function updateConfig(configId: number, request: ConfigRequest, version: number | undefined) {
+export async function updateConfig(
+  configId: number,
+  request: ConfigRequest,
+  version: number | undefined,
+) {
   return unwrapResult(
     await apiClient.put<ApiResult<SysConfig>>(`/api/v1/system/configs/${configId}`, {
       ...request,

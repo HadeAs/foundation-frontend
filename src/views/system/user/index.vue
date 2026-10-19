@@ -40,11 +40,7 @@ import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
 import { formatDateTime } from '@/utils/date'
 import { createLatestRequest } from '@/utils/latest-request'
 
-import {
-  normalizeDeptTree,
-  toDeptOptions,
-  type DeptNode,
-} from '../dept/tree'
+import { normalizeDeptTree, toDeptOptions, type DeptNode } from '../dept/tree'
 import { getUserDepartmentText, getUserRoleIds, getUserRoleText } from './relations'
 
 type UserForm = UserRequest & { userId?: number }
@@ -98,16 +94,24 @@ function defaultForm(): UserForm {
 const form = reactive<UserForm>(defaultForm())
 const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
 const passwordForm = reactive<PasswordForm>({ newPassword: '', confirmPassword: '' })
-const modalTitle = computed(() => editingId.value === undefined ? '新增用户' : '编辑用户')
-const passwordTitle = computed(() => passwordUser.value?.username
-  ? `重置密码 · ${passwordUser.value.username}`
-  : '重置密码')
+const modalTitle = computed(() => (editingId.value === undefined ? '新增用户' : '编辑用户'))
+const passwordTitle = computed(() =>
+  passwordUser.value?.username ? `重置密码 · ${passwordUser.value.username}` : '重置密码',
+)
 const deptOptions = computed(() => toDeptOptions(deptTree.value))
-const roleOptions = computed(() => roles.value.flatMap((role) => role.roleId === undefined ? [] : [{
-  label: `${role.roleName || role.roleCode || '未命名角色'}${role.status === 1 ? '' : '（已禁用）'}`,
-  value: role.roleId,
-  disabled: role.status !== 1,
-}]))
+const roleOptions = computed(() =>
+  roles.value.flatMap((role) =>
+    role.roleId === undefined
+      ? []
+      : [
+          {
+            label: `${role.roleName || role.roleCode || '未命名角色'}${role.status === 1 ? '' : '（已禁用）'}`,
+            value: role.roleId,
+            disabled: role.status !== 1,
+          },
+        ],
+  ),
+)
 
 const rules: FormProps['rules'] = {
   username: [
@@ -118,14 +122,16 @@ const rules: FormProps['rules'] = {
     { required: true, message: '请输入用户姓名', trigger: 'blur' },
     { max: 64, message: '用户姓名不能超过 64 个字符', trigger: 'blur' },
   ],
-  password: [{
-    validator: async (_rule, value?: string) => {
-      if (editingId.value !== undefined && !value) return
-      if (!value) throw new Error('请输入初始密码')
-      if (value.length < 8 || value.length > 72) throw new Error('密码长度必须为 8 至 72 位')
+  password: [
+    {
+      validator: async (_rule, value?: string) => {
+        if (editingId.value !== undefined && !value) return
+        if (!value) throw new Error('请输入初始密码')
+        if (value.length < 8 || value.length > 72) throw new Error('密码长度必须为 8 至 72 位')
+      },
+      trigger: 'blur',
     },
-    trigger: 'blur',
-  }],
+  ],
   email: [{ type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }],
 }
 
@@ -134,18 +140,22 @@ const passwordRules: FormProps['rules'] = {
     { required: true, message: '请输入新密码', trigger: 'blur' },
     { min: 8, max: 72, message: '密码长度必须为 8 至 72 位', trigger: 'blur' },
   ],
-  confirmPassword: [{
-    validator: async (_rule, value?: string) => {
-      if (!value) throw new Error('请再次输入新密码')
-      if (value !== passwordForm.newPassword) throw new Error('两次输入的新密码不一致')
+  confirmPassword: [
+    {
+      validator: async (_rule, value?: string) => {
+        if (!value) throw new Error('请再次输入新密码')
+        if (value !== passwordForm.newPassword) throw new Error('两次输入的新密码不一致')
+      },
+      trigger: 'blur',
     },
-    trigger: 'blur',
-  }],
+  ],
 }
 
 async function load() {
   try {
-    const result = await runLatestLoad(() => pageUsers(currentPage.value, pageSize.value, keyword.value))
+    const result = await runLatestLoad(() =>
+      pageUsers(currentPage.value, pageSize.value, keyword.value),
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -177,10 +187,7 @@ function resetForm() {
 async function refreshCandidates() {
   modalLoading.value = true
   try {
-    const [depts, rolePage] = await Promise.all([
-      listDeptTree(),
-      pageRoles(1, 1000),
-    ])
+    const [depts, rolePage] = await Promise.all([listDeptTree(), pageRoles(1, 1000)])
     deptTree.value = normalizeDeptTree(depts)
     roles.value = rolePage.records || []
   } catch {
@@ -200,7 +207,10 @@ function openCreate() {
 function openEdit(record: SysUser) {
   if (record.userId === undefined) return
   editingId.value = record.userId
-  Object.assign(form, defaultForm(), toRequest(record), { userId: record.userId, password: undefined })
+  Object.assign(form, defaultForm(), toRequest(record), {
+    userId: record.userId,
+    password: undefined,
+  })
   modalOpen.value = true
   nextTick(() => formRef.value?.clearValidate())
   void refreshCandidates()
@@ -357,7 +367,11 @@ load()
             <code class="username">{{ record.username || '—' }}</code>
           </template>
           <template v-else-if="column.key === 'deptId'">
-            <span v-if="getUserDepartmentText(record)" class="cell-text" :title="record.department?.deptCode">
+            <span
+              v-if="getUserDepartmentText(record)"
+              class="cell-text"
+              :title="record.department?.deptCode"
+            >
               {{ getUserDepartmentText(record) }}
             </span>
             <span v-else class="empty-value">未分配</span>
@@ -387,7 +401,9 @@ load()
           <template v-else-if="column.key === 'action'">
             <div class="row-actions">
               <a-button type="link" size="small" @click="openEdit(record)">编辑</a-button>
-              <a-button type="link" size="small" @click="openPasswordReset(record)">重置密码</a-button>
+              <a-button type="link" size="small" @click="openPasswordReset(record)"
+                >重置密码</a-button
+              >
               <a-popconfirm
                 title="确认删除该用户？"
                 description="删除后该用户将无法登录，且无法恢复。"
@@ -395,7 +411,9 @@ load()
                 cancel-text="取消"
                 @confirm="remove(record)"
               >
-                <a-button type="link" danger size="small" :loading="deletingId === record.userId">删除</a-button>
+                <a-button type="link" danger size="small" :loading="deletingId === record.userId"
+                  >删除</a-button
+                >
               </a-popconfirm>
             </div>
           </template>
@@ -421,7 +439,12 @@ load()
         <a-form ref="formRef" class="user-form" layout="vertical" :model="form" :rules="rules">
           <div class="form-grid">
             <a-form-item label="登录账号" name="username">
-              <a-input v-model:value="form.username" :maxlength="64" autocomplete="username" placeholder="请输入登录账号" />
+              <a-input
+                v-model:value="form.username"
+                :maxlength="64"
+                autocomplete="username"
+                placeholder="请输入登录账号"
+              />
             </a-form-item>
             <a-form-item label="用户姓名" name="realName">
               <a-input v-model:value="form.realName" :maxlength="64" placeholder="请输入用户姓名" />
@@ -467,14 +490,19 @@ load()
                 <div class="switch-field">
                   <a-switch
                     :checked="form.status === 1"
-                    @change="(checked) => form.status = Boolean(checked) ? 1 : 0"
+                    @change="(checked) => (form.status = Boolean(checked) ? 1 : 0)"
                   />
                   <span>{{ form.status === 1 ? '已启用' : '已禁用' }}</span>
                 </div>
               </a-form-item>
             </div>
             <a-form-item class="full-field" label="备注" name="remark">
-              <a-textarea v-model:value="form.remark" :rows="3" :maxlength="255" placeholder="请输入备注信息" />
+              <a-textarea
+                v-model:value="form.remark"
+                :rows="3"
+                :maxlength="255"
+                placeholder="请输入备注信息"
+              />
             </a-form-item>
           </div>
         </a-form>
@@ -491,13 +519,27 @@ load()
       cancel-text="取消"
       @ok="submitPasswordReset"
     >
-      <a-form ref="passwordFormRef" class="password-form" layout="vertical" :model="passwordForm" :rules="passwordRules">
-        <input type="text" :value="passwordUser?.username" autocomplete="username" hidden>
+      <a-form
+        ref="passwordFormRef"
+        class="password-form"
+        layout="vertical"
+        :model="passwordForm"
+        :rules="passwordRules"
+      >
+        <input type="text" :value="passwordUser?.username" autocomplete="username" hidden />
         <a-form-item label="新密码" name="newPassword" extra="8 至 72 位">
-          <a-input-password v-model:value="passwordForm.newPassword" autocomplete="new-password" placeholder="请输入新密码" />
+          <a-input-password
+            v-model:value="passwordForm.newPassword"
+            autocomplete="new-password"
+            placeholder="请输入新密码"
+          />
         </a-form-item>
         <a-form-item label="确认新密码" name="confirmPassword">
-          <a-input-password v-model:value="passwordForm.confirmPassword" autocomplete="new-password" placeholder="请再次输入新密码" />
+          <a-input-password
+            v-model:value="passwordForm.confirmPassword"
+            autocomplete="new-password"
+            placeholder="请再次输入新密码"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -505,23 +547,87 @@ load()
 </template>
 
 <style scoped>
-.query-field { width: min(520px, 58%); }
-.user-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.user-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.user-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.user-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.user-table :deep(.ant-pagination) { margin: 13px; }
-.user-name { font-weight: 600; }
-.username { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
-.cell-text { display: block; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
-.empty-value { color: color-mix(in srgb, var(--shell-muted) 55%, transparent); }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
-.empty-table :deep(.anticon) { font-size: 30px; }
-.user-form, .password-form { padding-top: 8px; }
-.form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.full-field { grid-column: 1 / -1; }
-.form-pair { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.switch-field { display: flex; min-height: 34px; align-items: center; gap: 9px; color: var(--shell-muted); }
-.password-form :deep(.ant-form-item:last-child) { margin-bottom: 4px; }
+.query-field {
+  width: min(520px, 58%);
+}
+.user-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.user-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.user-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.user-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.user-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.user-name {
+  font-weight: 600;
+}
+.username {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+}
+.cell-text {
+  display: block;
+  overflow: hidden;
+  color: var(--shell-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.empty-value {
+  color: color-mix(in srgb, var(--shell-muted) 55%, transparent);
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--shell-muted);
+}
+.empty-table :deep(.anticon) {
+  font-size: 30px;
+}
+.user-form,
+.password-form {
+  padding-top: 8px;
+}
+.form-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.form-pair {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.switch-field {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  color: var(--shell-muted);
+}
+.password-form :deep(.ant-form-item:last-child) {
+  margin-bottom: 4px;
+}
 </style>

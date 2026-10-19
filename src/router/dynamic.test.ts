@@ -12,7 +12,15 @@ import {
 } from './dynamic'
 
 const menus: SysMenu[] = [
-  { menuId: 1, menuName: '系统管理', menuType: 'DIR', path: 'system', status: 1, visible: true, sortNo: 10 },
+  {
+    menuId: 1,
+    menuName: '系统管理',
+    menuType: 'DIR',
+    path: 'system',
+    status: 1,
+    visible: true,
+    sortNo: 10,
+  },
   {
     menuId: 2,
     parentId: 1,
@@ -43,9 +51,7 @@ describe('dynamic routes', () => {
     expect(normalizeRoutePath('dashboard')).toBe('/dashboard')
     expect(normalizeRoutePath('/')).toBe('/dashboard')
     expect(normalizeRoutePath('https://example.com')).toBeNull()
-    expect(normalizeComponentPath('/system/user')).toBe(
-      '/src/views/system/user/index.vue',
-    )
+    expect(normalizeComponentPath('/system/user')).toBe('/src/views/system/user/index.vue')
     expect(normalizeComponentPath('../secret')).toBeNull()
     expect(normalizeExternalUrl('https://example.com/docs')).toBe('https://example.com/docs')
     expect(normalizeExternalUrl('javascript:alert(1)')).toBeNull()
@@ -70,11 +76,36 @@ describe('dynamic routes', () => {
   })
 
   it('resolves manually configured basic-data and runtime components', async () => {
-    const pages = ['factory', 'floor', 'area', 'production-line', 'storage-zone', 'location', 'container-model', 'container', 'vehicle-load', 'location-state', 'container-state', 'box-binding', 'production-plan', 'logistics-task', 'operation-record', 'warehouse-record', 'receiving-record']
-    const routes = createMenuRoutes(pages.map((page, index) => ({
-      menuId: 100 + index, menuName: page, menuType: 'MENU', status: 1,
-      path: `business/${page}`, component: `/business/${page}`, terminalType: 'PC',
-    })))
+    const pages = [
+      'factory',
+      'floor',
+      'area',
+      'production-line',
+      'storage-zone',
+      'location',
+      'container-model',
+      'container',
+      'vehicle-load',
+      'location-state',
+      'container-state',
+      'box-binding',
+      'production-plan',
+      'logistics-task',
+      'operation-record',
+      'warehouse-record',
+      'receiving-record',
+    ]
+    const routes = createMenuRoutes(
+      pages.map((page, index) => ({
+        menuId: 100 + index,
+        menuName: page,
+        menuType: 'MENU',
+        status: 1,
+        path: `business/${page}`,
+        component: `/business/${page}`,
+        terminalType: 'PC',
+      })),
+    )
     expect(routes).toHaveLength(17)
     for (const route of routes) {
       expect(typeof route.component).toBe('function')
@@ -84,27 +115,45 @@ describe('dynamic routes', () => {
   })
 
   it('normalizes the backend root dashboard route', () => {
-    const [route] = createMenuRoutes([{
-      menuId: 1,
-      menuName: '运行总览',
-      menuType: 'MENU',
-      path: '/',
-      component: '/dashboard',
-      status: 1,
-      visible: true,
-    }])
+    const [route] = createMenuRoutes([
+      {
+        menuId: 1,
+        menuName: '运行总览',
+        menuType: 'MENU',
+        path: '/',
+        component: '/dashboard',
+        status: 1,
+        visible: true,
+      },
+    ])
     expect(route?.path).toBe('/dashboard')
     expect(route?.meta?.fixedTab).toBe(true)
   })
 
   it('registers external menus as internal routes and filters non-PC menus', () => {
     const [externalRoute] = createMenuRoutes([
-      { menuId: 8, menuName: '文档', menuType: 'MENU', path: 'docs', externalUrl: 'https://example.com', status: 1 },
+      {
+        menuId: 8,
+        menuName: '文档',
+        menuType: 'MENU',
+        path: 'docs',
+        externalUrl: 'https://example.com',
+        status: 1,
+      },
     ])
     expect(externalRoute?.path).toBe('/docs')
     expect(externalRoute?.meta?.externalUrl).toBe('https://example.com')
-    expect(createMenuRoutes([
-      { menuId: 9, menuName: '移动端', menuType: 'MENU', path: 'mobile', terminalType: 'MOBILE', status: 1 },
-    ])).toEqual([])
+    expect(
+      createMenuRoutes([
+        {
+          menuId: 9,
+          menuName: '移动端',
+          menuType: 'MENU',
+          path: 'mobile',
+          terminalType: 'MOBILE',
+          status: 1,
+        },
+      ]),
+    ).toEqual([])
   })
 })

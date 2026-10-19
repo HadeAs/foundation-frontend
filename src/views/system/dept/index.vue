@@ -79,12 +79,17 @@ function defaultForm(parentId?: number): DeptForm {
 }
 
 const form = reactive<DeptForm>(defaultForm())
-const { markClean: markFormClean, requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
-const modalTitle = computed(() => editingId.value === undefined ? '新增部门' : '编辑部门')
+const { markClean: markFormClean, requestClose: requestFormClose } = useUnsavedChanges(
+  form,
+  modalOpen,
+)
+const modalTitle = computed(() => (editingId.value === undefined ? '新增部门' : '编辑部门'))
 const parentOptions = computed(() => toDeptOptions(candidateTree.value, editingId.value))
 const expandableIds = computed(() => collectExpandableDeptIds(records.value))
-const allExpanded = computed(() =>
-  expandableIds.value.length > 0 && expandableIds.value.every((id) => expandedKeys.value.includes(id)),
+const allExpanded = computed(
+  () =>
+    expandableIds.value.length > 0 &&
+    expandableIds.value.every((id) => expandedKeys.value.includes(id)),
 )
 
 const rules: FormProps['rules'] = {
@@ -265,9 +270,13 @@ load()
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'deptName'">
-            <div class="dept-name"><span>{{ record.deptName || '未命名部门' }}</span></div>
+            <div class="dept-name">
+              <span>{{ record.deptName || '未命名部门' }}</span>
+            </div>
           </template>
-          <template v-else-if="['deptCode', 'leader', 'phone', 'email'].includes(String(column.key))">
+          <template
+            v-else-if="['deptCode', 'leader', 'phone', 'email'].includes(String(column.key))"
+          >
             <span v-if="record[column.key]" class="cell-text">{{ record[column.key] }}</span>
             <span v-else class="empty-value">—</span>
           </template>
@@ -286,7 +295,9 @@ load()
                 cancel-text="取消"
                 @confirm="remove(record)"
               >
-                <a-button type="link" danger size="small" :loading="deletingId === record.deptId">删除</a-button>
+                <a-button type="link" danger size="small" :loading="deletingId === record.deptId"
+                  >删除</a-button
+                >
               </a-popconfirm>
             </div>
           </template>
@@ -324,7 +335,11 @@ load()
               <a-input v-model:value="form.deptCode" :maxlength="64" placeholder="请输入部门编码" />
             </a-form-item>
             <a-form-item label="部门名称" name="deptName">
-              <a-input v-model:value="form.deptName" :maxlength="128" placeholder="请输入部门名称" />
+              <a-input
+                v-model:value="form.deptName"
+                :maxlength="128"
+                placeholder="请输入部门名称"
+              />
             </a-form-item>
             <a-form-item label="负责人" name="leader">
               <a-input v-model:value="form.leader" :maxlength="64" placeholder="请输入负责人姓名" />
@@ -345,7 +360,12 @@ load()
               </div>
             </a-form-item>
             <a-form-item class="full-field" label="备注" name="remark">
-              <a-textarea v-model:value="form.remark" :rows="3" :maxlength="255" placeholder="请输入备注信息" />
+              <a-textarea
+                v-model:value="form.remark"
+                :rows="3"
+                :maxlength="255"
+                placeholder="请输入备注信息"
+              />
             </a-form-item>
           </div>
         </a-form>
@@ -355,23 +375,91 @@ load()
 </template>
 
 <style scoped>
-.query-field { width: min(520px, 58%); }
-.dept-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.dept-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.dept-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.dept-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.dept-name { display: flex; min-width: 0; align-items: center; gap: 8px; font-weight: 500; }
-.dept-name span, .cell-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cell-text { color: var(--shell-muted); }
-.empty-value { color: color-mix(in srgb, var(--shell-muted) 55%, transparent); }
-.status-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #28a87d; }
-.status-dot.disabled { background: #9ba8a8; }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
-.empty-table :deep(.anticon) { font-size: 30px; }
-.dept-form { padding-top: 8px; }
-.form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.form-grid :deep(.ant-input-number) { width: 100%; }
-.full-field { grid-column: 1 / -1; }
-.switch-field { display: flex; min-height: 34px; align-items: center; gap: 9px; color: var(--shell-muted); }
+.query-field {
+  width: min(520px, 58%);
+}
+.dept-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.dept-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.dept-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.dept-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.dept-name {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.dept-name span,
+.cell-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-text {
+  color: var(--shell-muted);
+}
+.empty-value {
+  color: color-mix(in srgb, var(--shell-muted) 55%, transparent);
+}
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #28a87d;
+}
+.status-dot.disabled {
+  background: #9ba8a8;
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--shell-muted);
+}
+.empty-table :deep(.anticon) {
+  font-size: 30px;
+}
+.dept-form {
+  padding-top: 8px;
+}
+.form-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.form-grid :deep(.ant-input-number) {
+  width: 100%;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.switch-field {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  color: var(--shell-muted);
+}
 </style>

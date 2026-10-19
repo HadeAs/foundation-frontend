@@ -3,10 +3,11 @@ import { defineAsyncComponent, type Component } from 'vue'
 type IconModule = { default: Component }
 
 const iconLoaders = Object.fromEntries(
-  Object.entries(import.meta.glob<IconModule>(
-    '../../../node_modules/@ant-design/icons-vue/*Outlined.js',
-    { exhaustive: true },
-  )).map(([path, loader]) => [path.slice(path.lastIndexOf('/') + 1, -3), loader]),
+  Object.entries(
+    import.meta.glob<IconModule>('../../../node_modules/@ant-design/icons-vue/*Outlined.js', {
+      exhaustive: true,
+    }),
+  ).map(([path, loader]) => [path.slice(path.lastIndexOf('/') + 1, -3), loader]),
 )
 const iconCache = new Map<string, Component>()
 const defaultIconName = 'AppstoreOutlined'

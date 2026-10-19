@@ -17,6 +17,17 @@ const externalUrl = computed(() => String(route.meta.externalUrl || ''))
 </template>
 
 <style scoped>
-.external-page { width: 100%; height: 100%; padding: 8px 10px 10px; overflow: hidden; }
-.external-page iframe { display: block; width: 100%; height: 100%; border: 1px solid var(--shell-border); background: var(--shell-panel); }
+.external-page {
+  width: 100%;
+  height: 100%;
+  padding: 8px 10px 10px;
+  overflow: hidden;
+}
+.external-page iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--shell-border);
+  background: var(--shell-panel);
+}
 </style>

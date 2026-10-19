@@ -1,8 +1,7 @@
 :root {
   color: #172626;
   background: #eef2f2;
-  font-family:
-    'Avenir Next', 'DIN Alternate', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: 'Avenir Next', 'DIN Alternate', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -271,7 +270,9 @@ body:has(.app-sider.ant-layout-sider-collapsed) .ant-message {
 }
 
 @keyframes global-request-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .ant-table-wrapper .ant-table-thead > tr > th:first-child,

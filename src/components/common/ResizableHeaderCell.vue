@@ -3,15 +3,18 @@ import { onBeforeUnmount } from 'vue'
 
 defineOptions({ inheritAttrs: false })
 
-const props = withDefaults(defineProps<{
-  width?: number
-  minWidth?: number
-  resizable?: boolean
-  onColumnResize?: (width: number) => void
-}>(), {
-  minWidth: 56,
-  resizable: true,
-})
+const props = withDefaults(
+  defineProps<{
+    width?: number
+    minWidth?: number
+    resizable?: boolean
+    onColumnResize?: (width: number) => void
+  }>(),
+  {
+    minWidth: 56,
+    resizable: true,
+  },
+)
 
 let startX = 0
 let startWidth = 0
@@ -78,7 +81,9 @@ onBeforeUnmount(stopDragging)
 </template>
 
 <style scoped>
-.resizable-header-cell { position: relative; }
+.resizable-header-cell {
+  position: relative;
+}
 .column-resize-handle {
   position: absolute;
   z-index: 2;
@@ -103,5 +108,7 @@ onBeforeUnmount(stopDragging)
 .column-resize-handle:focus-visible::after {
   background: var(--brand);
 }
-.column-resize-handle:focus-visible { outline: none; }
+.column-resize-handle:focus-visible {
+  outline: none;
+}
 </style>

@@ -1515,7 +1515,7 @@ export interface components {
             jobName: string;
             jobGroup?: string;
             jobScope?: string;
-            cronExpression: string;
+            cronExpression?: string;
             jobType?: string;
             jobData?: string;
             concurrencyPolicy?: string;
@@ -1537,6 +1537,28 @@ export interface components {
              * @example 1
              */
             version?: number;
+            /**
+             * @description CRON（省略时默认）或 INTERVAL
+             * @default CRON
+             * @enum {string}
+             */
+            scheduleType?: "CRON" | "INTERVAL";
+            /**
+             * Format: int32
+             * @description INTERVAL 必填，100～86400000 毫秒
+             */
+            intervalMillis?: number;
+            /**
+             * @description ALL（省略时默认）或 SUMMARY；亚秒任务须 SUMMARY
+             * @default ALL
+             * @enum {string}
+             */
+            logPolicy?: "ALL" | "SUMMARY";
+            /**
+             * Format: int32
+             * @description SUMMARY 汇总窗口，10～3600 秒，默认60
+             */
+            logSummarySeconds?: number;
         };
         ApiResultSysJob: {
             /** Format: int32 */
@@ -1578,6 +1600,12 @@ export interface components {
             createdTime?: string;
             /** Format: date-time */
             updatedTime?: string;
+            scheduleType?: string;
+            /** Format: int32 */
+            intervalMillis?: number;
+            logPolicy?: string;
+            /** Format: int32 */
+            logSummarySeconds?: number;
         };
         DictTypeRequest: {
             dictCode: string;

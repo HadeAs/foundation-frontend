@@ -66,9 +66,36 @@ const theme = useThemeStore()
 </template>
 
 <style scoped>
-.setting-block { margin-bottom: 28px; }
-.setting-block > label { display: block; margin-bottom: 10px; color: #617171; font-size: 14px; font-weight: 600; }
-.color-control { display: flex; height: 42px; align-items: center; gap: 12px; padding: 6px 12px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.color-control input { width: 28px; height: 28px; padding: 0; border: 0; background: transparent; cursor: pointer; }
-.color-control code { color: var(--shell-ink); font-size: 14px; letter-spacing: 0.08em; }
+.setting-block {
+  margin-bottom: 28px;
+}
+.setting-block > label {
+  display: block;
+  margin-bottom: 10px;
+  color: #617171;
+  font-size: 14px;
+  font-weight: 600;
+}
+.color-control {
+  display: flex;
+  height: 42px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border: 1px solid var(--shell-border);
+  background: var(--shell-panel);
+}
+.color-control input {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.color-control code {
+  color: var(--shell-ink);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
 </style>

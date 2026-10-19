@@ -10,12 +10,7 @@ import {
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import {
-  cancelAsyncTask,
-  createAsyncTask,
-  getAsyncTask,
-  type SysAsyncTask,
-} from '@/api/async-task'
+import { cancelAsyncTask, createAsyncTask, getAsyncTask, type SysAsyncTask } from '@/api/async-task'
 import { listDictItems, type DictItemResponse } from '@/api/dict'
 import { downloadFile } from '@/api/file'
 import { getErrorMessage } from '@/api/http'
@@ -46,16 +41,23 @@ let notifiedTaskId: number | undefined
 const permissions = computed(() => auth.user?.permissions || [])
 const canExport = computed(() => permissions.value.includes('system:async-task:view'))
 const canDownload = computed(() => permissions.value.includes('system:file:view'))
-const isActive = computed(() => task.value?.status === 'PENDING' || task.value?.status === 'RUNNING')
-const statusItem = computed(() => statusItems.value.find((item) => item.value === task.value?.status))
+const isActive = computed(
+  () => task.value?.status === 'PENDING' || task.value?.status === 'RUNNING',
+)
+const statusItem = computed(() =>
+  statusItems.value.find((item) => item.value === task.value?.status),
+)
 const statusLabel = computed(() => statusItem.value?.label || task.value?.status || '等待创建')
-const statusColor = computed(() => ({
-  primary: 'processing',
-  success: 'success',
-  warning: 'warning',
-  danger: 'error',
-  info: 'default',
-}[statusItem.value?.tagType || ''] || 'default'))
+const statusColor = computed(
+  () =>
+    ({
+      primary: 'processing',
+      success: 'success',
+      warning: 'warning',
+      danger: 'error',
+      info: 'default',
+    })[statusItem.value?.tagType || ''] || 'default',
+)
 const progressStatus = computed(() => {
   if (task.value?.status === 'FAILURE') return 'exception'
   if (task.value?.status === 'SUCCESS') return 'success'
@@ -77,7 +79,8 @@ async function pollTask() {
       if (notifiedTaskId !== task.value.taskId) {
         notifiedTaskId = task.value.taskId
         if (task.value.status === 'SUCCESS') message.success('导出已完成，可下载结果文件')
-        if (task.value.status === 'FAILURE') message.error(task.value.failureReason || '导出任务执行失败')
+        if (task.value.status === 'FAILURE')
+          message.error(task.value.failureReason || '导出任务执行失败')
       }
     }
   } catch (error) {
@@ -99,12 +102,9 @@ async function startExport() {
   if (!canExport.value || creating.value) return
   creating.value = true
   try {
-    task.value = await createAsyncTask(buildExportTaskRequest(
-      props.taskType,
-      props.taskName,
-      props.resource,
-      props.filters,
-    ))
+    task.value = await createAsyncTask(
+      buildExportTaskRequest(props.taskType, props.taskName, props.resource, props.filters),
+    )
     notifiedTaskId = undefined
     open.value = true
     startPolling()
@@ -195,24 +195,31 @@ onBeforeUnmount(stopPolling)
           message="导出完成，但当前账号没有结果文件下载权限"
         />
         <p v-else-if="isActive" class="status-note">任务正在后台处理，关闭弹窗不会取消导出。</p>
-        <p v-else-if="task?.status === 'CANCELED'" class="status-note">任务已取消，不会生成结果文件。</p>
-        <p v-else-if="task?.status === 'SUCCESS'" class="status-note">导出已完成，可以下载结果文件。</p>
+        <p v-else-if="task?.status === 'CANCELED'" class="status-note">
+          任务已取消，不会生成结果文件。
+        </p>
+        <p v-else-if="task?.status === 'SUCCESS'" class="status-note">
+          导出已完成，可以下载结果文件。
+        </p>
 
         <div class="status-meta">
-          <span>任务编号</span><code>{{ task?.taskId ?? '—' }}</code>
-          <span>结果文件</span><strong>{{ task?.resultFileName || '—' }}</strong>
+          <span>任务编号</span><code>{{ task?.taskId ?? '—' }}</code> <span>结果文件</span
+          ><strong>{{ task?.resultFileName || '—' }}</strong>
         </div>
 
         <div class="modal-actions">
           <a-button @click="goToTaskCenter">前往异步任务</a-button>
           <a-button @click="open = false">关闭</a-button>
-          <a-button v-if="isActive" danger :loading="canceling" @click="cancelTask">取消任务</a-button>
+          <a-button v-if="isActive" danger :loading="canceling" @click="cancelTask"
+            >取消任务</a-button
+          >
           <a-button
             v-if="task?.status === 'SUCCESS' && task.resultFileId !== undefined && canDownload"
             type="primary"
             :loading="downloading"
             @click="downloadResult"
-          >下载文件</a-button>
+            >下载文件</a-button
+          >
         </div>
       </div>
     </a-modal>
@@ -220,17 +227,69 @@ onBeforeUnmount(stopPolling)
 </template>
 
 <style scoped>
-.export-action { color: var(--shell-ink); background: var(--shell-hover); }
-.export-action:hover { color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important; }
-.export-status { padding-top: 8px; }
-.status-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
-.status-heading > div { display: flex; align-items: center; gap: 9px; }
-.status-heading strong { color: var(--brand-deep); font-size: 20px; font-variant-numeric: tabular-nums; }
-.status-caption { color: var(--shell-muted); font-size: 13px; }
-.status-note { margin: 13px 0 0; padding: 10px 12px; color: var(--shell-muted); background: var(--shell-hover); }
-.status-meta { display: grid; margin-top: 14px; grid-template-columns: 82px minmax(0, 1fr); border-top: 1px solid var(--shell-border); border-left: 1px solid var(--shell-border); }
-.status-meta > * { min-width: 0; padding: 9px 11px; overflow-wrap: anywhere; border-right: 1px solid var(--shell-border); border-bottom: 1px solid var(--shell-border); }
-.status-meta span { color: var(--shell-muted); background: var(--shell-hover); }
-.status-meta code { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.export-action {
+  color: var(--shell-ink);
+  background: var(--shell-hover);
+}
+.export-action:hover {
+  color: var(--brand) !important;
+  background: color-mix(in srgb, var(--brand) 11%, var(--shell-panel)) !important;
+}
+.export-status {
+  padding-top: 8px;
+}
+.status-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.status-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.status-heading strong {
+  color: var(--brand-deep);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.status-caption {
+  color: var(--shell-muted);
+  font-size: 13px;
+}
+.status-note {
+  margin: 13px 0 0;
+  padding: 10px 12px;
+  color: var(--shell-muted);
+  background: var(--shell-hover);
+}
+.status-meta {
+  display: grid;
+  margin-top: 14px;
+  grid-template-columns: 82px minmax(0, 1fr);
+  border-top: 1px solid var(--shell-border);
+  border-left: 1px solid var(--shell-border);
+}
+.status-meta > * {
+  min-width: 0;
+  padding: 9px 11px;
+  overflow-wrap: anywhere;
+  border-right: 1px solid var(--shell-border);
+  border-bottom: 1px solid var(--shell-border);
+}
+.status-meta span {
+  color: var(--shell-muted);
+  background: var(--shell-hover);
+}
+.status-meta code {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
 </style>

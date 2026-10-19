@@ -1,45 +1,222 @@
 /* Query prototypes only. Reuse the existing industrial theme and compact density. */
-.query-fields { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
-.query-fields > .query-control { width:180px; flex:1 1 160px; max-width:240px; }
-.query-fields .query-control input,.query-fields .query-control select { width:100%; max-width:none; }
-.query-control.reference { position:relative; }
-.query-control.reference > button:first-child { width:100%; justify-content:space-between; padding-right:48px; overflow:hidden; }
-.query-control.reference .clear-related { position:absolute; right:30px; top:3px; width:26px; min-height:28px; border:0; padding:0; background:white; color:var(--muted); }
-.query-control.reference .icon { width:16px; height:16px; }
-.query-control.reference .reference-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.query-fields .date-range { flex:0 1 auto; width:auto; max-width:none; display:flex; align-items:center; gap:6px; }
-.date-range label { display:flex; align-items:center; gap:7px; }
-.date-range .date-name { font-size:12px; color:var(--muted); white-space:nowrap; }
-.date-range input { width:182px; font-size:12px; }
-.query-actions { display:flex; gap:8px; margin-left:auto; }
-.advanced-fields { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); max-height:220px; overflow:auto; }
-.advanced-fields[hidden] { display:none; }
-.filter-error { margin:8px 0 0; color:var(--danger); font-size:12px; }
-.logistics-table th,.logistics-table td { white-space:nowrap; }
-.logistics-table .actions { width:82px; }
-.logistics-table td .cell-text { display:block; overflow:hidden; text-overflow:ellipsis; }
-.logistics-table td .record-link { display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; vertical-align:middle; }
-.runtime-tag.danger { color:#b93838; background:#fff0ef; }
-.viewer-heading { display:flex; gap:10px; align-items:center; }
-.viewer-heading .icon-button { flex-shrink:0; }
-.detail-section + .detail-section { margin-top:16px; padding-top:12px; border-top:1px solid var(--border); }
-.detail-section h3 { font-size:14px; margin:0 0 10px; }
-.detail-section .detail-grid { gap:10px 16px; font-size:13px; }
-.snapshot { margin-top:12px; border-top:1px solid var(--border); padding-top:10px; }
-.snapshot summary { cursor:pointer; color:var(--muted); font-size:12px; }
-.snapshot pre { margin:8px 0 0; padding:10px; background:#f5f8f8; border:1px solid var(--border); font:12px/1.6 ui-monospace,monospace; white-space:pre-wrap; overflow-wrap:anywhere; max-height:260px; overflow:auto; }
-.view-table-wrap { overflow:auto; max-height:380px; min-height:120px; }
-#viewer .view-table-wrap th,#viewer .view-table-wrap td { height:36px; padding:6px 10px; }
-.child-filters { border:0; padding:0 0 12px; }
-.child-filters input { max-width:180px; }
-.child-pagination { padding:10px 0 0; }
-.detail-grid .runtime-tag { vertical-align:middle; }
-.empty-state { min-height:220px; }
-.table-scroll > .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100%; }
-.empty-state button { margin-top:12px; }
-.reference-current { display:flex; align-items:center; gap:10px; padding:8px 10px; margin-bottom:10px; background:#e7f3f4; border:1px solid #a3d5d8; font-size:12px; }
-.picker-search { display:flex; gap:8px; margin-bottom:12px; }
-#picker .table-scroll { max-height:300px; }
-.picker-row[aria-selected="true"] td { background:#e0f1f2; }
-.missing-reference { color:var(--muted); font-size:12px; }
-.detail-grid dd button.link { padding:0; min-height:22px; text-align:left; white-space:normal; }
+.query-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.query-fields > .query-control {
+  width: 180px;
+  flex: 1 1 160px;
+  max-width: 240px;
+}
+.query-fields .query-control input,
+.query-fields .query-control select {
+  width: 100%;
+  max-width: none;
+}
+.query-control.reference {
+  position: relative;
+}
+.query-control.reference > button:first-child {
+  width: 100%;
+  justify-content: space-between;
+  padding-right: 48px;
+  overflow: hidden;
+}
+.query-control.reference .clear-related {
+  position: absolute;
+  right: 30px;
+  top: 3px;
+  width: 26px;
+  min-height: 28px;
+  border: 0;
+  padding: 0;
+  background: white;
+  color: var(--muted);
+}
+.query-control.reference .icon {
+  width: 16px;
+  height: 16px;
+}
+.query-control.reference .reference-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.query-fields .date-range {
+  flex: 0 1 auto;
+  width: auto;
+  max-width: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.date-range label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.date-range .date-name {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.date-range input {
+  width: 182px;
+  font-size: 12px;
+}
+.query-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.advanced-fields {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  max-height: 220px;
+  overflow: auto;
+}
+.advanced-fields[hidden] {
+  display: none;
+}
+.filter-error {
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 12px;
+}
+.logistics-table th,
+.logistics-table td {
+  white-space: nowrap;
+}
+.logistics-table .actions {
+  width: 82px;
+}
+.logistics-table td .cell-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.logistics-table td .record-link {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.runtime-tag.danger {
+  color: #b93838;
+  background: #fff0ef;
+}
+.viewer-heading {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.viewer-heading .icon-button {
+  flex-shrink: 0;
+}
+.detail-section + .detail-section {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.detail-section h3 {
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+.detail-section .detail-grid {
+  gap: 10px 16px;
+  font-size: 13px;
+}
+.snapshot {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.snapshot summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+}
+.snapshot pre {
+  margin: 8px 0 0;
+  padding: 10px;
+  background: #f5f8f8;
+  border: 1px solid var(--border);
+  font:
+    12px/1.6 ui-monospace,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 260px;
+  overflow: auto;
+}
+.view-table-wrap {
+  overflow: auto;
+  max-height: 380px;
+  min-height: 120px;
+}
+#viewer .view-table-wrap th,
+#viewer .view-table-wrap td {
+  height: 36px;
+  padding: 6px 10px;
+}
+.child-filters {
+  border: 0;
+  padding: 0 0 12px;
+}
+.child-filters input {
+  max-width: 180px;
+}
+.child-pagination {
+  padding: 10px 0 0;
+}
+.detail-grid .runtime-tag {
+  vertical-align: middle;
+}
+.empty-state {
+  min-height: 220px;
+}
+.table-scroll > .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+.empty-state button {
+  margin-top: 12px;
+}
+.reference-current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: #e7f3f4;
+  border: 1px solid #a3d5d8;
+  font-size: 12px;
+}
+.picker-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+#picker .table-scroll {
+  max-height: 300px;
+}
+.picker-row[aria-selected='true'] td {
+  background: #e0f1f2;
+}
+.missing-reference {
+  color: var(--muted);
+  font-size: 12px;
+}
+.detail-grid dd button.link {
+  padding: 0;
+  min-height: 22px;
+  text-align: left;
+  white-space: normal;
+}

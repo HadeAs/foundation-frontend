@@ -75,7 +75,12 @@ const tagColors: Record<string, string> = {
   danger: 'error',
   info: 'default',
 }
-const logColors: Record<string, string> = { ERROR: 'error', WARN: 'warning', INFO: 'processing', DEBUG: 'default' }
+const logColors: Record<string, string> = {
+  ERROR: 'error',
+  WARN: 'warning',
+  INFO: 'processing',
+  DEBUG: 'default',
+}
 
 const keyword = ref('')
 const status = ref<string>()
@@ -140,12 +145,20 @@ const logColumns: TableColumnsType = [
 ]
 
 function defaultForm(): AsyncTaskForm {
-  return { taskType: '', taskName: '', paramsJson: undefined, idempotentKey: undefined, remark: undefined }
+  return {
+    taskType: '',
+    taskName: '',
+    paramsJson: undefined,
+    idempotentKey: undefined,
+    remark: undefined,
+  }
 }
 
 const form = reactive<AsyncTaskForm>(defaultForm())
 const { requestClose: requestCreateClose } = useUnsavedChanges(form, createOpen)
-const statusOptions = computed(() => statusItems.value.map((item) => ({ label: item.label, value: item.value })))
+const statusOptions = computed(() =>
+  statusItems.value.map((item) => ({ label: item.label, value: item.value })),
+)
 const rules: FormProps['rules'] = {
   taskType: [{ required: true, message: '请输入任务类型', trigger: 'blur' }],
   taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
@@ -205,15 +218,19 @@ async function loadStatusItems() {
 
 async function load(silent = false) {
   try {
-    const result = await runLatestLoad(() => pageAsyncTasks(
-      currentPage.value,
-      pageSize.value,
-      appliedQuery.keyword,
-      appliedQuery.status,
-      appliedQuery.taskType,
-      appliedQuery.startTime,
-      appliedQuery.endTime,
-    ), !silent)
+    const result = await runLatestLoad(
+      () =>
+        pageAsyncTasks(
+          currentPage.value,
+          pageSize.value,
+          appliedQuery.keyword,
+          appliedQuery.status,
+          appliedQuery.taskType,
+          appliedQuery.startTime,
+          appliedQuery.endTime,
+        ),
+      !silent,
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -288,13 +305,17 @@ async function loadLogs(silent = false) {
   const taskId = detailTaskId.value
   if (taskId === undefined) return
   try {
-    const result = await runLatestLogs(() => pageAsyncTaskLogs(
-      taskId,
-      logPage.value,
-      logPageSize.value,
-      appliedLogQuery.startTime,
-      appliedLogQuery.endTime,
-    ), !silent)
+    const result = await runLatestLogs(
+      () =>
+        pageAsyncTaskLogs(
+          taskId,
+          logPage.value,
+          logPageSize.value,
+          appliedLogQuery.startTime,
+          appliedLogQuery.endTime,
+        ),
+      !silent,
+    )
     if (!result) return
     logs.value = result.records || []
     logTotal.value = Number(result.total || 0)
@@ -353,7 +374,10 @@ async function downloadResult(record: SysAsyncTask) {
   downloadingId.value = record.resultFileId
   try {
     const response = await downloadFile(record.resultFileId)
-    downloadBlob(response.data, record.resultFileName || `任务结果-${record.taskId || record.resultFileId}`)
+    downloadBlob(
+      response.data,
+      record.resultFileName || `任务结果-${record.taskId || record.resultFileId}`,
+    )
   } catch (error) {
     message.error(getErrorMessage(error))
   } finally {
@@ -435,9 +459,24 @@ onBeforeUnmount(() => {
   <main class="management-page">
     <section class="query-panel">
       <div class="query-fields">
-        <a-input v-model:value="keyword" allow-clear placeholder="请输入任务名称或操作人" @press-enter="search" />
-        <a-input v-model:value="taskType" allow-clear placeholder="请输入任务类型" @press-enter="search" />
-        <a-select v-model:value="status" allow-clear placeholder="全部状态" :options="statusOptions" />
+        <a-input
+          v-model:value="keyword"
+          allow-clear
+          placeholder="请输入任务名称或操作人"
+          @press-enter="search"
+        />
+        <a-input
+          v-model:value="taskType"
+          allow-clear
+          placeholder="请输入任务类型"
+          @press-enter="search"
+        />
+        <a-select
+          v-model:value="status"
+          allow-clear
+          placeholder="全部状态"
+          :options="statusOptions"
+        />
         <a-range-picker
           v-model:value="timeRange"
           show-time
@@ -483,7 +522,17 @@ onBeforeUnmount(() => {
             <a-tag :color="statusColor(record.status)">{{ statusLabel(record.status) }}</a-tag>
           </template>
           <template v-else-if="column.key === 'progress'">
-            <a-progress :percent="record.progress ?? 0" size="small" :status="record.status === 'FAILURE' ? 'exception' : record.status === 'SUCCESS' ? 'success' : 'active'" />
+            <a-progress
+              :percent="record.progress ?? 0"
+              size="small"
+              :status="
+                record.status === 'FAILURE'
+                  ? 'exception'
+                  : record.status === 'SUCCESS'
+                    ? 'success'
+                    : 'active'
+              "
+            />
           </template>
           <template v-else-if="column.key === 'resultFile'">
             <a-button
@@ -493,11 +542,14 @@ onBeforeUnmount(() => {
               class="file-link"
               :loading="downloadingId === record.resultFileId"
               @click="downloadResult(record)"
-            >{{ record.resultFileName || '下载结果文件' }}</a-button>
+              >{{ record.resultFileName || '下载结果文件' }}</a-button
+            >
             <span v-else class="cell-text">—</span>
           </template>
           <template v-else-if="column.key === 'failureReason'">
-            <span class="cell-text" :title="record.failureReason">{{ record.failureReason || '—' }}</span>
+            <span class="cell-text" :title="record.failureReason">{{
+              record.failureReason || '—'
+            }}</span>
           </template>
           <template v-else-if="column.key === 'operator'">
             <span>{{ record.operator || '—' }}</span>
@@ -515,7 +567,14 @@ onBeforeUnmount(() => {
                 cancel-text="返回"
                 @confirm="cancelTask(record)"
               >
-                <a-button type="link" danger size="small" :disabled="!isActive(record)" :loading="cancelingId === record.taskId">取消</a-button>
+                <a-button
+                  type="link"
+                  danger
+                  size="small"
+                  :disabled="!isActive(record)"
+                  :loading="cancelingId === record.taskId"
+                  >取消</a-button
+                >
               </a-popconfirm>
             </div>
           </template>
@@ -544,13 +603,22 @@ onBeforeUnmount(() => {
             <a-input v-model:value="form.taskName" placeholder="请输入任务名称" />
           </a-form-item>
           <a-form-item class="full-field" label="任务参数" name="paramsJson">
-            <a-textarea v-model:value="form.paramsJson" :rows="5" placeholder="请输入任务参数 JSON，具体结构由任务处理器定义" />
+            <a-textarea
+              v-model:value="form.paramsJson"
+              :rows="5"
+              placeholder="请输入任务参数 JSON，具体结构由任务处理器定义"
+            />
           </a-form-item>
           <a-form-item class="full-field" label="幂等键" name="idempotentKey">
             <a-input v-model:value="form.idempotentKey" placeholder="可选，用于避免重复登记任务" />
           </a-form-item>
           <a-form-item class="full-field" label="备注" name="remark">
-            <a-textarea v-model:value="form.remark" :rows="2" :maxlength="255" placeholder="请输入备注信息" />
+            <a-textarea
+              v-model:value="form.remark"
+              :rows="2"
+              :maxlength="255"
+              placeholder="请输入备注信息"
+            />
           </a-form-item>
         </div>
       </a-form>
@@ -559,26 +627,68 @@ onBeforeUnmount(() => {
     <a-modal v-model:open="detailOpen" title="异步任务详情" :width="1040" :footer="null">
       <div class="detail-loading" :class="{ active: detailLoading }">
         <dl class="task-detail">
-          <div><dt>任务名称</dt><dd>{{ detailTask?.taskName || '—' }}</dd></div>
-          <div><dt>任务类型</dt><dd><code>{{ detailTask?.taskType || '—' }}</code></dd></div>
-          <div><dt>任务状态</dt><dd><a-tag :color="statusColor(detailTask?.status)">{{ statusLabel(detailTask?.status) }}</a-tag></dd></div>
-          <div><dt>执行进度</dt><dd><a-progress :percent="detailTask?.progress ?? 0" size="small" /></dd></div>
-          <div><dt>操作人</dt><dd>{{ detailTask?.operator || '—' }}</dd></div>
-          <div><dt>创建时间</dt><dd>{{ formatDateTime(detailTask?.createdTime) }}</dd></div>
-          <div><dt>开始时间</dt><dd>{{ formatDateTime(detailTask?.startedTime) }}</dd></div>
-          <div><dt>结束时间</dt><dd>{{ formatDateTime(detailTask?.finishedTime) }}</dd></div>
-          <div class="full-detail"><dt>结果文件</dt><dd>
-            <a-button
-              v-if="detailTask?.resultFileId !== undefined"
-              type="link"
-              size="small"
-              :loading="downloadingId === detailTask.resultFileId"
-              @click="downloadResult(detailTask)"
-            >{{ detailTask.resultFileName || '下载结果文件' }}</a-button>
-            <span v-else>—</span>
-          </dd></div>
-          <div class="full-detail"><dt>失败原因</dt><dd class="long-text">{{ detailTask?.failureReason || '—' }}</dd></div>
-          <div class="full-detail"><dt>任务参数</dt><dd><pre>{{ detailTask?.paramsJson || '—' }}</pre></dd></div>
+          <div>
+            <dt>任务名称</dt>
+            <dd>{{ detailTask?.taskName || '—' }}</dd>
+          </div>
+          <div>
+            <dt>任务类型</dt>
+            <dd>
+              <code>{{ detailTask?.taskType || '—' }}</code>
+            </dd>
+          </div>
+          <div>
+            <dt>任务状态</dt>
+            <dd>
+              <a-tag :color="statusColor(detailTask?.status)">{{
+                statusLabel(detailTask?.status)
+              }}</a-tag>
+            </dd>
+          </div>
+          <div>
+            <dt>执行进度</dt>
+            <dd><a-progress :percent="detailTask?.progress ?? 0" size="small" /></dd>
+          </div>
+          <div>
+            <dt>操作人</dt>
+            <dd>{{ detailTask?.operator || '—' }}</dd>
+          </div>
+          <div>
+            <dt>创建时间</dt>
+            <dd>{{ formatDateTime(detailTask?.createdTime) }}</dd>
+          </div>
+          <div>
+            <dt>开始时间</dt>
+            <dd>{{ formatDateTime(detailTask?.startedTime) }}</dd>
+          </div>
+          <div>
+            <dt>结束时间</dt>
+            <dd>{{ formatDateTime(detailTask?.finishedTime) }}</dd>
+          </div>
+          <div class="full-detail">
+            <dt>结果文件</dt>
+            <dd>
+              <a-button
+                v-if="detailTask?.resultFileId !== undefined"
+                type="link"
+                size="small"
+                :loading="downloadingId === detailTask.resultFileId"
+                @click="downloadResult(detailTask)"
+                >{{ detailTask.resultFileName || '下载结果文件' }}</a-button
+              >
+              <span v-else>—</span>
+            </dd>
+          </div>
+          <div class="full-detail">
+            <dt>失败原因</dt>
+            <dd class="long-text">{{ detailTask?.failureReason || '—' }}</dd>
+          </div>
+          <div class="full-detail">
+            <dt>任务参数</dt>
+            <dd>
+              <pre>{{ detailTask?.paramsJson || '—' }}</pre>
+            </dd>
+          </div>
         </dl>
       </div>
 
@@ -609,12 +719,16 @@ onBeforeUnmount(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'logLevel'">
-            <a-tag :color="logColors[record.logLevel] || 'default'">{{ record.logLevel || 'INFO' }}</a-tag>
+            <a-tag :color="logColors[record.logLevel] || 'default'">{{
+              record.logLevel || 'INFO'
+            }}</a-tag>
           </template>
           <template v-else-if="column.key === 'message'">
             <span class="log-message" :title="record.message">{{ record.message || '—' }}</span>
           </template>
-          <template v-else-if="column.key === 'createdTime'">{{ formatDateTime(record.createdTime) }}</template>
+          <template v-else-if="column.key === 'createdTime'">{{
+            formatDateTime(record.createdTime)
+          }}</template>
         </template>
         <template #emptyText><div class="empty-table">暂无任务日志</div></template>
       </ResizableTable>
@@ -623,36 +737,164 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.query-fields { display: grid; width: min(1110px, 82%); grid-template-columns: minmax(230px, 1fr) minmax(160px, .65fr) 130px 320px; gap: 8px; }
-.polling-note { display: block; margin-top: 2px; color: var(--shell-muted); font-size: 12px; }
-.task-table :deep(.ant-table), .log-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.task-table :deep(.ant-table-thead > tr > th), .log-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.task-table :deep(.ant-table-tbody > tr > td), .log-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.task-table :deep(.ant-table-tbody > tr:hover > td), .log-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.task-table :deep(.ant-pagination), .log-table :deep(.ant-pagination) { margin: 13px; }
-.mono-cell { display: block; overflow: hidden; color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.cell-text, .log-message { display: block; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
-.file-link { display: block; max-width: 100%; padding-inline: 0; overflow: hidden; text-overflow: ellipsis; }
-.empty-table { display: flex; min-height: 150px; align-items: center; justify-content: center; color: var(--shell-muted); }
-.task-form { padding-top: 8px; }
-.form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.full-field { grid-column: 1 / -1; }
-.detail-loading { transition: opacity .16s ease; }
-.detail-loading.active { opacity: .55; }
-.task-detail { display: grid; margin: 4px 0 0; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--shell-border); border-left: 1px solid var(--shell-border); }
-.task-detail > div { min-width: 0; padding: 9px 11px; border-right: 1px solid var(--shell-border); border-bottom: 1px solid var(--shell-border); }
-.task-detail dt { color: var(--shell-muted); font-size: 12px; }
-.task-detail dd { min-width: 0; margin: 4px 0 0; overflow-wrap: anywhere; }
-.task-detail dd code { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; }
-.task-detail .full-detail { grid-column: 1 / -1; }
-.task-detail .full-detail :deep(.ant-btn) { height: auto; padding: 0; }
-.task-detail pre { max-height: 110px; margin: 0; overflow: auto; color: var(--shell-ink); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; white-space: pre-wrap; }
-.long-text { max-height: 72px; overflow: auto !important; white-space: pre-wrap; }
-.log-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 8px; }
-.log-toolbar h2 { margin: 0; font-size: 16px; }
-.log-query-controls { display: flex; align-items: center; gap: 7px; }
-.log-query-controls :deep(.ant-picker) { width: 320px; }
-.log-query-controls :deep(.ant-btn) { min-width: 58px; }
-.log-table { height: 300px; border: 1px solid var(--shell-border); }
+.query-fields {
+  display: grid;
+  width: min(1110px, 82%);
+  grid-template-columns: minmax(230px, 1fr) minmax(160px, 0.65fr) 130px 320px;
+  gap: 8px;
+}
+.polling-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--shell-muted);
+  font-size: 12px;
+}
+.task-table :deep(.ant-table),
+.log-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.task-table :deep(.ant-table-thead > tr > th),
+.log-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.task-table :deep(.ant-table-tbody > tr > td),
+.log-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.task-table :deep(.ant-table-tbody > tr:hover > td),
+.log-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.task-table :deep(.ant-pagination),
+.log-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.mono-cell {
+  display: block;
+  overflow: hidden;
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-text,
+.log-message {
+  display: block;
+  overflow: hidden;
+  color: var(--shell-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-link {
+  display: block;
+  max-width: 100%;
+  padding-inline: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.empty-table {
+  display: flex;
+  min-height: 150px;
+  align-items: center;
+  justify-content: center;
+  color: var(--shell-muted);
+}
+.task-form {
+  padding-top: 8px;
+}
+.form-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.detail-loading {
+  transition: opacity 0.16s ease;
+}
+.detail-loading.active {
+  opacity: 0.55;
+}
+.task-detail {
+  display: grid;
+  margin: 4px 0 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--shell-border);
+  border-left: 1px solid var(--shell-border);
+}
+.task-detail > div {
+  min-width: 0;
+  padding: 9px 11px;
+  border-right: 1px solid var(--shell-border);
+  border-bottom: 1px solid var(--shell-border);
+}
+.task-detail dt {
+  color: var(--shell-muted);
+  font-size: 12px;
+}
+.task-detail dd {
+  min-width: 0;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.task-detail dd code {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+}
+.task-detail .full-detail {
+  grid-column: 1 / -1;
+}
+.task-detail .full-detail :deep(.ant-btn) {
+  height: auto;
+  padding: 0;
+}
+.task-detail pre {
+  max-height: 110px;
+  margin: 0;
+  overflow: auto;
+  color: var(--shell-ink);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+.long-text {
+  max-height: 72px;
+  overflow: auto !important;
+  white-space: pre-wrap;
+}
+.log-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 8px;
+}
+.log-toolbar h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.log-query-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.log-query-controls :deep(.ant-picker) {
+  width: 320px;
+}
+.log-query-controls :deep(.ant-btn) {
+  min-width: 58px;
+}
+.log-table {
+  height: 300px;
+  border: 1px solid var(--shell-border);
+}
 </style>

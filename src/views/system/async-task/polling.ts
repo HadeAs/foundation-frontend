@@ -5,8 +5,9 @@ export function shouldPollAsyncTasks(
   detailStatus: string | undefined,
   visible: boolean,
 ) {
-  return visible && (
-    activeStatuses.has(detailStatus || '')
-    || statuses.some((status) => activeStatuses.has(status || ''))
+  return (
+    visible &&
+    (activeStatuses.has(detailStatus || '') ||
+      statuses.some((status) => activeStatuses.has(status || '')))
   )
 }

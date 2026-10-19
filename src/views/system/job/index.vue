@@ -22,7 +22,7 @@ import {
   type TableProps,
 } from 'ant-design-vue'
 import type { Dayjs } from 'dayjs'
-import { computed, nextTick, reactive, ref } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 
 import {
   batchDeleteJobs,
@@ -52,7 +52,11 @@ type JobForm = {
   jobName: string
   jobGroup?: string
   jobScope: string
+  scheduleType: string
   cronExpression: string
+  intervalMillis?: number
+  logPolicy: string
+  logSummarySeconds?: number
   jobType?: string
   jobData?: string
   concurrencyPolicy: string
@@ -90,10 +94,26 @@ const cronOptions = [
   { label: '每天零点', value: '0 0 0 * * ?' },
   { label: '每月 1 日零点', value: '0 0 0 1 * ?' },
 ]
-const scopeLabels: Record<string, string> = Object.fromEntries(scopeOptions.map((item) => [item.value, item.label]))
-const sourceLabels: Record<string, string> = Object.fromEntries(sourceOptions.map((item) => [item.value, item.label]))
-const logStatusLabels: Record<string, string> = { RUNNING: '运行中', SUCCESS: '成功', FAILURE: '失败' }
-const logStatusColors: Record<string, string> = { RUNNING: 'processing', SUCCESS: 'success', FAILURE: 'error' }
+const scheduleOptions = [
+  { label: 'Cron 表达式', value: 'CRON' },
+  { label: '固定间隔', value: 'INTERVAL' },
+]
+const scopeLabels: Record<string, string> = Object.fromEntries(
+  scopeOptions.map((item) => [item.value, item.label]),
+)
+const sourceLabels: Record<string, string> = Object.fromEntries(
+  sourceOptions.map((item) => [item.value, item.label]),
+)
+const logStatusLabels: Record<string, string> = {
+  RUNNING: '运行中',
+  SUCCESS: '成功',
+  FAILURE: '失败',
+}
+const logStatusColors: Record<string, string> = {
+  RUNNING: 'processing',
+  SUCCESS: 'success',
+  FAILURE: 'error',
+}
 
 const keyword = ref('')
 const jobScope = ref<string>()
@@ -135,7 +155,8 @@ const columns: TableColumnsType = [
   { title: '范围', dataIndex: 'jobScope', key: 'jobScope', width: 100, align: 'center' },
   { title: '来源', dataIndex: 'sourceType', key: 'sourceType', width: 100, align: 'center' },
   { title: 'Handler', dataIndex: 'jobType', key: 'jobType', width: 175 },
-  { title: 'Cron 表达式', dataIndex: 'cronExpression', key: 'cronExpression', width: 180 },
+  { title: '调度配置', dataIndex: 'cronExpression', key: 'cronExpression', width: 220 },
+  { title: '日志策略', dataIndex: 'logPolicy', key: 'logPolicy', width: 165 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 88, align: 'center' },
   { title: '更新时间', dataIndex: 'updatedTime', key: 'updatedTime', width: 155 },
   { title: '操作', key: 'action', width: 300, align: 'center' },
@@ -155,7 +176,11 @@ function defaultForm(): JobForm {
     jobName: '',
     jobGroup: 'DEFAULT',
     jobScope: 'BUSINESS',
+    scheduleType: 'CRON',
     cronExpression: '0 */5 * * * ?',
+    intervalMillis: undefined,
+    logPolicy: 'ALL',
+    logSummarySeconds: 60,
     jobType: undefined,
     jobData: undefined,
     concurrencyPolicy: 'FORBID',
@@ -171,22 +196,93 @@ function defaultForm(): JobForm {
 }
 
 const form = reactive<JobForm>(defaultForm())
+const subSecondInterval = computed(
+  () =>
+    form.scheduleType === 'INTERVAL' &&
+    typeof form.intervalMillis === 'number' &&
+    form.intervalMillis > 0 &&
+    form.intervalMillis < 1000,
+)
+const logPolicyOptions = computed(() => [
+  { label: '全量日志', value: 'ALL', disabled: subSecondInterval.value },
+  { label: '汇总日志', value: 'SUMMARY' },
+])
+watch([subSecondInterval, () => form.logPolicy], ([required]) => {
+  if (required && form.logPolicy === 'ALL') form.logPolicy = 'SUMMARY'
+})
 const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
-const modalTitle = computed(() => editingJob.value ? '编辑定时任务' : '新增定时任务')
-const handlerOptions = computed(() => handlers.value.map((item) => ({
-  label: item.source ? `${item.label || item.type}（${item.source}）` : item.label || item.type,
-  value: item.type,
-})).filter((item) => item.value))
+const modalTitle = computed(() => (editingJob.value ? '编辑定时任务' : '新增定时任务'))
+const handlerOptions = computed(() =>
+  handlers.value
+    .map((item) => ({
+      label: item.source ? `${item.label || item.type}（${item.source}）` : item.label || item.type,
+      value: item.type,
+    }))
+    .filter((item) => item.value),
+)
 const rowSelection = computed<TableProps<SysJob>['rowSelection']>(() => ({
   selectedRowKeys: selectedIds.value,
   fixed: true,
   columnWidth: 48,
-  onChange: (keys) => { selectedIds.value = keys.map(Number) },
+  onChange: (keys) => {
+    selectedIds.value = keys.map(Number)
+  },
   getCheckboxProps: (record) => ({ disabled: record.protectedFlag === true }),
 }))
-const rules: FormProps['rules'] = {
+const rules = computed<FormProps['rules']>(() => ({
   jobName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
-  cronExpression: [{ required: true, message: '请输入 Cron 表达式', trigger: 'blur' }],
+  scheduleType: [
+    { required: true, type: 'enum', enum: ['CRON', 'INTERVAL'], message: '请选择有效的调度方式' },
+  ],
+  cronExpression: [
+    {
+      required: form.scheduleType === 'CRON',
+      whitespace: true,
+      message: '请输入 Cron 表达式',
+      trigger: 'blur',
+    },
+  ],
+  intervalMillis: [
+    {
+      required: form.scheduleType === 'INTERVAL',
+      type: 'integer',
+      min: 100,
+      max: 86400000,
+      message: '请输入 100～86400000 的整数毫秒数',
+    },
+  ],
+  logPolicy: [
+    {
+      required: true,
+      type: 'enum',
+      enum: subSecondInterval.value ? ['SUMMARY'] : ['ALL', 'SUMMARY'],
+      message: subSecondInterval.value ? '不足 1 秒的任务必须使用汇总日志' : '请选择有效的日志策略',
+    },
+  ],
+  logSummarySeconds: [
+    {
+      required: form.logPolicy === 'SUMMARY',
+      type: 'integer',
+      min: 10,
+      max: 3600,
+      message: '请输入 10～3600 的整数秒数',
+    },
+  ],
+  jobData: [{ max: 4000, message: '任务参数不能超过 4000 个字符', trigger: 'blur' }],
+}))
+
+function scheduleDescription(record: SysJob) {
+  const type = record.scheduleType ?? 'CRON'
+  if (type === 'CRON') return `Cron · ${record.cronExpression || '—'}`
+  if (type === 'INTERVAL') return `固定间隔 · ${record.intervalMillis ?? '—'} 毫秒`
+  return `未知调度（${type}）`
+}
+
+function logPolicyDescription(record: SysJob) {
+  const policy = record.logPolicy ?? 'ALL'
+  if (policy === 'ALL') return '全量日志'
+  if (policy === 'SUMMARY') return `汇总日志 · ${record.logSummarySeconds ?? 60} 秒`
+  return `未知策略（${policy}）`
 }
 
 function clean(value?: string) {
@@ -198,7 +294,14 @@ function toRequest(): JobRequest {
     jobName: form.jobName.trim(),
     jobGroup: clean(form.jobGroup),
     jobScope: form.jobScope,
-    cronExpression: form.cronExpression.trim(),
+    scheduleType: form.scheduleType === 'INTERVAL' ? 'INTERVAL' : 'CRON',
+    ...(form.scheduleType === 'INTERVAL'
+      ? { intervalMillis: form.intervalMillis ?? undefined }
+      : { cronExpression: form.cronExpression.trim() }),
+    logPolicy: form.logPolicy === 'SUMMARY' ? 'SUMMARY' : 'ALL',
+    ...(form.logPolicy === 'SUMMARY'
+      ? { logSummarySeconds: form.logSummarySeconds ?? undefined }
+      : {}),
     jobType: clean(form.jobType),
     jobData: clean(form.jobData),
     concurrencyPolicy: form.concurrencyPolicy,
@@ -216,7 +319,9 @@ function toRequest(): JobRequest {
 async function load() {
   selectedIds.value = []
   try {
-    const result = await runLatestLoad(() => pageJobs(currentPage.value, pageSize.value, keyword.value, jobScope.value, sourceType.value))
+    const result = await runLatestLoad(() =>
+      pageJobs(currentPage.value, pageSize.value, keyword.value, jobScope.value, sourceType.value),
+    )
     if (!result) return
     records.value = result.records || []
     total.value = Number(result.total || 0)
@@ -284,7 +389,11 @@ function openEdit(record: SysJob) {
     jobName: record.jobName || '',
     jobGroup: record.jobGroup,
     jobScope: record.jobScope || 'BUSINESS',
+    scheduleType: record.scheduleType ?? 'CRON',
     cronExpression: record.cronExpression || '',
+    intervalMillis: record.intervalMillis,
+    logPolicy: record.logPolicy ?? 'ALL',
+    logSummarySeconds: record.logSummarySeconds ?? 60,
     jobType: record.jobType,
     jobData: record.jobData,
     concurrencyPolicy: record.concurrencyPolicy || 'FORBID',
@@ -304,12 +413,14 @@ function openEdit(record: SysJob) {
 }
 
 async function submit() {
+  if (submitting.value) return
+  submitting.value = true
   try {
     await formRef.value?.validate()
   } catch {
+    submitting.value = false
     return
   }
-  submitting.value = true
   try {
     if (editingJob.value?.jobId === undefined) {
       await createJob(toRequest())
@@ -350,9 +461,11 @@ function removeSelected() {
     cancelText: '取消',
     onOk: async () => {
       try {
-        await batchDeleteJobs(selectedIds.value.map((id) =>
-          versionedId(id, records.value.find((record) => record.jobId === id)?.version),
-        ))
+        await batchDeleteJobs(
+          selectedIds.value.map((id) =>
+            versionedId(id, records.value.find((record) => record.jobId === id)?.version),
+          ),
+        )
         selectedIds.value = []
         message.success('定时任务已批量删除')
         await load()
@@ -406,13 +519,15 @@ async function loadLogs() {
   const jobId = logJob.value?.jobId
   if (jobId === undefined) return
   try {
-    const result = await runLatestLogs(() => pageJobLogs(
-      jobId,
-      logPage.value,
-      logPageSize.value,
-      logTimeRange.value?.[0].toISOString(),
-      logTimeRange.value?.[1].toISOString(),
-    ))
+    const result = await runLatestLogs(() =>
+      pageJobLogs(
+        jobId,
+        logPage.value,
+        logPageSize.value,
+        logTimeRange.value?.[0].toISOString(),
+        logTimeRange.value?.[1].toISOString(),
+      ),
+    )
     if (!result) return
     logs.value = result.records || []
     logTotal.value = Number(result.total || 0)
@@ -457,9 +572,24 @@ load()
   <main class="management-page">
     <section class="query-panel">
       <div class="query-fields">
-        <a-input v-model:value="keyword" allow-clear placeholder="请输入任务名称、分组或 Handler" @press-enter="search" />
-        <a-select v-model:value="jobScope" allow-clear placeholder="全部范围" :options="scopeOptions" />
-        <a-select v-model:value="sourceType" allow-clear placeholder="全部来源" :options="sourceOptions" />
+        <a-input
+          v-model:value="keyword"
+          allow-clear
+          placeholder="请输入任务名称、分组或 Handler"
+          @press-enter="search"
+        />
+        <a-select
+          v-model:value="jobScope"
+          allow-clear
+          placeholder="全部范围"
+          :options="scopeOptions"
+        />
+        <a-select
+          v-model:value="sourceType"
+          allow-clear
+          placeholder="全部来源"
+          :options="sourceOptions"
+        />
       </div>
       <div class="query-actions">
         <a-button type="primary" :loading="loading" @click="search">查询</a-button>
@@ -510,18 +640,38 @@ load()
             <code class="mono-cell">{{ record.jobType || '—' }}</code>
           </template>
           <template v-else-if="column.key === 'cronExpression'">
-            <code class="mono-cell">{{ record.cronExpression || '—' }}</code>
+            <span class="cell-text" :title="scheduleDescription(record)">{{
+              scheduleDescription(record)
+            }}</span>
+          </template>
+          <template v-else-if="column.key === 'logPolicy'">
+            <span class="cell-text" :title="logPolicyDescription(record)">{{
+              logPolicyDescription(record)
+            }}</span>
           </template>
           <template v-else-if="column.key === 'status'">
-            <span class="status-cell" :class="{ paused: record.status === 0 }"><i />{{ record.status === 0 ? '暂停' : '运行' }}</span>
+            <span class="status-cell" :class="{ paused: record.status === 0 }"
+              ><i />{{ record.status === 0 ? '暂停' : '运行' }}</span
+            >
           </template>
           <template v-else-if="column.key === 'updatedTime'">
             <span class="cell-text">{{ formatDateTime(record.updatedTime) }}</span>
           </template>
           <template v-else-if="column.key === 'action'">
             <div class="row-actions">
-              <a-button type="link" size="small" :loading="actionKey === `run:${record.jobId}`" @click="executeNow(record)">立即执行</a-button>
-              <a-button type="link" size="small" :loading="actionKey === `status:${record.jobId}`" @click="toggleStatus(record)">
+              <a-button
+                type="link"
+                size="small"
+                :loading="actionKey === `run:${record.jobId}`"
+                @click="executeNow(record)"
+                >立即执行</a-button
+              >
+              <a-button
+                type="link"
+                size="small"
+                :loading="actionKey === `status:${record.jobId}`"
+                @click="toggleStatus(record)"
+              >
                 {{ record.status === 0 ? '恢复' : '暂停' }}
               </a-button>
               <a-button type="link" size="small" @click="openLogs(record)">日志</a-button>
@@ -534,7 +684,14 @@ load()
                 :disabled="record.protectedFlag"
                 @confirm="remove(record)"
               >
-                <a-button type="link" danger size="small" :disabled="record.protectedFlag" :loading="deletingId === record.jobId">删除</a-button>
+                <a-button
+                  type="link"
+                  danger
+                  size="small"
+                  :disabled="record.protectedFlag"
+                  :loading="deletingId === record.jobId"
+                  >删除</a-button
+                >
               </a-popconfirm>
             </div>
           </template>
@@ -547,14 +704,25 @@ load()
       :open="modalOpen"
       :title="modalTitle"
       :width="860"
+      :body-style="{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' }"
       :confirm-loading="submitting"
       :mask-closable="false"
+      :closable="!submitting"
+      :keyboard="!submitting"
+      :cancel-button-props="{ disabled: submitting }"
       ok-text="保存"
       cancel-text="取消"
       @ok="submit"
-      @cancel="requestFormClose"
+      @cancel="!submitting && requestFormClose()"
     >
-      <a-form ref="formRef" class="job-form" layout="vertical" :model="form" :rules="rules">
+      <a-form
+        ref="formRef"
+        class="job-form"
+        layout="vertical"
+        :model="form"
+        :rules="rules"
+        :disabled="submitting"
+      >
         <div class="form-grid">
           <a-form-item label="任务名称" name="jobName">
             <a-input v-model:value="form.jobName" placeholder="请输入任务名称" />
@@ -563,7 +731,11 @@ load()
             <a-input v-model:value="form.jobGroup" placeholder="例如 DEFAULT" />
           </a-form-item>
           <a-form-item label="任务范围" name="jobScope">
-            <a-select v-model:value="form.jobScope" :disabled="editingJob?.protectedFlag" :options="scopeOptions" />
+            <a-select
+              v-model:value="form.jobScope"
+              :disabled="submitting || editingJob?.protectedFlag"
+              :options="scopeOptions"
+            />
           </a-form-item>
           <a-form-item label="Handler" name="jobType">
             <a-select
@@ -575,7 +747,33 @@ load()
               placeholder="请选择后端 Handler"
             />
           </a-form-item>
-          <a-form-item class="full-field" label="Cron 表达式" name="cronExpression">
+          <a-form-item
+            :class="{ 'full-field': form.scheduleType === 'CRON' }"
+            label="调度方式"
+            name="scheduleType"
+          >
+            <a-select v-model:value="form.scheduleType" :options="scheduleOptions" />
+          </a-form-item>
+          <a-form-item
+            v-if="form.scheduleType === 'INTERVAL'"
+            label="执行间隔（毫秒）"
+            name="intervalMillis"
+          >
+            <a-input-number
+              :value="form.intervalMillis"
+              :min="100"
+              :max="86400000"
+              :precision="0"
+              placeholder="100～86400000"
+              @update:value="form.intervalMillis = typeof $event === 'number' ? $event : undefined"
+            />
+          </a-form-item>
+          <a-form-item
+            v-if="form.scheduleType === 'CRON'"
+            class="full-field"
+            label="Cron 表达式"
+            name="cronExpression"
+          >
             <div class="cron-field">
               <a-select
                 v-model:value="cronPreset"
@@ -584,8 +782,36 @@ load()
                 :options="cronOptions"
                 @change="applyCronPreset"
               />
-              <a-input v-model:value="form.cronExpression" placeholder="请输入原始 Cron 表达式" @change="syncCronPreset" />
+              <a-input
+                v-model:value="form.cronExpression"
+                placeholder="请输入原始 Cron 表达式"
+                @change="syncCronPreset"
+              />
             </div>
+          </a-form-item>
+          <a-form-item
+            :class="{ 'full-field': form.logPolicy !== 'SUMMARY' }"
+            label="日志策略"
+            name="logPolicy"
+            :extra="subSecondInterval ? '不足 1 秒的任务必须使用汇总日志' : undefined"
+          >
+            <a-select v-model:value="form.logPolicy" :options="logPolicyOptions" />
+          </a-form-item>
+          <a-form-item
+            v-if="form.logPolicy === 'SUMMARY'"
+            label="汇总窗口（秒）"
+            name="logSummarySeconds"
+          >
+            <a-input-number
+              :value="form.logSummarySeconds"
+              :min="10"
+              :max="3600"
+              :precision="0"
+              placeholder="10～3600"
+              @update:value="
+                form.logSummarySeconds = typeof $event === 'number' ? $event : undefined
+              "
+            />
           </a-form-item>
           <a-form-item label="并发策略" name="concurrencyPolicy">
             <a-select v-model:value="form.concurrencyPolicy" :options="concurrencyOptions" />
@@ -597,7 +823,13 @@ load()
             </div>
           </a-form-item>
           <a-form-item class="full-field" label="任务参数" name="jobData">
-            <a-textarea v-model:value="form.jobData" :rows="3" placeholder="请输入 Handler 所需参数，格式由后端 Handler 定义" />
+            <a-textarea
+              v-model:value="form.jobData"
+              :rows="3"
+              :maxlength="4000"
+              show-count
+              placeholder="请输入 Handler 所需参数，格式由后端 Handler 定义"
+            />
           </a-form-item>
 
           <details class="advanced-fields full-field">
@@ -616,22 +848,39 @@ load()
                 <a-select v-model:value="form.failureStrategy" :options="failureOptions" />
               </a-form-item>
               <a-form-item class="full-field" label="幂等键表达式" name="idempotencyKeyExpression">
-                <a-input v-model:value="form.idempotencyKeyExpression" placeholder="请输入幂等键表达式" />
+                <a-input
+                  v-model:value="form.idempotencyKeyExpression"
+                  placeholder="请输入幂等键表达式"
+                />
               </a-form-item>
               <a-form-item class="full-field" label="参数 Schema" name="paramsSchemaJson">
-                <a-textarea v-model:value="form.paramsSchemaJson" :rows="3" placeholder="请输入参数 Schema JSON" />
+                <a-textarea
+                  v-model:value="form.paramsSchemaJson"
+                  :rows="3"
+                  placeholder="请输入参数 Schema JSON"
+                />
               </a-form-item>
             </div>
           </details>
 
           <a-form-item class="full-field" label="备注" name="remark">
-            <a-textarea v-model:value="form.remark" :rows="2" :maxlength="255" placeholder="请输入备注信息" />
+            <a-textarea
+              v-model:value="form.remark"
+              :rows="2"
+              :maxlength="255"
+              placeholder="请输入备注信息"
+            />
           </a-form-item>
         </div>
       </a-form>
     </a-modal>
 
-    <a-modal v-model:open="logsOpen" :title="`执行日志 · ${logJob?.jobName || ''}`" :width="1040" :footer="null">
+    <a-modal
+      v-model:open="logsOpen"
+      :title="`执行日志 · ${logJob?.jobName || ''}`"
+      :width="1040"
+      :footer="null"
+    >
       <div class="log-query-bar">
         <a-range-picker
           v-model:value="logTimeRange"
@@ -658,13 +907,23 @@ load()
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
-            <a-tag :color="logStatusColors[record.status] || 'default'">{{ logStatusLabels[record.status] || record.status || '未知' }}</a-tag>
+            <a-tag :color="logStatusColors[record.status] || 'default'">{{
+              logStatusLabels[record.status] || record.status || '未知'
+            }}</a-tag>
           </template>
-          <template v-else-if="column.key === 'startedTime'">{{ formatDateTime(record.startedTime) }}</template>
-          <template v-else-if="column.key === 'finishedTime'">{{ formatDateTime(record.finishedTime) }}</template>
-          <template v-else-if="column.key === 'durationMs'">{{ record.durationMs ?? 0 }} ms</template>
+          <template v-else-if="column.key === 'startedTime'">{{
+            formatDateTime(record.startedTime)
+          }}</template>
+          <template v-else-if="column.key === 'finishedTime'">{{
+            formatDateTime(record.finishedTime)
+          }}</template>
+          <template v-else-if="column.key === 'durationMs'"
+            >{{ record.durationMs ?? 0 }} ms</template
+          >
           <template v-else-if="column.key === 'message'">
-            <span class="log-message" :title="record.message || record.exceptionText">{{ record.message || record.exceptionText || '—' }}</span>
+            <span class="log-message" :title="record.message || record.exceptionText">{{
+              record.message || record.exceptionText || '—'
+            }}</span>
           </template>
           <template v-else-if="column.key === 'action'">
             <a-button type="link" size="small" @click="openLogDetail(record)">详情</a-button>
@@ -676,51 +935,213 @@ load()
 
     <a-modal v-model:open="detailOpen" title="执行日志详情" :width="720" :footer="null">
       <dl class="log-detail">
-        <div><dt>执行状态</dt><dd>{{ logStatusLabels[detailLog?.status || ''] || detailLog?.status || '未知' }}</dd></div>
-        <div><dt>开始时间</dt><dd>{{ formatDateTime(detailLog?.startedTime) }}</dd></div>
-        <div><dt>结束时间</dt><dd>{{ formatDateTime(detailLog?.finishedTime) }}</dd></div>
-        <div><dt>执行耗时</dt><dd>{{ detailLog?.durationMs ?? 0 }} ms</dd></div>
-        <div class="full-detail"><dt>执行消息</dt><dd>{{ detailLog?.message || '—' }}</dd></div>
-        <div class="full-detail"><dt>失败原因</dt><dd><pre>{{ detailLog?.exceptionText || '—' }}</pre></dd></div>
+        <div>
+          <dt>执行状态</dt>
+          <dd>{{ logStatusLabels[detailLog?.status || ''] || detailLog?.status || '未知' }}</dd>
+        </div>
+        <div>
+          <dt>开始时间</dt>
+          <dd>{{ formatDateTime(detailLog?.startedTime) }}</dd>
+        </div>
+        <div>
+          <dt>结束时间</dt>
+          <dd>{{ formatDateTime(detailLog?.finishedTime) }}</dd>
+        </div>
+        <div>
+          <dt>执行耗时</dt>
+          <dd>{{ detailLog?.durationMs ?? 0 }} ms</dd>
+        </div>
+        <div class="full-detail">
+          <dt>执行消息</dt>
+          <dd>{{ detailLog?.message || '—' }}</dd>
+        </div>
+        <div class="full-detail">
+          <dt>失败原因</dt>
+          <dd>
+            <pre>{{ detailLog?.exceptionText || '—' }}</pre>
+          </dd>
+        </div>
       </dl>
     </a-modal>
   </main>
 </template>
 
 <style scoped>
-.query-fields { display: grid; width: min(820px, 70%); grid-template-columns: minmax(280px, 1fr) 135px 135px; gap: 8px; }
-.job-table :deep(.ant-table), .log-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.job-table :deep(.ant-table-thead > tr > th), .log-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.job-table :deep(.ant-table-tbody > tr > td), .log-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.job-table :deep(.ant-table-tbody > tr:hover > td), .log-table :deep(.ant-table-tbody > tr:hover > td) { background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel)); }
-.job-table :deep(.ant-pagination), .log-table :deep(.ant-pagination) { margin: 13px; }
-.cell-text { display: block; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
-.mono-cell { display: block; overflow: hidden; color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.status-cell { display: inline-flex; align-items: center; gap: 6px; }
-.status-cell i { width: 7px; height: 7px; border-radius: 50%; background: #26aa80; }
-.status-cell.paused i { background: #d89a28; }
-.empty-table { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--shell-muted); }
-.job-form { padding-top: 8px; }
-.form-grid, .advanced-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item), .advanced-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.form-grid :deep(.ant-input-number), .advanced-grid :deep(.ant-input-number) { width: 100%; }
-.full-field { grid-column: 1 / -1; }
-.cron-field { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 8px; }
-.switch-field { display: flex; min-height: 34px; align-items: center; gap: 9px; color: var(--shell-muted); }
-.advanced-fields { margin-bottom: 14px; border: 1px solid var(--shell-border); background: color-mix(in srgb, var(--shell-hover) 55%, var(--shell-panel)); }
-.advanced-fields summary { padding: 10px 12px; color: var(--brand-deep); cursor: pointer; font-weight: 600; }
-.advanced-fields[open] summary { border-bottom: 1px solid var(--shell-border); }
-.advanced-grid { padding: 14px 14px 0; }
-.log-query-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.log-query-bar :deep(.ant-picker) { width: 345px; }
-.log-query-actions { display: flex; gap: 7px; }
-.log-query-actions :deep(.ant-btn) { min-width: 58px; }
-.log-table { height: 500px; border: 1px solid var(--shell-border); }
-.log-message { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.log-detail { display: grid; margin: 10px 0 0; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--shell-border); border-left: 1px solid var(--shell-border); }
-.log-detail > div { min-width: 0; padding: 12px; border-right: 1px solid var(--shell-border); border-bottom: 1px solid var(--shell-border); }
-.log-detail dt { color: var(--shell-muted); font-size: 12px; }
-.log-detail dd { margin: 5px 0 0; overflow-wrap: anywhere; }
-.log-detail .full-detail { grid-column: 1 / -1; }
-.log-detail pre { max-height: 220px; margin: 0; overflow: auto; color: var(--shell-ink); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; white-space: pre-wrap; }
+.query-fields {
+  display: grid;
+  width: min(820px, 70%);
+  grid-template-columns: minmax(280px, 1fr) 135px 135px;
+  gap: 8px;
+}
+.job-table :deep(.ant-table),
+.log-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.job-table :deep(.ant-table-thead > tr > th),
+.log-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.job-table :deep(.ant-table-tbody > tr > td),
+.log-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.job-table :deep(.ant-table-tbody > tr:hover > td),
+.log-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: color-mix(in srgb, var(--brand) 7%, var(--shell-panel));
+}
+.job-table :deep(.ant-pagination),
+.log-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.cell-text {
+  display: block;
+  overflow: hidden;
+  color: var(--shell-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mono-cell {
+  display: block;
+  overflow: hidden;
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.status-cell i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #26aa80;
+}
+.status-cell.paused i {
+  background: #d89a28;
+}
+.empty-table {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  color: var(--shell-muted);
+}
+.job-form {
+  padding-top: 8px;
+}
+.form-grid,
+.advanced-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item),
+.advanced-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.form-grid :deep(.ant-input-number),
+.advanced-grid :deep(.ant-input-number) {
+  width: 100%;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.cron-field {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 8px;
+}
+.switch-field {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  color: var(--shell-muted);
+}
+.advanced-fields {
+  margin-bottom: 14px;
+  border: 1px solid var(--shell-border);
+  background: color-mix(in srgb, var(--shell-hover) 55%, var(--shell-panel));
+}
+.advanced-fields summary {
+  padding: 10px 12px;
+  color: var(--brand-deep);
+  cursor: pointer;
+  font-weight: 600;
+}
+.advanced-fields[open] summary {
+  border-bottom: 1px solid var(--shell-border);
+}
+.advanced-grid {
+  padding: 14px 14px 0;
+}
+.log-query-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.log-query-bar :deep(.ant-picker) {
+  width: 345px;
+}
+.log-query-actions {
+  display: flex;
+  gap: 7px;
+}
+.log-query-actions :deep(.ant-btn) {
+  min-width: 58px;
+}
+.log-table {
+  height: 500px;
+  border: 1px solid var(--shell-border);
+}
+.log-message {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.log-detail {
+  display: grid;
+  margin: 10px 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--shell-border);
+  border-left: 1px solid var(--shell-border);
+}
+.log-detail > div {
+  min-width: 0;
+  padding: 12px;
+  border-right: 1px solid var(--shell-border);
+  border-bottom: 1px solid var(--shell-border);
+}
+.log-detail dt {
+  color: var(--shell-muted);
+  font-size: 12px;
+}
+.log-detail dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+}
+.log-detail .full-detail {
+  grid-column: 1 / -1;
+}
+.log-detail pre {
+  max-height: 220px;
+  margin: 0;
+  overflow: auto;
+  color: var(--shell-ink);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
 </style>

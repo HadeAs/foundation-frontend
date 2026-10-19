@@ -32,12 +32,16 @@ describe('PageTabs', () => {
     await router.push('/system/role')
     await router.isReady()
 
-    const wrapper = mount(PageTabs, { attachTo: document.body, global: { plugins: [pinia, router] } })
+    const wrapper = mount(PageTabs, {
+      attachTo: document.body,
+      global: { plugins: [pinia, router] },
+    })
     await wrapper.findAll('.page-tab')[1]!.trigger('contextmenu')
     await nextTick()
 
-    const closeRight = Array.from(document.querySelectorAll<HTMLElement>('.ant-dropdown-menu-item'))
-      .find((item) => item.textContent?.includes('关闭右侧'))
+    const closeRight = Array.from(
+      document.querySelectorAll<HTMLElement>('.ant-dropdown-menu-item'),
+    ).find((item) => item.textContent?.includes('关闭右侧'))
     expect(closeRight).toBeTruthy()
     closeRight!.click()
     await flushPromises()

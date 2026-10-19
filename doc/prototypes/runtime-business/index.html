@@ -1,25 +1,77 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>业务管理 · 高保真交互原型</title>
-  <link rel="stylesheet" href="../basic-data/style.css">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="review-bar"><strong>业务管理 · 高保真评审稿 <span>/ 演示数据</span></strong><div class="review-tools"><label for="scene">查看场景</label><select id="scene"><option value="normal">正常列表</option><option value="loading">加载中</option><option value="empty">空数据</option><option value="failure">加载失败</option><option value="unknown">未知值 / 关联缺失</option><option value="no-state">指定对象无运行状态</option></select><a href="../basic-data/index.html#container">治具箱适用订单 ↗</a><a href="interaction-spec.md" target="_blank">交互说明 ↗</a></div></div>
-  <div class="app-shell">
-    <aside><div class="brand"><span class="brand-mark">⌁</span><strong>工业系统</strong></div><nav aria-label="主菜单"><div class="nav-label"><span data-icon="home"></span>工作台</div><a class="nav-label" href="../basic-data/index.html#container"><span data-icon="box"></span>基础资料</a><div class="nav-group"><span data-icon="grid"></span>业务管理<span class="chevron">⌃</span></div><div id="navigation"></div><div class="nav-label"><span data-icon="settings"></span>系统管理</div></nav><p class="demo-note">评审原型<br>运行数据仅供演示。查询与刷新不访问后端，不改变业务状态。</p></aside>
-    <div class="workspace">
-      <header class="app-header"><div class="breadcrumb"><span data-icon="menu"></span><span>业务管理 / <b id="breadcrumb"></b></span></div><div class="account"><span class="avatar" data-icon="user"></span><div>业务管理员<small>administrator</small></div></div></header>
-      <div class="tab-strip"><span class="page-tab"><span data-icon="home"></span>工作台</span><span class="page-tab active"><span id="tabIcon"></span><span id="activeTab"></span></span></div>
-      <main><form id="filters" class="filter-panel runtime-filters" aria-label="查询条件"></form><section class="list-panel" aria-labelledby="pageTitle"><div class="toolbar"><h1 id="pageTitle"></h1></div><div id="mainTable" class="table-scroll"></div><div id="pagination" class="pagination"></div></section></main>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>业务管理 · 高保真交互原型</title>
+    <link rel="stylesheet" href="../basic-data/style.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="review-bar">
+      <strong>业务管理 · 高保真评审稿 <span>/ 演示数据</span></strong>
+      <div class="review-tools">
+        <label for="scene">查看场景</label
+        ><select id="scene">
+          <option value="normal">正常列表</option>
+          <option value="loading">加载中</option>
+          <option value="empty">空数据</option>
+          <option value="failure">加载失败</option>
+          <option value="unknown">未知值 / 关联缺失</option>
+          <option value="no-state">指定对象无运行状态</option></select
+        ><a href="../basic-data/index.html#container">治具箱适用订单 ↗</a
+        ><a href="interaction-spec.md" target="_blank">交互说明 ↗</a>
+      </div>
     </div>
-  </div>
-  <dialog id="detail" aria-labelledby="detailTitle"></dialog>
-  <dialog id="picker" aria-labelledby="pickerTitle"></dialog>
-  <div id="toast" role="status" hidden></div>
-  <script src="../basic-data/data.js"></script><script src="data.js"></script><script src="prototype.js"></script>
-</body>
+    <div class="app-shell">
+      <aside>
+        <div class="brand"><span class="brand-mark">⌁</span><strong>工业系统</strong></div>
+        <nav aria-label="主菜单">
+          <div class="nav-label"><span data-icon="home"></span>工作台</div>
+          <a class="nav-label" href="../basic-data/index.html#container"
+            ><span data-icon="box"></span>基础资料</a
+          >
+          <div class="nav-group">
+            <span data-icon="grid"></span>业务管理<span class="chevron">⌃</span>
+          </div>
+          <div id="navigation"></div>
+          <div class="nav-label"><span data-icon="settings"></span>系统管理</div>
+        </nav>
+        <p class="demo-note">
+          评审原型<br />运行数据仅供演示。查询与刷新不访问后端，不改变业务状态。
+        </p>
+      </aside>
+      <div class="workspace">
+        <header class="app-header">
+          <div class="breadcrumb">
+            <span data-icon="menu"></span><span>业务管理 / <b id="breadcrumb"></b></span>
+          </div>
+          <div class="account">
+            <span class="avatar" data-icon="user"></span>
+            <div>业务管理员<small>administrator</small></div>
+          </div>
+        </header>
+        <div class="tab-strip">
+          <span class="page-tab"><span data-icon="home"></span>工作台</span
+          ><span class="page-tab active"
+            ><span id="tabIcon"></span><span id="activeTab"></span
+          ></span>
+        </div>
+        <main>
+          <form id="filters" class="filter-panel runtime-filters" aria-label="查询条件"></form>
+          <section class="list-panel" aria-labelledby="pageTitle">
+            <div class="toolbar"><h1 id="pageTitle"></h1></div>
+            <div id="mainTable" class="table-scroll"></div>
+            <div id="pagination" class="pagination"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <dialog id="detail" aria-labelledby="detailTitle"></dialog>
+    <dialog id="picker" aria-labelledby="pickerTitle"></dialog>
+    <div id="toast" role="status" hidden></div>
+    <script src="../basic-data/data.js"></script>
+    <script src="data.js"></script>
+    <script src="prototype.js"></script>
+  </body>
 </html>

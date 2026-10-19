@@ -9,6 +9,8 @@
     "typecheck": "vue-tsc -b",
     "api:business-types": "openapi-typescript doc/nari-logistics.openapi.json -o src/types/business-api.d.ts",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
     "preview": "vite preview"
@@ -33,6 +35,7 @@
     "globals": "^17.7.0",
     "happy-dom": "^20.10.6",
     "openapi-typescript": "^7.13.0",
+    "prettier": "3.9.10",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.64.0",
     "vite": "^8.1.4",

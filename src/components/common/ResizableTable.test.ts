@@ -32,17 +32,29 @@ describe('ResizableTable', () => {
 
     await wrapper.find('.column-settings-trigger').trigger('click')
     await flushPromises()
-    const nameItem = Array.from(document.querySelectorAll<HTMLElement>('.column-settings-item'))
-      .find((item) => item.textContent?.includes('名称'))
+    const nameItem = Array.from(
+      document.querySelectorAll<HTMLElement>('.column-settings-item'),
+    ).find((item) => item.textContent?.includes('名称'))
     expect(nameItem).toBeTruthy()
     nameItem!.querySelector<HTMLInputElement>('input')!.click()
-    const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('.column-settings-footer button'))
-      .find((button) => button.textContent?.includes('确认'))
+    const confirm = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('.column-settings-footer button'),
+    ).find((button) => button.textContent?.includes('确认'))
     confirm!.click()
     await flushPromises()
 
-    expect(wrapper.findAll('th').map((cell) => cell.text()).join()).not.toContain('名称')
-    expect(wrapper.findAll('th').map((cell) => cell.text()).join()).toContain('状态')
+    expect(
+      wrapper
+        .findAll('th')
+        .map((cell) => cell.text())
+        .join(),
+    ).not.toContain('名称')
+    expect(
+      wrapper
+        .findAll('th')
+        .map((cell) => cell.text())
+        .join(),
+    ).toContain('状态')
     wrapper.unmount()
   })
 })

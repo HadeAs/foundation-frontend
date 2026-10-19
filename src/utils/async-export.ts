@@ -7,8 +7,8 @@ export function buildExportTaskRequest(
   sourceFilters: Record<string, unknown>,
 ): AsyncTaskRequest {
   const filters = Object.fromEntries(
-    Object.entries(sourceFilters).filter(([key, value]) =>
-      key !== 'page' && key !== 'size' && value !== undefined && value !== '',
+    Object.entries(sourceFilters).filter(
+      ([key, value]) => key !== 'page' && key !== 'size' && value !== undefined && value !== '',
     ),
   )
   return {

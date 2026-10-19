@@ -56,14 +56,10 @@ export function joinRoutePath(parentPath: string | null, currentPath?: string) {
   return `/${[...parentSegments, ...currentSegments].join('/')}`
 }
 
-export function buildMenuTree(
-  menus: SysMenu[],
-  visibleOnly = true,
-  activeOnly = true,
-): MenuNode[] {
+export function buildMenuTree(menus: SysMenu[], visibleOnly = true, activeOnly = true): MenuNode[] {
   const active = menus
-    .filter((menu) =>
-      (!activeOnly || menu.status === 1) && (!visibleOnly || menu.visible !== false),
+    .filter(
+      (menu) => (!activeOnly || menu.status === 1) && (!visibleOnly || menu.visible !== false),
     )
     .sort((left, right) => (left.sortNo || 0) - (right.sortNo || 0))
   const nodes = new Map<number, MenuNode>()
@@ -105,21 +101,23 @@ export function createMenuRoutes(menus: SysMenu[]): RouteRecordRaw[] {
     const externalUrl = normalizeExternalUrl(menu.externalUrl)
     const componentPath = normalizeComponentPath(menu.component)
     const routeComponentPath = `/src/views${path}/index.vue`
-    const loader = (componentPath ? viewModules[componentPath] : undefined)
-      || viewModules[routeComponentPath]
-    return [{
-      path,
-      name: `menu-${menu.menuId}`,
-      component: externalUrl ? ExternalPage : loader || MissingPage,
-      meta: {
-        title: menu.menuName || '未命名页面',
-        icon: menu.icon,
-        menuId: menu.menuId,
-        externalUrl,
-        fixedTab: path === '/dashboard',
-        keepAlive: true,
-      },
-    } satisfies RouteRecordRaw]
+    const loader =
+      (componentPath ? viewModules[componentPath] : undefined) || viewModules[routeComponentPath]
+    return [
+      {
+        path,
+        name: `menu-${menu.menuId}`,
+        component: externalUrl ? ExternalPage : loader || MissingPage,
+        meta: {
+          title: menu.menuName || '未命名页面',
+          icon: menu.icon,
+          menuId: menu.menuId,
+          externalUrl,
+          fixedTab: path === '/dashboard',
+          keepAlive: true,
+        },
+      } satisfies RouteRecordRaw,
+    ]
   })
 }
 

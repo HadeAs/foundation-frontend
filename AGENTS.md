@@ -10,6 +10,7 @@
 - 用户自行进行真实浏览器验证。未经用户重新明确要求，不运行 Playwright 或其他真实浏览器自动化；可做静态、单元及本地 DOM 检查，并准确说明验证范围。
 
 <!-- CODEGRAPH_START -->
+
 ## CodeGraph
 
 In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:

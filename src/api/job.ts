@@ -1,12 +1,6 @@
 import type { components } from '@/types/api'
 
-import {
-  apiClient,
-  type ApiResult,
-  requireVersion,
-  type VersionedId,
-  unwrapResult,
-} from './http'
+import { apiClient, type ApiResult, requireVersion, type VersionedId, unwrapResult } from './http'
 
 export type JobRequest = components['schemas']['JobRequest']
 export type SysJob = components['schemas']['SysJob']
@@ -36,9 +30,7 @@ export async function listJobHandlers() {
 }
 
 export async function createJob(request: JobRequest) {
-  return unwrapResult(
-    await apiClient.post<ApiResult<SysJob>>('/api/v1/system/jobs', request),
-  )
+  return unwrapResult(await apiClient.post<ApiResult<SysJob>>('/api/v1/system/jobs', request))
 }
 
 export async function updateJob(jobId: number, request: JobRequest, version: number | undefined) {

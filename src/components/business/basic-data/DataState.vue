@@ -6,7 +6,13 @@ defineEmits<{ retry: [] }>()
 const { token } = theme.useToken()
 </script>
 <template>
-  <div class="data-state" role="status" :style="{ color: loading ? token.colorInfo : error ? token.colorError : token.colorTextSecondary }">
+  <div
+    class="data-state"
+    role="status"
+    :style="{
+      color: loading ? token.colorInfo : error ? token.colorError : token.colorTextSecondary,
+    }"
+  >
     <LoadingOutlined v-if="loading" spin />
     <ExclamationCircleOutlined v-else-if="error" />
     <InboxOutlined v-else />
@@ -16,8 +22,25 @@ const { token } = theme.useToken()
   </div>
 </template>
 <style scoped>
-.data-state { display: flex; min-height: 160px; padding: 24px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; }
-.data-state > .anticon { font-size: 28px; }
-.data-state > span:not(.anticon) { max-width: 600px; white-space: normal; }
-@media (prefers-reduced-motion: reduce) { .data-state :deep(.anticon-spin) { animation: none; } }
+.data-state {
+  display: flex;
+  min-height: 160px;
+  padding: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+}
+.data-state > .anticon {
+  font-size: 28px;
+}
+.data-state > span:not(.anticon) {
+  max-width: 600px;
+  white-space: normal;
+}
+@media (prefers-reduced-motion: reduce) {
+  .data-state :deep(.anticon-spin) {
+    animation: none;
+  }
+}
 </style>

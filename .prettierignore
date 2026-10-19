@@ -1,0 +1,15 @@
+# Dependencies and generated artifacts
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.playwright-cli/
+output/
+release/
+
+# Dependency lockfile and generated API types/contracts
+package-lock.json
+src/types/api.d.ts
+src/types/business-api.d.ts
+**/*.openapi.json

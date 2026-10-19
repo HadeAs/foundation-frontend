@@ -27,8 +27,7 @@ const theme = computed(() => ({
     borderRadius: themeStore.radius,
     controlHeight: themeStore.density === 'compact' ? 34 : 38,
     fontSize: 15,
-    fontFamily:
-      '"Avenir Next", "DIN Alternate", "PingFang SC", "Microsoft YaHei", sans-serif',
+    fontFamily: '"Avenir Next", "DIN Alternate", "PingFang SC", "Microsoft YaHei", sans-serif',
   },
   components: {
     Table: {

@@ -169,14 +169,18 @@ const typeRowSelection = computed<TableProps<SysDictType>['rowSelection']>(() =>
   selectedRowKeys: selectedTypeIds.value,
   fixed: true,
   columnWidth: 48,
-  onChange: (keys) => { selectedTypeIds.value = keys.map(Number) },
+  onChange: (keys) => {
+    selectedTypeIds.value = keys.map(Number)
+  },
   getCheckboxProps: (record) => ({ disabled: record.builtinFlag === true }),
 }))
 const itemRowSelection = computed<TableProps<SysDictItem>['rowSelection']>(() => ({
   selectedRowKeys: selectedItemIds.value,
   fixed: true,
   columnWidth: 48,
-  onChange: (keys) => { selectedItemIds.value = keys.map(Number) },
+  onChange: (keys) => {
+    selectedItemIds.value = keys.map(Number)
+  },
   getCheckboxProps: (record) => ({ disabled: record.builtinFlag === true }),
 }))
 
@@ -258,19 +262,17 @@ async function selectType(record: SysDictType) {
 
 async function loadTypes() {
   try {
-    const result = await runLatestTypes(() => pageDictTypes(
-      currentPage.value,
-      pageSize.value,
-      keyword.value,
-      status.value,
-      scope.value,
-    ))
+    const result = await runLatestTypes(() =>
+      pageDictTypes(currentPage.value, pageSize.value, keyword.value, status.value, scope.value),
+    )
     if (!result) return
     types.value = result.records || []
     total.value = Number(result.total || 0)
     currentPage.value = Number(result.current || currentPage.value)
     pageSize.value = Number(result.size || pageSize.value)
-    const current = types.value.find((record) => record.dictTypeId === selectedType.value?.dictTypeId)
+    const current = types.value.find(
+      (record) => record.dictTypeId === selectedType.value?.dictTypeId,
+    )
     selectedType.value = current || types.value[0]
     await loadItems()
   } catch {
@@ -325,7 +327,7 @@ async function confirmDisableType() {
 async function submitType() {
   try {
     await typeFormRef.value?.validate()
-    if (!await confirmDisableType()) return
+    if (!(await confirmDisableType())) return
   } catch (error) {
     if (error instanceof Error) message.error(getErrorMessage(error))
     return
@@ -365,9 +367,11 @@ function removeSelectedTypes() {
     cancelText: '取消',
     onOk: async () => {
       try {
-        await batchDeleteDictTypes(selectedTypeIds.value.map((id) =>
-          versionedId(id, types.value.find((record) => record.dictTypeId === id)?.version),
-        ))
+        await batchDeleteDictTypes(
+          selectedTypeIds.value.map((id) =>
+            versionedId(id, types.value.find((record) => record.dictTypeId === id)?.version),
+          ),
+        )
         selectedTypeIds.value = []
         message.success('字典类型已批量删除')
         await loadTypes()
@@ -460,9 +464,11 @@ function removeSelectedItems() {
     cancelText: '取消',
     onOk: async () => {
       try {
-        await batchDeleteDictItems(selectedItemIds.value.map((id) =>
-          versionedId(id, items.value.find((record) => record.dictItemId === id)?.version),
-        ))
+        await batchDeleteDictItems(
+          selectedItemIds.value.map((id) =>
+            versionedId(id, items.value.find((record) => record.dictItemId === id)?.version),
+          ),
+        )
         selectedItemIds.value = []
         message.success('字典项已批量删除')
         await loadItems()
@@ -505,8 +511,11 @@ async function handleImport(event: Event) {
   importing.value = true
   try {
     const result = await importDict(file)
-    const changed = (result.createdTypes || 0) + (result.updatedTypes || 0)
-      + (result.createdItems || 0) + (result.updatedItems || 0)
+    const changed =
+      (result.createdTypes || 0) +
+      (result.updatedTypes || 0) +
+      (result.createdItems || 0) +
+      (result.updatedItems || 0)
     message.success(`导入完成，共写入 ${changed} 条，跳过 ${result.skippedRows || 0} 条`)
     if (result.errors?.length) {
       Modal.warning({ title: '部分数据未导入', content: result.errors.slice(0, 8).join('；') })
@@ -532,11 +541,9 @@ async function refreshCache() {
 
 async function loadLogs() {
   try {
-    const result = await runLatestLogs(() => pageDictChangeLogs(
-      logPage.value,
-      logPageSize.value,
-      selectedType.value?.dictCode,
-    ))
+    const result = await runLatestLogs(() =>
+      pageDictChangeLogs(logPage.value, logPageSize.value, selectedType.value?.dictCode),
+    )
     if (!result) return
     logs.value = result.records || []
     logTotal.value = Number(result.total || 0)
@@ -558,9 +565,24 @@ loadTypes()
   <main class="management-page">
     <section class="query-panel">
       <div class="query-fields">
-        <a-input v-model:value="keyword" allow-clear placeholder="请输入字典名称或编码" @press-enter="search" />
-        <a-select v-model:value="scope" allow-clear placeholder="全部范围" :options="scopeOptions" />
-        <a-select v-model:value="status" allow-clear placeholder="全部状态" :options="statusOptions" />
+        <a-input
+          v-model:value="keyword"
+          allow-clear
+          placeholder="请输入字典名称或编码"
+          @press-enter="search"
+        />
+        <a-select
+          v-model:value="scope"
+          allow-clear
+          placeholder="全部范围"
+          :options="scopeOptions"
+        />
+        <a-select
+          v-model:value="status"
+          allow-clear
+          placeholder="全部状态"
+          :options="statusOptions"
+        />
       </div>
       <div class="query-actions">
         <a-button type="primary" :loading="typeLoading" @click="search">查询</a-button>
@@ -574,10 +596,18 @@ loadTypes()
       <div class="toolbar-actions">
         <a-button :loading="templateLoading" @click="downloadTemplate">下载模板</a-button>
         <a-button :loading="importing" @click="importInput?.click()">导入 CSV</a-button>
-        <a-button :loading="exporting" @click="exportCurrent">导出{{ selectedType ? '当前字典' : '全部字典' }}</a-button>
+        <a-button :loading="exporting" @click="exportCurrent"
+          >导出{{ selectedType ? '当前字典' : '全部字典' }}</a-button
+        >
         <a-button @click="openLogs">变更记录</a-button>
         <a-button :loading="cacheRefreshing" @click="refreshCache">刷新缓存</a-button>
-        <input ref="importInput" class="file-input" type="file" accept=".csv,text/csv" @change="handleImport" />
+        <input
+          ref="importInput"
+          class="file-input"
+          type="file"
+          accept=".csv,text/csv"
+          @change="handleImport"
+        />
       </div>
     </section>
 
@@ -586,11 +616,9 @@ loadTypes()
         <header class="panel-toolbar">
           <div><h1>字典类型</h1></div>
           <div class="toolbar-actions">
-            <a-button
-              v-if="selectedTypeIds.length"
-              danger
-              @click="removeSelectedTypes"
-            >批量删除</a-button>
+            <a-button v-if="selectedTypeIds.length" danger @click="removeSelectedTypes"
+              >批量删除</a-button
+            >
             <a-button type="primary" @click="openCreateType">新增字典</a-button>
           </div>
         </header>
@@ -605,7 +633,10 @@ loadTypes()
           :pagination="typePagination"
           :row-selection="typeRowSelection"
           :custom-row="(record: SysDictType) => ({ onClick: () => selectType(record) })"
-          :row-class-name="(record: SysDictType) => record.dictTypeId === selectedType?.dictTypeId ? 'selected-row' : ''"
+          :row-class-name="
+            (record: SysDictType) =>
+              record.dictTypeId === selectedType?.dictTypeId ? 'selected-row' : ''
+          "
           @change="handleTypeTableChange"
         >
           <template #bodyCell="{ column, record }">
@@ -617,7 +648,13 @@ loadTypes()
             </template>
             <template v-else-if="column.key === 'dictScope'">
               <a-tag :color="record.dictScope === 'FOUNDATION' ? 'blue' : 'cyan'">
-                {{ record.dictScope === 'FOUNDATION' ? '系统' : record.dictScope === 'BUSINESS' ? '业务' : record.dictScope || '未知' }}
+                {{
+                  record.dictScope === 'FOUNDATION'
+                    ? '系统'
+                    : record.dictScope === 'BUSINESS'
+                      ? '业务'
+                      : record.dictScope || '未知'
+                }}
               </a-tag>
             </template>
             <template v-else-if="column.key === 'status'">
@@ -627,7 +664,9 @@ loadTypes()
             </template>
             <template v-else-if="column.key === 'action'">
               <div class="row-actions">
-                <a-button type="link" size="small" @click.stop="openEditType(record)">编辑</a-button>
+                <a-button type="link" size="small" @click.stop="openEditType(record)"
+                  >编辑</a-button
+                >
                 <a-popconfirm
                   title="确认删除该字典类型？"
                   description="所属字典项也会被删除。"
@@ -636,7 +675,14 @@ loadTypes()
                   :disabled="record.builtinFlag === true"
                   @confirm="removeType(record)"
                 >
-                  <a-button type="link" danger size="small" :disabled="record.builtinFlag === true" @click.stop>删除</a-button>
+                  <a-button
+                    type="link"
+                    danger
+                    size="small"
+                    :disabled="record.builtinFlag === true"
+                    @click.stop
+                    >删除</a-button
+                  >
                 </a-popconfirm>
               </div>
             </template>
@@ -657,7 +703,9 @@ loadTypes()
               <a-button danger @click="removeSelectedItems">批量删除</a-button>
             </template>
             <a-button v-if="orderDirty" @click="persistOrder">保存排序</a-button>
-            <a-button type="primary" :disabled="!selectedType" @click="openCreateItem">新增字典项</a-button>
+            <a-button type="primary" :disabled="!selectedType" @click="openCreateItem"
+              >新增字典项</a-button
+            >
           </div>
         </header>
         <ResizableTable
@@ -688,8 +736,20 @@ loadTypes()
             </template>
             <template v-else-if="column.key === 'action'">
               <div class="row-actions item-row-actions">
-                <a-button type="link" size="small" :disabled="index === 0" @click="moveItem(record, -1)">上移</a-button>
-                <a-button type="link" size="small" :disabled="index === items.length - 1" @click="moveItem(record, 1)">下移</a-button>
+                <a-button
+                  type="link"
+                  size="small"
+                  :disabled="index === 0"
+                  @click="moveItem(record, -1)"
+                  >上移</a-button
+                >
+                <a-button
+                  type="link"
+                  size="small"
+                  :disabled="index === items.length - 1"
+                  @click="moveItem(record, 1)"
+                  >下移</a-button
+                >
                 <a-button type="link" size="small" @click="openEditItem(record)">编辑</a-button>
                 <a-popconfirm
                   title="确认删除该字典项？"
@@ -698,13 +758,19 @@ loadTypes()
                   :disabled="record.builtinFlag === true"
                   @confirm="removeItem(record)"
                 >
-                  <a-button type="link" danger size="small" :disabled="record.builtinFlag === true">删除</a-button>
+                  <a-button type="link" danger size="small" :disabled="record.builtinFlag === true"
+                    >删除</a-button
+                  >
                 </a-popconfirm>
               </div>
             </template>
           </template>
           <template #emptyText>
-            <div class="empty-table"><DatabaseOutlined /><span>{{ selectedType ? '该字典暂无字典项' : '请先选择字典类型' }}</span></div>
+            <div class="empty-table">
+              <DatabaseOutlined /><span>{{
+                selectedType ? '该字典暂无字典项' : '请先选择字典类型'
+              }}</span>
+            </div>
           </template>
         </ResizableTable>
       </div>
@@ -721,25 +787,48 @@ loadTypes()
       @ok="submitType"
       @cancel="requestTypeClose"
     >
-      <a-form ref="typeFormRef" class="modal-form" layout="vertical" :model="typeForm" :rules="typeRules">
+      <a-form
+        ref="typeFormRef"
+        class="modal-form"
+        layout="vertical"
+        :model="typeForm"
+        :rules="typeRules"
+      >
         <div class="form-grid">
           <a-form-item label="字典名称" name="dictName">
-            <a-input v-model:value="typeForm.dictName" :maxlength="128" placeholder="请输入字典名称" />
+            <a-input
+              v-model:value="typeForm.dictName"
+              :maxlength="128"
+              placeholder="请输入字典名称"
+            />
           </a-form-item>
           <a-form-item label="字典编码" name="dictCode">
-            <a-input v-model:value="typeForm.dictCode" :disabled="Boolean(editingType)" :maxlength="64" placeholder="例如 async_task_status" />
+            <a-input
+              v-model:value="typeForm.dictCode"
+              :disabled="Boolean(editingType)"
+              :maxlength="64"
+              placeholder="例如 async_task_status"
+            />
           </a-form-item>
           <a-form-item label="字典范围" name="dictScope">
             <a-select v-model:value="typeForm.dictScope" :options="scopeOptions" />
           </a-form-item>
           <a-form-item label="启用状态" name="status">
             <div class="switch-field">
-              <a-switch :checked="typeForm.status === 1" @change="typeForm.status = $event ? 1 : 0" />
+              <a-switch
+                :checked="typeForm.status === 1"
+                @change="typeForm.status = $event ? 1 : 0"
+              />
               <span>{{ typeForm.status === 1 ? '已启用' : '已禁用' }}</span>
             </div>
           </a-form-item>
           <a-form-item class="full-field" label="备注" name="remark">
-            <a-textarea v-model:value="typeForm.remark" :rows="3" :maxlength="255" placeholder="请输入备注信息" />
+            <a-textarea
+              v-model:value="typeForm.remark"
+              :rows="3"
+              :maxlength="255"
+              placeholder="请输入备注信息"
+            />
           </a-form-item>
         </div>
       </a-form>
@@ -756,28 +845,55 @@ loadTypes()
       @ok="submitItem"
       @cancel="requestItemClose"
     >
-      <a-form ref="itemFormRef" class="modal-form" layout="vertical" :model="itemForm" :rules="itemRules">
+      <a-form
+        ref="itemFormRef"
+        class="modal-form"
+        layout="vertical"
+        :model="itemForm"
+        :rules="itemRules"
+      >
         <div class="form-grid">
           <a-form-item label="显示名称" name="itemLabel">
-            <a-input v-model:value="itemForm.itemLabel" :maxlength="128" placeholder="请输入显示名称" />
+            <a-input
+              v-model:value="itemForm.itemLabel"
+              :maxlength="128"
+              placeholder="请输入显示名称"
+            />
           </a-form-item>
           <a-form-item label="字典值" name="itemValue">
-            <a-input v-model:value="itemForm.itemValue" :maxlength="128" placeholder="请输入字典值" />
+            <a-input
+              v-model:value="itemForm.itemValue"
+              :maxlength="128"
+              placeholder="请输入字典值"
+            />
           </a-form-item>
           <a-form-item label="标签颜色" name="tagType">
             <a-select v-model:value="itemForm.tagType" :options="tagOptions" />
           </a-form-item>
           <a-form-item label="排序号" name="sortNo">
-            <a-input-number v-model:value="itemForm.sortNo" :min="0" :precision="0" class="number-input" />
+            <a-input-number
+              v-model:value="itemForm.sortNo"
+              :min="0"
+              :precision="0"
+              class="number-input"
+            />
           </a-form-item>
           <a-form-item label="启用状态" name="status">
             <div class="switch-field">
-              <a-switch :checked="itemForm.status === 1" @change="itemForm.status = $event ? 1 : 0" />
+              <a-switch
+                :checked="itemForm.status === 1"
+                @change="itemForm.status = $event ? 1 : 0"
+              />
               <span>{{ itemForm.status === 1 ? '已启用' : '已禁用' }}</span>
             </div>
           </a-form-item>
           <a-form-item class="full-field" label="备注" name="remark">
-            <a-textarea v-model:value="itemForm.remark" :rows="3" :maxlength="255" placeholder="请输入备注信息" />
+            <a-textarea
+              v-model:value="itemForm.remark"
+              :rows="3"
+              :maxlength="255"
+              placeholder="请输入备注信息"
+            />
           </a-form-item>
         </div>
       </a-form>
@@ -796,13 +912,23 @@ loadTypes()
         @change="handleLogTableChange"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'dictCode'"><code class="code-cell">{{ record.dictCode || '—' }}</code></template>
-          <template v-else-if="column.key === 'targetType'">{{ targetLabels[record.targetType] || record.targetType || '未知' }}</template>
-          <template v-else-if="column.key === 'actionType'">{{ actionLabels[record.actionType] || record.actionType || '未知' }}</template>
+          <template v-if="column.key === 'dictCode'"
+            ><code class="code-cell">{{ record.dictCode || '—' }}</code></template
+          >
+          <template v-else-if="column.key === 'targetType'">{{
+            targetLabels[record.targetType] || record.targetType || '未知'
+          }}</template>
+          <template v-else-if="column.key === 'actionType'">{{
+            actionLabels[record.actionType] || record.actionType || '未知'
+          }}</template>
           <template v-else-if="column.key === 'beforeJson' || column.key === 'afterJson'">
-            <span class="json-cell" :title="record[column.key]">{{ record[column.key] || '—' }}</span>
+            <span class="json-cell" :title="record[column.key]">{{
+              record[column.key] || '—'
+            }}</span>
           </template>
-          <template v-else-if="column.key === 'createdTime'">{{ formatDateTime(record.createdTime) }}</template>
+          <template v-else-if="column.key === 'createdTime'">{{
+            formatDateTime(record.createdTime)
+          }}</template>
         </template>
       </ResizableTable>
     </a-modal>
@@ -810,35 +936,160 @@ loadTypes()
 </template>
 
 <style scoped>
-.query-fields { display: grid; width: min(720px, 68%); grid-template-columns: minmax(260px, 2fr) 130px 130px; gap: 8px; }
-.dict-workspace { display: grid; min-width: 0; margin-top: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.dict-panel { min-width: 0; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.panel-toolbar { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 13px; border-bottom: 1px solid var(--shell-border); }
-.panel-toolbar > div:first-child { min-width: 0; }
-.panel-toolbar h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
-.item-actions { justify-content: flex-end; flex-wrap: wrap; }
-.dict-table, .dict-table :deep(.ant-table), .dict-table :deep(.ant-table-container), .dict-table :deep(.ant-table-content) { border-radius: 0 !important; }
-.dict-table :deep(.ant-table) { color: var(--shell-ink); background: var(--shell-panel); }
-.dict-table :deep(.ant-table-thead > tr > th) { padding-block: 9px; color: var(--shell-muted); font-size: 13px; font-weight: 600; background: var(--shell-hover); }
-.dict-table :deep(.ant-table-tbody > tr > td) { padding-block: 8px; }
-.dict-table :deep(.ant-table-tbody > tr:hover > td), .dict-table :deep(.selected-row > td) { background: color-mix(in srgb, var(--brand) 8%, var(--shell-panel)) !important; }
-.dict-table :deep(.ant-pagination) { margin: 13px; }
-.primary-cell { color: var(--shell-ink); font-weight: 600; }
-.code-cell { color: var(--brand-deep); font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
-.status-text { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.status-text i { width: 7px; height: 7px; border-radius: 50%; background: #28aa81; }
-.status-text.disabled i { background: #aab3b3; }
-.empty-table { display: flex; min-height: 200px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--shell-muted); }
-.empty-table :deep(.anticon) { font-size: 30px; }
-.utility-bar { display: flex; min-height: 52px; align-items: center; justify-content: space-between; margin-top: 8px; padding: 8px 13px; border: 1px solid var(--shell-border); background: var(--shell-panel); }
-.utility-bar > h1 { margin: 0; color: var(--shell-ink); font-size: 18px; font-weight: 600; }
-.file-input { display: none; }
-.modal-form { padding-top: 8px; }
-.form-grid { display: grid; column-gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid :deep(.ant-form-item) { margin-bottom: 14px; }
-.full-field { grid-column: 1 / -1; }
-.switch-field { display: flex; min-height: 34px; align-items: center; gap: 9px; color: var(--shell-muted); }
-.number-input { width: 100%; }
-.json-cell { display: block; overflow: hidden; color: var(--shell-muted); text-overflow: ellipsis; white-space: nowrap; }
-.log-table { margin-top: 10px; }
+.query-fields {
+  display: grid;
+  width: min(720px, 68%);
+  grid-template-columns: minmax(260px, 2fr) 130px 130px;
+  gap: 8px;
+}
+.dict-workspace {
+  display: grid;
+  min-width: 0;
+  margin-top: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.dict-panel {
+  min-width: 0;
+  border: 1px solid var(--shell-border);
+  background: var(--shell-panel);
+}
+.panel-toolbar {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--shell-border);
+}
+.panel-toolbar > div:first-child {
+  min-width: 0;
+}
+.panel-toolbar h1 {
+  margin: 0;
+  color: var(--shell-ink);
+  font-size: 18px;
+  font-weight: 600;
+}
+.item-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.dict-table,
+.dict-table :deep(.ant-table),
+.dict-table :deep(.ant-table-container),
+.dict-table :deep(.ant-table-content) {
+  border-radius: 0 !important;
+}
+.dict-table :deep(.ant-table) {
+  color: var(--shell-ink);
+  background: var(--shell-panel);
+}
+.dict-table :deep(.ant-table-thead > tr > th) {
+  padding-block: 9px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--shell-hover);
+}
+.dict-table :deep(.ant-table-tbody > tr > td) {
+  padding-block: 8px;
+}
+.dict-table :deep(.ant-table-tbody > tr:hover > td),
+.dict-table :deep(.selected-row > td) {
+  background: color-mix(in srgb, var(--brand) 8%, var(--shell-panel)) !important;
+}
+.dict-table :deep(.ant-pagination) {
+  margin: 13px;
+}
+.primary-cell {
+  color: var(--shell-ink);
+  font-weight: 600;
+}
+.code-cell {
+  color: var(--brand-deep);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+}
+.status-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.status-text i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #28aa81;
+}
+.status-text.disabled i {
+  background: #aab3b3;
+}
+.empty-table {
+  display: flex;
+  min-height: 200px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--shell-muted);
+}
+.empty-table :deep(.anticon) {
+  font-size: 30px;
+}
+.utility-bar {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 8px 13px;
+  border: 1px solid var(--shell-border);
+  background: var(--shell-panel);
+}
+.utility-bar > h1 {
+  margin: 0;
+  color: var(--shell-ink);
+  font-size: 18px;
+  font-weight: 600;
+}
+.file-input {
+  display: none;
+}
+.modal-form {
+  padding-top: 8px;
+}
+.form-grid {
+  display: grid;
+  column-gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid :deep(.ant-form-item) {
+  margin-bottom: 14px;
+}
+.full-field {
+  grid-column: 1 / -1;
+}
+.switch-field {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  color: var(--shell-muted);
+}
+.number-input {
+  width: 100%;
+}
+.json-cell {
+  display: block;
+  overflow: hidden;
+  color: var(--shell-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.log-table {
+  margin-top: 10px;
+}
 </style>
