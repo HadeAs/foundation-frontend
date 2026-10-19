@@ -106,6 +106,11 @@ async function load() {
     if (current === epoch) loading.value = false
   }
 }
+function query() {
+  applied.value = keyword.value.trim()
+  page.value = 1
+  void load()
+}
 function choose(row: DataRecord) {
   if (row.id !== undefined && !unavailableReason(row) && !loading.value) emit('select', row.id)
 }
@@ -152,20 +157,8 @@ onBeforeUnmount(() => {
         allow-clear
         placeholder="搜索名称或编码"
         aria-label="搜索名称或编码"
-        @press-enter="
-          applied = keyword.trim()
-          page = 1
-          load()
-        "
-      /><AButton
-        type="primary"
-        @click="
-          applied = keyword.trim()
-          page = 1
-          load()
-        "
-        >查询</AButton
-      >
+        @press-enter="query"
+      /><AButton type="primary" @click="query">查询</AButton>
     </div>
     <p v-if="containerKind" class="picker-hint">
       仅可选择{{ containerKind === 'box' ? '料箱' : '载具' }}，规格不符或加载失败的记录不可选。

@@ -202,6 +202,10 @@ function query() {
   page.value = 1
   void load()
 }
+function refresh() {
+  void load()
+  void loadDictionaries()
+}
 function reset() {
   filters.value = {}
   applied.value = {}
@@ -282,6 +286,10 @@ function saved() {
   message.success('保存成功')
   void load()
 }
+function refreshAfterDeleteConflict() {
+  deletion.value = undefined
+  void load()
+}
 let needsReload = false
 onDeactivated(() => {
   epoch++
@@ -359,13 +367,7 @@ void loadDictionaries()
       </div>
       <div class="query-actions">
         <AButton type="primary" @click="query">查询</AButton><AButton @click="reset">重置</AButton
-        ><AButton
-          @click="
-            load()
-            loadDictionaries()
-          "
-          >刷新</AButton
-        >
+        ><AButton @click="refresh">刷新</AButton>
       </div>
     </section>
     <AAlert v-if="dictError" show-icon type="warning" :message="`字典加载失败：${dictError}`"
@@ -502,13 +504,7 @@ void loadDictionaries()
       </p>
       <template #footer
         ><AButton :disabled="deleting" @click="deletion = undefined">取消</AButton
-        ><AButton
-          v-if="deleteConflict"
-          @click="
-            deletion = undefined
-            load()
-          "
-          >刷新列表</AButton
+        ><AButton v-if="deleteConflict" @click="refreshAfterDeleteConflict">刷新列表</AButton
         ><AButton
           danger
           type="primary"

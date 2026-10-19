@@ -149,6 +149,10 @@ function query() {
   page.value = 1
   void load()
 }
+function refresh() {
+  void load()
+  void loadDictionaries()
+}
 function reset() {
   filters.value = defaultRuntimeFilters(props.type)
   applied.value = { ...filters.value }
@@ -247,13 +251,7 @@ void loadDictionaries()
           more ? '收起条件' : '更多条件'
         }}</AButton
         ><AButton type="primary" @click="query">查询</AButton><AButton @click="reset">重置</AButton
-        ><AButton
-          @click="
-            load()
-            loadDictionaries()
-          "
-          >刷新</AButton
-        >
+        ><AButton @click="refresh">刷新</AButton>
       </div>
     </section>
     <AAlert v-if="dictError" type="warning" show-icon :message="`字典加载失败：${dictError}`"

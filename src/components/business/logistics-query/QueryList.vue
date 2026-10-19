@@ -131,6 +131,10 @@ function query() {
     validation.value = cause instanceof Error ? cause.message : getErrorMessage(cause)
   }
 }
+function refresh() {
+  void load()
+  void loadDictionaries()
+}
 function reset() {
   draft.value = {}
   applied.value = {}
@@ -172,14 +176,7 @@ onBeforeUnmount(() => {
             more ? '收起条件' : '更多条件'
           }}</AButton
           ><AButton type="primary" @click="query">查询</AButton
-          ><AButton @click="reset">重置</AButton
-          ><AButton
-            @click="
-              load()
-              loadDictionaries()
-            "
-            >刷新</AButton
-          >
+          ><AButton @click="reset">重置</AButton><AButton @click="refresh">刷新</AButton>
         </div>
       </div>
       <QueryFilters
