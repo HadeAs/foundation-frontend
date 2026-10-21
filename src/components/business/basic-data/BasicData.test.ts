@@ -56,6 +56,80 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 describe('基础资料页面本地 DOM', () => {
+  const line = {
+    id: 2,
+    version: 3,
+    lineCode: '001',
+    lineName: '产线',
+    floorId: 4,
+    lineType: 'SMT',
+    enabled: true,
+  }
+  it('产线列表回显楼层，筛选携带 floorId 而非 areaId', async () => {
+    vi.mocked(api.pageBasicData).mockResolvedValue({ records: [line], total: 1 })
+    vi.mocked(api.getBasicData).mockResolvedValue({ id: 4, floorName: '测试楼层' })
+    const wrapper = keep(mount(BasicDataGrid, { props: { type: 'line' }, ...options }))
+    await flushPromises()
+    expect(wrapper.text()).toContain('测试楼层')
+    expect(wrapper.text()).toContain('所属楼层')
+    expect(wrapper.text()).not.toContain('所属区域')
+    const filter = wrapper.findComponent(ReferenceInput)
+    expect(filter.props('target')).toBe('floor')
+    filter.vm.$emit('update:value', 5)
+    await wrapper
+      .findAllComponents(Button)
+      .find((button) => button.text().replace(/\s/g, '') === '查询')!
+      .trigger('click')
+    await flushPromises()
+    const query = vi.mocked(api.pageBasicData).mock.lastCall![1]
+    expect(query.floorId).toBe(5)
+    expect(query).not.toHaveProperty('areaId')
+  })
+  it.each([undefined, 2])('产线表单（id %s）选择楼层，必填且保存不带区域', async (id) => {
+    vi.mocked(api.getBasicData).mockImplementation(async (type) =>
+      type === 'line' ? line : { id: 4, floorName: '测试楼层' },
+    )
+    const wrapper = keep(mount(BasicDataEditor, { props: { type: 'line', id }, ...options }))
+    await flushPromises()
+    const field = wrapper.findComponent(ReferenceInput)
+    expect(field.props('target')).toBe('floor')
+    expect(wrapper.text()).toContain('所属楼层')
+    expect(wrapper.text()).not.toContain('所属区域')
+    if (id) expect(field.props('value')).toBe(4)
+    await wrapper.find('input[aria-label="产线编码"]').setValue('001')
+    await wrapper.find('input[aria-label="产线名称"]').setValue('产线')
+    wrapper.findComponent(Select).vm.$emit('update:value', 'SMT')
+    field.vm.$emit('update:value', undefined)
+    const save = wrapper
+      .findAllComponents(Button)
+      .find((button) => button.text().replace(/\s/g, '') === '保存')!
+    await save.trigger('click')
+    expect(api.saveBasicData).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('请填写所属楼层')
+    field.vm.$emit('update:value', 5)
+    await save.trigger('click')
+    await flushPromises()
+    const call = vi.mocked(api.saveBasicData).mock.lastCall!
+    expect(call[1].floorId).toBe(5)
+    expect(call[1]).not.toHaveProperty('areaId')
+    expect(call[2]).toEqual(id ? line : undefined)
+  })
+  it('产线查看回显所属楼层且不可修改', async () => {
+    vi.mocked(api.getBasicData).mockImplementation(async (type) =>
+      type === 'line' ? line : { id: 4, floorName: '测试楼层' },
+    )
+    const wrapper = keep(
+      mount(BasicDataEditor, { props: { type: 'line', id: 2, readonly: true }, ...options }),
+    )
+    await flushPromises()
+    expect(wrapper.findComponent(ReferenceInput).props()).toMatchObject({
+      target: 'floor',
+      value: 4,
+      disabled: true,
+    })
+    expect(wrapper.text()).toContain('测试楼层')
+    expect(wrapper.text()).not.toContain('所属区域')
+  })
   const trafficArea = {
     id: 11,
     version: 4,

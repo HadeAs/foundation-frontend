@@ -77,6 +77,24 @@ describe('基础资料字段与最新查询契约', () => {
       expect(body).not.toHaveProperty('version')
     })
 
+  it('产线归属楼层，查询和维护不再使用区域字段', () => {
+    expect(objects.line.fields.find((item) => item.key === 'floorId')).toMatchObject({
+      label: '所属楼层',
+      target: 'floor',
+      required: true,
+    })
+    expect(objects.line.filters).toEqual(['floorId', 'lineType'])
+    expect(objects.line.columns).toContain('floorId')
+    expect(objects.line.columns).not.toContain('areaId')
+    expect(validateDraft('line', {}).floorId).toBe('请填写所属楼层')
+    expect(buildRequest('line', { floorId: 2, areaId: 99 })).toEqual({ floorId: 2 })
+    expect(buildRequest('line', { floorId: 3, areaId: 99 }, undefined, true)).toMatchObject({
+      floorId: 3,
+    })
+    expect(buildRequest('line', { floorId: null }, undefined, true)).not.toHaveProperty('floorId')
+    for (const type of ['storage', 'location'] as const)
+      expect(objects[type].fields.find((item) => item.key === 'areaId')?.target).toBe('area')
+  })
   it('交管区域只维护基础字段，编码保留前导零，不提交运行状态', () => {
     expect(sortableFields('trafficArea')).toEqual(['id', 'createdTime', 'updatedTime'])
     const draft = {
@@ -156,6 +174,22 @@ describe('基础资料字段与最新查询契约', () => {
       slotCode: '0001',
       enabled: false,
     })
+  })
+  it('楼层数仅更改显示文案，字段、必填、整数校验和排序保持不变', () => {
+    expect(objects.floor.fields.find((item) => item.key === 'floorNumber')).toEqual({
+      key: 'floorNumber',
+      label: '楼层数',
+      kind: 'integer',
+      required: true,
+    })
+    expect(objects.floor.columns).toContain('floorNumber')
+    expect(sortableFields('floor')).toContain('floorNumber')
+    expect(validateDraft('floor', {}).floorNumber).toBe('请填写楼层数')
+    for (const floorNumber of [-1, 0, 3]) {
+      expect(validateDraft('floor', { floorNumber })).not.toHaveProperty('floorNumber')
+      expect(buildRequest('floor', { floorNumber })).toEqual({ floorNumber })
+    }
+    expect(validateDraft('floor', { floorNumber: 1.5 }).floorNumber).toBe('请输入整数')
   })
   it('必填、整数、正整数、长度与旧分类校验', () => {
     expect(

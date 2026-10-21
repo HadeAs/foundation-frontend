@@ -59,6 +59,21 @@ describe('基础资料真实接口请求', () => {
         ],
       })
     })
+  it('产线分页、新增和更新使用 floorId，更新保留版本', async () => {
+    const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { data: { records: [] } } })
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { data: { id: 1 } } })
+    const put = vi.spyOn(apiClient, 'put').mockResolvedValue({ data: { data: { id: 1 } } })
+    const base = '/api/v1/business/nari-production-line'
+    await pageBasicData('line', { page: 1, size: 20, floorId: 2, lineType: 'SMT' })
+    expect(get).toHaveBeenLastCalledWith(base, {
+      params: { page: 1, size: 20, floorId: 2, lineType: 'SMT' },
+    })
+    const body = { lineCode: '001', lineName: '产线', floorId: 2, lineType: 'SMT', enabled: true }
+    await saveBasicData('line', body)
+    expect(post).toHaveBeenLastCalledWith(base, body)
+    await saveBasicData('line', { ...body, floorId: 3 }, { id: 1, version: 2 })
+    expect(put).toHaveBeenLastCalledWith(`${base}/1`, { ...body, floorId: 3, version: 2 })
+  })
   it('排序非法字段不发送，按区域查询不丢条件', async () => {
     const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { data: { records: [] } } })
     await pageBasicData('storage', {

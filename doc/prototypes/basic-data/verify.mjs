@@ -601,16 +601,23 @@ try {
 
   app.navigate('line')
   app.openEditor('line', 1)
+  assert.ok(!get('f-areaId'))
+  assert.match(get('f-floorId').textContent, /A 栋一层/)
   get('f-lineName').value = '保留的草稿'
-  app.openPicker('area', 'areaId', 'editor')
-  get('pickerKeyword').value = '装配'
+  app.openPicker('floor', 'floorId', 'editor')
+  get('pickerKeyword').value = '二层'
   get('pickerFilters').dispatchEvent(
     new window.Event('submit', { bubbles: true, cancelable: true }),
   )
   assert.equal(get('pickerTable').querySelectorAll('tbody tr').length, 1)
   app.choose(2)
   assert.equal(get('f-lineName').value, '保留的草稿')
-  assert.match(get('f-areaId').textContent, /装配生产区/)
+  assert.match(get('f-floorId').textContent, /A 栋二层/)
+  app.openPicker('floor', 'floorId', 'editor')
+  app.choose(1)
+  await app.save()
+  assert.equal(data.records.line[0].floorId, 1)
+  assert.ok(!Object.hasOwn(data.records.line[0], 'areaId'))
   app.closeDialog('editor')
   app.setScene('conflict')
   get('f-lineName').value = '冲突保留值'
@@ -622,25 +629,25 @@ try {
   app.closeDialog('editor')
   app.setScene('normal')
 
-  app.openPicker('area', 'areaId', 'filter')
+  app.openPicker('floor', 'floorId', 'filter')
   click('#pickerTable tr[data-id="2"] td')
   assert.equal(
-    get('filters').querySelector('[data-key="areaId"].reference-action').dataset.action,
+    get('filters').querySelector('[data-key="floorId"].reference-action').dataset.action,
     'clear-reference',
     'Selected filter shows clear',
   )
   get('filters').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }))
   assert.equal(app.filteredRows().length, 3)
-  app.openPicker('area', 'areaId', 'filter')
+  app.openPicker('floor', 'floorId', 'filter')
   assert.equal(
     get('pickerTable').querySelector('.selected').dataset.id,
     '2',
     'Filter selection is highlighted on reopen',
   )
   app.closeDialog('picker')
-  click('#filters [data-action="clear-reference"][data-key="areaId"]')
+  click('#filters [data-action="clear-reference"][data-key="floorId"]')
   assert.equal(
-    get('filters').querySelector('[data-key="areaId"].reference-action').dataset.action,
+    get('filters').querySelector('[data-key="floorId"].reference-action').dataset.action,
     'filter-pick',
     'Cleared filter shows search',
   )

@@ -342,10 +342,16 @@ export interface paths {
         };
         /** 查询生产计划单详情 */
         get: operations["get_15"];
-        /** 更新生产计划单 */
+        /**
+         * 更新生产计划单
+         * @description planNo和planStatus不可由普通CRUD修改。只有PLANNED且不存在任何运输任务历史（含归档）可改订单、数量、时间和映射；其他计划仅允许改备注。可变计划修改时间或分组后由后端重新排队，邻项版本更新。不得用CRUD冒充插单、取消或完成业务流程。
+         */
         put: operations["update_15"];
         post?: never;
-        /** 删除生产计划单 */
+        /**
+         * 删除生产计划单
+         * @description 只允许删除PLANNED且无任何运输任务历史（含已完成及归档）的计划。批量删除先统一校验，任一不合规则整批不删；保留版本校验及并发保护。
+         */
         delete: operations["delete_15"];
         options?: never;
         head?: never;
@@ -900,6 +906,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description 2026-10-21.2：资源处理器声明格式，既有资源只接受CSV。resource=nari-fixture-initialization支持.xlsx＋INSERT_ONLY，最多1000箱、10MiB，Sheet为治具初始化和填写说明；containerCode／confirmedLoaded／remark均为文本，每箱confirmedLoaded=YES。只初始化已有启用BOX／FIXTURE_BOX台账的UNKNOWN首次投用箱（新台账数量可空），重复已初始化箱跳过且不覆盖USED或预占。任一无效行在同一业务事务回滚。查询任务status：PENDING／RUNNING／SUCCESS／FAILURE／CANCELED；本资源成功后resultFileId=null，没有结果文件，也不直接返回successRows／新增数／跳过数。内部完成行计数含跳过，不能当本次新增可用箱数；详情通过任务日志、实际状态及初始化操作证据核对。/result只在resultFileId非空时下载，本资源成功调用/result返回404并非导入失败；FAILURE查看failureReason。本资源失败一般无逐行结果文件。不是13对象多Sheet基础资料导入。 */
         post: operations["create_4"];
         delete?: never;
         options?: never;
@@ -916,6 +923,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description 2026-10-21.2：资源处理器声明格式，既有资源只接受CSV。resource=nari-fixture-initialization支持.xlsx＋INSERT_ONLY，最多1000箱、10MiB，Sheet为治具初始化和填写说明；containerCode／confirmedLoaded／remark均为文本，每箱confirmedLoaded=YES。只初始化已有启用BOX／FIXTURE_BOX台账的UNKNOWN首次投用箱（新台账数量可空），重复已初始化箱跳过且不覆盖USED或预占。任一无效行在同一业务事务回滚。查询任务status：PENDING／RUNNING／SUCCESS／FAILURE／CANCELED；本资源成功后resultFileId=null，没有结果文件，也不直接返回successRows／新增数／跳过数。内部完成行计数含跳过，不能当本次新增可用箱数；详情通过任务日志、实际状态及初始化操作证据核对。/result只在resultFileId非空时下载，本资源成功调用/result返回404并非导入失败；FAILURE查看failureReason。本资源失败一般无逐行结果文件。不是13对象多Sheet基础资料导入。 */
         post: operations["cancel"];
         delete?: never;
         options?: never;
@@ -1571,7 +1579,10 @@ export interface paths {
         /** 分页查询生产计划单 */
         get: operations["page_15"];
         put?: never;
-        /** 创建生产计划单 */
+        /**
+         * 创建生产计划单
+         * @description 只允许新增PLANNED计划。后端以resourceCode＋mainProcessCode解析已启用产线和配送StorageZone，productionLineId须与资源映射一致；自动赋值deliveryStorageZoneId与sequenceNo。按同资源＋主工序隔离队列，在尚未启动段按计划时间插入并保留现有相对顺序；不得插到已有执行／任务历史前缀之前。数量必须为正数。
+         */
         post: operations["create_17"];
         delete?: never;
         options?: never;
@@ -1588,7 +1599,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 批量删除生产计划单 */
+        /**
+         * 批量删除生产计划单
+         * @description 只允许删除PLANNED且无任何运输任务历史（含已完成及归档）的计划。批量删除先统一校验，任一不合规则整批不删；保留版本校验及并发保护。
+         */
         post: operations["batchDelete_16"];
         delete?: never;
         options?: never;
@@ -1735,6 +1749,8 @@ export interface paths {
          *     WMS使用此前确认的lCode=LES applicationNo、cartCode可空、批次解析、一板数量1及100写入规则。三步全部成功才一次事务生成NariWarehouseRecord及成功箱明细、将warehouseRequestId保护交给activeBoxId、保存成功回执；旧历史内容键（含归档）也禁止重复缴库。申请号复用nari.numbering.operation-rule。成功原请求回放。运输需之后独立创建，不代表已入库。
          *
          *     前端：503不一定没有SAP/WMS效果；保留原requestId及原完整请求。明确WMS失败可原样重试，未知由后端阻止；不得自动创建新请求或自行清除保护。无需新增inboundLocation输入。当前源码已测试，未真实MES／SAP／WMS联调、部署或联合冻结。
+         *
+         *     编号边界（2026-10-20.1）：applicationNo 是业务单据编号，仍由后端读取 nari.numbering.operation-rule 对应的启用规则生成；前端不提交编码规则。此参数不再用于普通操作回执。
          */
         post: operations["nari_warehouse_applications_submit"];
         delete?: never;
@@ -1951,6 +1967,8 @@ export interface paths {
          *     shippingNo复用基座操作编码规则；本接口不创建物流任务。成功后仅有可信斯坦德停车起点的料车canCreateLogisticsTask=true，可带shippingNo走既有物流创建接口；该接口复核发料成功及固定聚合版本，仍只建QUEUED，不代表调度已受理。箱场景后续人工绑车及独立运输继续使用原功能。
          *
          *     全部约定步骤成功才200/code=0。503可能已经完成LES重建，不能当成整体回滚；前端保留原请求用于安全重试。运行接口只检查登录；本次未联合冻结／部署或现场联调。
+         *
+         *     编号边界（2026-10-20.1）：shippingNo 是业务单据编号，仍由后端读取 nari.numbering.operation-rule 对应的启用规则生成；前端不提交编码规则。此参数不再用于普通操作回执。
          */
         post: operations["nari_shipping_submit"];
         delete?: never;
@@ -1970,12 +1988,15 @@ export interface paths {
         put?: never;
         /**
          * 确认物料接收
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。接收记录本身仍由后端按 nari.numbering.receiving-rule 生成 receivingNo。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     扫描箱确认单箱、扫描车确认本批剩余箱；核对当前内容，写接收记录并返回最新任务版本。
          *
-         *     前置与边界：可信送达、当前 taskId／version、object；可选 remark；接收与操作编号规则。
+         *     前置与边界：可信送达、当前 taskId／version、object；可选 remark；接收记录编号规则（nari.numbering.receiving-rule）。
          *
          *     object 为本次扫描对象；扫描箱仅确认该箱，扫描车确认本次固定范围中剩余箱，可附 remark；以回执最新 task.version 继续后续操作。
          *
@@ -2001,7 +2022,10 @@ export interface paths {
         put?: never;
         /**
          * 清空对象 WMS 历史绑定
-         * @description 2026-10-19核对：当前未提供按原UUID查询清理处理状态的PDA契约；receiving/tasks可核对原任务最新版本和接收信息，不能证明某次清理已回滚／已完成，不能用其接收状态或版本增量推断清理状态。
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     2026-10-19核对：当前未提供按原UUID查询清理处理状态的PDA契约；receiving/tasks可核对原任务最新版本和接收信息，不能证明某次清理已回滚／已完成，不能用其接收状态或版本增量推断清理状态。
          *     配置在stage登记前不可用：没有清理操作／远端删除；已登记后明确尚未写入或已回滚：内部FAILED、HTTP503/code500/data=null，原UUID重放仍失败；有可信后端核实依据才可刷新后新UUID。SENDING／UNKNOWN：原请求重试返回409并阻止再次删除，不因等待超时自动解锁。当前响应不能机器区分以上503分支，前端保留原UUID和完整旧版本请求的暂行做法正确。
          *     成功原UUID回放原OperationReceipt；整车跳过已CLEARED箱，剩余范围原子执行；零远端匹配行也可完成，affectedCount是完成的箱数。清理失败／成功后重新查询原taskId＋对象取得任务最新version，不能修改未决原请求中的旧version。
          *     远端实际谓词为mes_material_list的boxCode=? AND status=100，没有lCode条件，可能删除同箱其他申请100行；LES固定范围只限制选中哪些箱。已有更新的本地有效缴库成功箱记录时阻止旧任务清理，不能保证所有外部新增申请都能被本地识别。人工UNKNOWN恢复入口待补。
@@ -2071,7 +2095,7 @@ export interface paths {
          *
          *     整体复核所选箱及目标运行状态版本，逐箱创建同 callNo 的本地 QUEUED 并按目标排队。
          *
-         *     前置与边界：订单候选、箱版本、destinationVersion；任务与操作编号规则；实际发送与逐箱放行待调度／可信空位。
+         *     前置与边界：订单候选、箱版本、destinationVersion；任务与叫料单据编号规则；实际发送与逐箱放行待调度／可信空位。
          *
          *     同一 callNo 可对应多个逐箱任务；当前只本地排队，不等于已逐箱实际派送。
          *
@@ -2081,6 +2105,8 @@ export interface paths {
          *     确认时服务端先整体校验所选箱订单归属、资格、位置及版本；任一箱已分配/占用、状态不允许或版本冲突，返回 409/40900，message 明确箱码及可展示原因，整批不创建任务。前端显示原因，由操作人员刷新 GET /order-calls/candidates，重新获取候选与版本后重新选择、确认。通过校验后原子预留箱并创建本地业务任务；预留实现方式仍待评审。与自动配送入口共用箱预留及防重，禁止绕过其他进行中/未知任务。
          *     目标位置一次只容纳一箱：所有入口共享同一位置的串行调度约束。先前运输完成不等于目标位置已释放；必须获得可信的空位确认才可放行下一箱，未知占用不放行。同目标按创建顺序排队，同请求内逐箱放行；释放信号的实际字段与可信协议仍后补，不以调度完成代替空位确认。
          *     受理成功只表示本批本地业务任务已创建；外部调用通过任务状态推进，已创建任务不因其他任务失败被抹去。相同 requestId/相同内容返回同一批及当前状态，不同内容返回 409；已明确拒绝后刷新并重新选择属于新的业务提交，生成新 requestId；网络超时不等于业务拒绝，同一提交如重试仍复用原 requestId 及内容，避免重复创建。本流程不提供独立叫料结果查询接口，不要求前端轮询逐箱状态。预留释放、幂等保留期限及失败恢复策略为 R02 未决。 人工按订单叫料不要求对应生产计划或查询订单主数据；仍重新校验源范围、目标、箱同质内容、当前状态、版本及预占，只有可用箱可受理。
+         *
+         *     编号边界（2026-10-20.1）：callNo 是业务单据编号，仍由后端读取 nari.numbering.operation-rule 对应的启用规则生成；前端不提交编码规则。此参数不再用于普通操作回执。
          */
         post: operations["nari_order_calls_submit"];
         delete?: never;
@@ -2160,12 +2186,15 @@ export interface paths {
         put?: never;
         /**
          * 解绑库位容器
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     校验直接绑定后解绑，位置有物状态改 UNKNOWN；指定用途可同步清空 magzine 板件关系。
          *
-         *     前置与边界：已处理关联任务并刷新版本；清箱仅限配置 CLEAR_MATERIAL_ON_UNBIND，操作编号规则。
+         *     前置与边界：已处理关联任务并刷新版本；清箱仅限配置 CLEAR_MATERIAL_ON_UNBIND。
          *
          *     先调用现有取消接口，核实可信取消和实物状态，再刷新对象版本提交解绑。仅配置 CLEAR_MATERIAL_ON_UNBIND 的 magzine 供料位置清空板件关系；铆接取箱不能默认清空。
          *
@@ -2191,12 +2220,15 @@ export interface paths {
         put?: never;
         /**
          * 绑定容器到库位
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     校验位置／容器版本、规格与工厂后绑定；按位置用途更新铆接／治具业务状态。
          *
-         *     前置与边界：位置与容器版本、允许规格、无已有占用，操作编号规则。
+         *     前置与边界：位置与容器版本、允许规格、无已有占用。
          *
          *
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
@@ -2223,12 +2255,15 @@ export interface paths {
         put?: never;
         /**
          * 卸载所选料箱
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     关闭所选 SLOT 装载关系并同步相关版本；不删除历史。
          *
-         *     前置与边界：料车与装载关系版本、无未结算任务，操作编号规则。
+         *     前置与边界：料车与装载关系版本、无未结算任务。
          *
          *
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
@@ -2259,12 +2294,15 @@ export interface paths {
         put?: never;
         /**
          * 全部卸载料箱
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     整批解除有位车的当前装载，按卸载事实更新料车内容状态。
          *
-         *     前置与边界：当前料车版本、无未结算任务，操作编号规则。
+         *     前置与边界：当前料车版本、无未结算任务。
          *
          *
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
@@ -2296,12 +2334,15 @@ export interface paths {
         put?: never;
         /**
          * 批量装车
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     逐箱逐位校验后建立 SLOT 关系，核对容量并同步箱／车／槽位版本，失败整批回滚。
          *
-         *     前置与边界：箱与装载位版本、同工厂有位车、无占用／预占，操作编号规则。
+         *     前置与边界：箱与装载位版本、同工厂有位车、无占用／预占。
          *
          *
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
@@ -2373,12 +2414,15 @@ export interface paths {
         put?: never;
         /**
          * 解绑所选板件
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     逐行复核绑定归属与版本后整批解绑，保留历史及实际 contentState。
          *
-         *     前置与边界：箱版本、所选绑定行版本、内容可变更，操作编号规则。
+         *     前置与边界：箱版本、所选绑定行版本、内容可变更。
          *
          *
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
@@ -2412,12 +2456,15 @@ export interface paths {
         put?: never;
         /**
          * 全部解绑箱内板件
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     关闭全部有效板件关系、更新摘要并保留历史；不凭逻辑解绑确认物理空箱。
          *
-         *     前置与边界：当前箱版本、MATERIAL 用途、无任务／缴库冻结，操作编号规则。
+         *     前置与边界：当前箱版本、MATERIAL 用途、无任务／缴库冻结。
          *
          *
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
@@ -2457,12 +2504,15 @@ export interface paths {
         put?: never;
         /**
          * 按订单数量绑箱
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     用代表板件码解析订单／物料／批次，按整数数量追加；同装箱周期不混用逐码与数量方式。
          *
-         *     前置与边界：代表板件 panelCode、对应 orderNo、正整数 quantity、箱版本及操作编号规则；支持混料确认。
+         *     前置与边界：代表板件 panelCode、对应 orderNo、正整数 quantity、箱版本；支持混料确认。
          *
          *     必须提交代表板件码 panelCode；扫码提取订单、物料及批次。同一装箱周期不混用按码与按数量方式。混料确认须新 requestId，不能重用提示请求的 ID。
          *
@@ -2490,12 +2540,15 @@ export interface paths {
         put?: never;
         /**
          * 按唯一码批量绑箱
-         * @description ### 当前实现（2026-10-15.1）
+         * @description ### 本轮调整（2026-10-20.1）
+         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：本地逻辑已实现（须满足前置）。
          *
          *     逐码校验重复、箱版本与同质内容；混料先返回 CONFIRMATION_REQUIRED，确认后整批绑定。
          *
-         *     前置与边界：普通料箱及可操作状态、操作编号规则；确认提交沿用业务内容并使用新的 requestId。
+         *     前置与边界：普通料箱及可操作状态；确认提交沿用业务内容并使用新的 requestId。
          *
          *     混料提示为 CONFIRMATION_REQUIRED，不能展示为绑定成功。确认时 requestId 必须换新，业务内容、箱版本及 confirmationToken 保持匹配；同 requestId 改请求体返回 409。
          *
@@ -3279,6 +3332,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description 2026-10-21.2：资源处理器声明格式，既有资源只接受CSV。resource=nari-fixture-initialization支持.xlsx＋INSERT_ONLY，最多1000箱、10MiB，Sheet为治具初始化和填写说明；containerCode／confirmedLoaded／remark均为文本，每箱confirmedLoaded=YES。只初始化已有启用BOX／FIXTURE_BOX台账的UNKNOWN首次投用箱（新台账数量可空），重复已初始化箱跳过且不覆盖USED或预占。任一无效行在同一业务事务回滚。查询任务status：PENDING／RUNNING／SUCCESS／FAILURE／CANCELED；本资源成功后resultFileId=null，没有结果文件，也不直接返回successRows／新增数／跳过数。内部完成行计数含跳过，不能当本次新增可用箱数；详情通过任务日志、实际状态及初始化操作证据核对。/result只在resultFileId非空时下载，本资源成功调用/result返回404并非导入失败；FAILURE查看failureReason。本资源失败一般无逐行结果文件。不是13对象多Sheet基础资料导入。 */
         get: operations["template"];
         put?: never;
         post?: never;
@@ -3295,6 +3349,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description 2026-10-21.2：资源处理器声明格式，既有资源只接受CSV。resource=nari-fixture-initialization支持.xlsx＋INSERT_ONLY，最多1000箱、10MiB，Sheet为治具初始化和填写说明；containerCode／confirmedLoaded／remark均为文本，每箱confirmedLoaded=YES。只初始化已有启用BOX／FIXTURE_BOX台账的UNKNOWN首次投用箱（新台账数量可空），重复已初始化箱跳过且不覆盖USED或预占。任一无效行在同一业务事务回滚。查询任务status：PENDING／RUNNING／SUCCESS／FAILURE／CANCELED；本资源成功后resultFileId=null，没有结果文件，也不直接返回successRows／新增数／跳过数。内部完成行计数含跳过，不能当本次新增可用箱数；详情通过任务日志、实际状态及初始化操作证据核对。/result只在resultFileId非空时下载，本资源成功调用/result返回404并非导入失败；FAILURE查看failureReason。本资源失败一般无逐行结果文件。不是13对象多Sheet基础资料导入。 */
         get: operations["task"];
         put?: never;
         post?: never;
@@ -3311,6 +3366,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description 2026-10-21.2：资源处理器声明格式，既有资源只接受CSV。resource=nari-fixture-initialization支持.xlsx＋INSERT_ONLY，最多1000箱、10MiB，Sheet为治具初始化和填写说明；containerCode／confirmedLoaded／remark均为文本，每箱confirmedLoaded=YES。只初始化已有启用BOX／FIXTURE_BOX台账的UNKNOWN首次投用箱（新台账数量可空），重复已初始化箱跳过且不覆盖USED或预占。任一无效行在同一业务事务回滚。查询任务status：PENDING／RUNNING／SUCCESS／FAILURE／CANCELED；本资源成功后resultFileId=null，没有结果文件，也不直接返回successRows／新增数／跳过数。内部完成行计数含跳过，不能当本次新增可用箱数；详情通过任务日志、实际状态及初始化操作证据核对。/result只在resultFileId非空时下载，本资源成功调用/result返回404并非导入失败；FAILURE查看failureReason。本资源失败一般无逐行结果文件。不是13对象多Sheet基础资料导入。 */
         get: operations["result"];
         put?: never;
         post?: never;
@@ -3642,6 +3698,8 @@ export interface paths {
          *     缴库发起专用结果。boxes 为对象完整关联料箱及其物料明细（扫描料箱时包含该料箱），箱码用于 boxes/materials 查看物料；totalMaterialQuantity 是整个对象所有关联箱的物料总件数，不是明细行数，沿用现有整数件数候选计量。可发起成功结果必须有推荐地点及完整层级，且属于完整候选集合。不能推荐或不可发起时返回 HTTP 400 / code=40000 及原因，不返回缺省推荐的成功结果。 仅返回当前扫描对象、任务类型及业务规则允许的完整候选，不是全库位置列表。候选不分页、不截断，前端用完整数组构建楼层/区域/库位三级级联；服务端按 floorCode、areaCode、locationCode 升序稳定排序，位置编码去重。一次响应内候选层级及关联对象须一致；无法完整取得时返回失败，不以部分列表成功返回。重新扫描或查询条件变化后丢弃旧响应并重置选择。提交时服务端复核位置、载具及资格，不因查询时可选而跳过校验。 成功时默认选中 recommendedDestination，必须对应 destinations 中唯一 recommended=true 的记录，员工可切换到完整集合内其他位置；无推荐或不可发起仍返回 400/40000。
          *
          *     扫码对象类型由后端按 scanCode 在载具、位置范围内唯一识别，不要求前端提供 scanType。无匹配对象返回 404；编码无法唯一识别时返回 HTTP 400 / code=40000 和明确原因，不默认选择某一类型或第一条记录。识别为位置时，由后端解析该位置当前关联的实际容器；无有效关联容器时明确返回业务失败，不伪造对象。响应中的对象类型保留为服务端识别结果；查询不改变关系，后续提交仍重新校验实际对象、位置关系及版本。
+         *
+         *     2026-10-21.1：TASK规则未就绪时资格不可用；查询不消耗编号。
          */
         get: operations["nari_warehouse_logistics_options_query"];
         put?: never;
@@ -3662,6 +3720,8 @@ export interface paths {
         /**
          * 查询缴库申请对象
          * @description 2026-10-15.5：查询本地箱／车范围、完整板件及版本，评估真实逐码、未冻结／未成功内容、普通板件箱及MES／SAP／WMS独立配置。查询不请求MES完成标记、SAP Token／申请或WMS，不产生缴库事实；eligibility=true不表示MES已通过，实际提交仍逐件校验。名称／单位无来源省略，materials按契约返回。运行接口仅检查登录。
+         *
+         *     2026-10-21.1：OPERATION业务单据规则未就绪时资格不可用；查询不消耗编号。
          */
         get: operations["nari_warehouse_applications_objects_query"];
         put?: never;
@@ -3734,6 +3794,8 @@ export interface paths {
          *
          *     查询不建立、解除或切换关系。后端根据扫描码识别类型，无需前端提交容器类型。料箱直接绑定和库位装载互斥：已库位装载的料箱不可直接绑定，不能通过换绑隐式卸车。返回编号、可展示名称、最新版本及完整直接绑定箱列表。与 /vehicles/loads 分开。绑定页有旧箱时询问是否一键解绑，选择否保留旧列表且仍允许追加；解绑页用于勾选及前端扫码匹配。
          *     若历史异常导致同一箱同时存在直接关系和库位装载，拒绝本次操作并提示数据冲突，不隐式清理任何另一类关系。
+         *
+         *     2026-10-21.2走查：必填查询参数名为scanCode（不是vehicleCode）。当前漏传scanCode会返回500，是待修的参数异常映射；前端按契约提交，不能将该500当作查无料车。
          */
         get: operations["nari_vehicle_direct_bindings_query"];
         put?: never;
@@ -3769,6 +3831,8 @@ export interface paths {
          *
          *     查询不建立、解除或切换关系。后端根据扫描码识别类型，无需前端提交容器类型。料箱直接绑定和库位装载互斥：已库位装载的料箱不可直接绑定，不能通过换绑隐式卸车。vehicleCode 是先前已识别的目标料车；扫描料箱校验组合。已绑当前车返回不可操作及原因；已绑其他车且合法时返回所属车与快照，要求用户确认后再加入。已装载箱返回不可操作原因。无关系返回显式 null。
          *     若历史异常导致同一箱同时存在直接关系和库位装载，拒绝本次操作并提示数据冲突，不隐式清理任何另一类关系。
+         *
+         *     2026-10-21.1：同车已绑定、其他车改绑及新增均按目标车真实容量和预占核对，满载目标不可作为可用候选；提交仍在事务内重新校验。
          */
         get: operations["nari_vehicle_direct_binding_box_candidate"];
         put?: never;
@@ -3804,6 +3868,8 @@ export interface paths {
          *     slotCode 与固定 locationCode 分开。
          *
          *     联合评审／冻结状态见本文件 info；业务规则仍由后端再次校验。
+         *
+         *     2026-10-21.1：父料车规格停用时不返回允许装载资格；装载位占用和未结算任务引用也会影响资格。
          */
         get: operations["nari_vehicle_slots_query"];
         put?: never;
@@ -3864,6 +3930,8 @@ export interface paths {
          *     物料、批次、订单从实际唯一码解析，每码1件；完全相同的重复来源行展示去重，原始多重集留给提交复核。同一码跨箱或lCode冲突、坏码、单箱不同物料／批次／订单整体拒绝；不同箱可以是不同订单。名称／单位无可靠来源则省略，不额外调用MES名称查询。某箱无本次WMS内容时展示零数并不给整批提交资格，不回退LES历史。
          *
          *     查询不代表已经发料；提交仍重新取WMS并校验当前版本。运行接口保留登录、角色只控制页面／路由；待现场联调及联合评审。
+         *
+         *     2026-10-21.1：OPERATION业务单据规则未就绪时资格不可用；查询不消耗编号。
          */
         get: operations["nari_shipping_objects_query"];
         put?: never;
@@ -3896,6 +3964,8 @@ export interface paths {
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
          *
          *     扫描箱／车按本次已可信送达物流任务的冻结箱范围查询，卸车后仍按原送达范围定位，不能用当前装载代替。箱返回本箱内容；车返回本次完整范围及 PENDING／PARTIAL／RECEIVED、已接收箱数和总数。存在多个未完成交付冲突返回 409，不任取第一条。无范围时省略 task，boxes=[]、总量为 0。可携带已知 taskId 查询已接收范围及清理结果，仍复核 scanCode 对象属于该固定范围；不增加员工多任务选择。对象不存在 404、编码歧义 400。查询完整一致，不分页不截断；确认提交 taskId、version、object。
+         *
+         *     2026-10-21.1：仍待接收时，RECEIVING规则未就绪会反馈不可确认；已接收项仍按已完成展示。查询不消耗编号。
          */
         get: operations["nari_receiving_tasks_query"];
         put?: never;
@@ -3997,6 +4067,8 @@ export interface paths {
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
          *
          *     按箱关联的生产订单匹配；目标位置决定合法取料范围和业务条件，不能仅按全库同订单箱返回。铆接场景须符合未铆接要求；焊接场景不把铆接状态作为通用过滤条件。返回完整候选供多选，不自动选全、不创建任务、不占用箱。目标位置当前有箱不等于可立即送料；可排队，不能占用时强行送入。人工叫料不要求生产计划或独立订单存在性校验，有该订单可用箱即可。接收位置不存在返回 404；没有匹配箱返回空候选及不可操作原因，不以“订单不存在”返回 404。已分配或占用的箱通过 eligibility 解释。具体配置关联、容量上限待评审。
+         *
+         *     2026-10-21.1：候选及整体eligibility反馈OPERATION与TASK规则就绪情况；缺失或停用时不可提交，查询不消耗编号。普通回执无需规则，但订单叫料单及运输任务仍需后端业务编号。
          */
         get: operations["nari_order_calls_candidates_query"];
         put?: never;
@@ -4050,6 +4122,8 @@ export interface paths {
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
          *
          *     扫描载具、料箱或业务位置，由后端按 scanCode 唯一识别对象与实际起始位置，歧义或无有效关联明确失败。候选按业务基准位置的 SOURCE／TARGET 存储区关联展开其下真实 NariLocation，再按用途、产线、规格、占用／预占及业务资格筛选。回线边库采用 TARGET 和运行用途选择库类别，不使用 BOX_TARGET／FIXTURE_TARGET 或独立点对点关系。 后端按实际搬运对象和业务确定品牌：位置箱作业使用位置唯一 agvVendor，同品牌高／低车由调度选择；当前整车运输使用 STANDARD。停车点上的车与车上箱是不同搬运对象，海康取放箱不得改成斯坦德搬整车。位置配置缺失／无法识别对象或不支持组合时明确失败，不采用默认品牌。 taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。 完整候选一致读取、不分页；查询不改关系，目标由员工选择，最终提交重新校验。 位置支持多用途配置，筛选后按位置去重，不重复派单。
+         *
+         *     2026-10-21.1：缴库处理中或已缴库冻结的箱不允许普通物流运输，已缴库箱使用缴库运输专用流程；TASK编码规则缺失、停用或无法预览时eligibility.allowed=false。查询不消耗编号。
          */
         get: operations["nari_logistics_origins_and_destinations_query"];
         put?: never;
@@ -4218,6 +4292,8 @@ export interface paths {
          *     联合评审／冻结状态见本文件 info；业务规则仍由后端再次校验。
          *
          *     仅返回当前扫描对象、任务类型及业务规则允许的完整候选，不是全库位置列表。候选不分页、不截断，前端用完整数组构建楼层/区域/库位三级级联；服务端按 floorCode、areaCode、locationCode 升序稳定排序，位置编码去重。一次响应内候选层级及关联对象须一致；无法完整取得时返回失败，不以部分列表成功返回。重新扫描或查询条件变化后丢弃旧响应并重置选择。提交时服务端复核位置、载具及资格，不因查询时可选而跳过校验。 origins 非空时默认选中响应数组第一项；切换起始位置时同步替换该项关联 vehicle（编码、版本及展示信息），载具信息在选择框外展示。无候选时不选中、不显示旧载具，禁止提交。
+         *
+         *     2026-10-21.1：TASK编码规则未配置、停用或无法预览时返回受控409；查询不消耗编号。
          */
         get: operations["nari_empty_vehicles_origins_query"];
         put?: never;
@@ -4283,6 +4359,8 @@ export interface paths {
          *     联合评审／冻结状态见本文件 info；业务规则仍由后端再次校验。
          *
          *     指定箱或载具范围全量查询，不接受 page/size 或全量开关，不按 20/200 条截断；空集合返回 []。服务端保证一次响应的容器、装载、物料、版本和汇总属于一致读取结果；无法取得完整一致结果时返回失败，不返回部分成功。前端取得成功结果后才执行本地扫码匹配。写入仍校验最新版本。
+         *
+         *     2026-10-21.1：资格同时按容器规格FIXTURE_BOX和实际runtimeUsage判断；尚未初始化的治具箱也不允许绑定板件。普通绑定不依赖nari.numbering.operation-rule。
          */
         get: operations["nari_boxes_bindings_query"];
         put?: never;
@@ -5337,7 +5415,7 @@ export interface components {
              * Format: int64
              * @description 不传保留原值；禁止清空
              */
-            areaId?: number;
+            floorId?: number;
             /** @description 不传保留原值；禁止清空 */
             enabled?: boolean;
             /** @description 不传保留原值；禁止清空 */
@@ -5369,7 +5447,7 @@ export interface components {
             /** Format: int64 */
             id?: number;
             /** Format: int64 */
-            areaId?: number;
+            floorId?: number;
             enabled?: boolean;
             lineCode?: string;
             lineName?: string;
@@ -6606,7 +6684,7 @@ export interface components {
         };
         NariProductionLineRequest: {
             /** Format: int64 */
-            areaId: number;
+            floorId: number;
             enabled: boolean;
             lineCode: string;
             lineName: string;
@@ -8087,7 +8165,7 @@ export interface components {
              */
             sortOrder?: "ASC" | "DESC";
             /** Format: int64 */
-            areaId?: number;
+            floorId?: number;
             enabled?: boolean;
             lineCode?: string;
             lineName?: string;
@@ -10243,7 +10321,9 @@ export interface components {
         };
         /**
          * OperationReceipt
-         * @description 通用业务操作回执。说明一次操作何时完成、业务处理编号及实际影响关系数量；不包含更新后的容器状态，箱内关系操作使用 BoxOperationReceipt。
+         * @description 通用业务操作回执。说明一次操作何时完成、实际影响关系数量；不包含更新后的容器状态，箱内关系操作使用 BoxOperationReceipt。
+         *
+         *     2026-10-20.1：普通回执取消 operationNo，不取业务单据编号；requestId 关联原请求和防重，处理时间、影响数量及原有业务字段保留。历史成功请求按新结构投影，原业务不重做、旧证据不改写。
          */
         OperationReceipt: {
             /**
@@ -10252,11 +10332,6 @@ export interface components {
              * @example 47ab7945-b324-4ed4-a10a-af734b83de07
              */
             requestId: string;
-            /**
-             * @description 本次业务操作的处理编号，用于追溯；不是物流任务编号。 本次业务处理编号；用于追溯，不是 AGV 任务号。
-             * @example CODE-001
-             */
-            operationNo: string;
             /**
              * Format: int32
              * @description 实际发生变更的关系条数，不一定等于物料件数。 本次实际变更的关系数量。
@@ -11226,6 +11301,8 @@ export interface components {
          *
          *     关联字段说明：
          *     box：本次查询或操作的料箱，结构见 BoxSummary。
+         *
+         *     2026-10-20.1：普通回执取消 operationNo，不取业务单据编号；requestId 关联原请求和防重，处理时间、影响数量及原有业务字段保留。历史成功请求按新结构投影，原业务不重做、旧证据不改写。
          */
         BoxOperationReceipt: {
             /**
@@ -11234,11 +11311,6 @@ export interface components {
              * @example 47ab7945-b324-4ed4-a10a-af734b83de07
              */
             requestId: string;
-            /**
-             * @description 本次业务操作的处理编号，用于追溯；不是物流任务编号。 本次业务处理编号；用于追溯，不是 AGV 任务号。
-             * @example CODE-001
-             */
-            operationNo: string;
             /**
              * Format: int32
              * @description 实际发生变更的关系条数，不一定等于物料件数。 本次实际变更的关系数量。
@@ -11578,6 +11650,28 @@ export interface components {
             version: number;
         };
         /**
+         * DirectBoxVehicleBindingSnapshot
+         * @description 料箱查询时的直接所属关系快照，用于换绑提交复核。记录关系标识、版本和所属料车；不表示库位装载。
+         */
+        DirectBoxVehicleBindingSnapshot: {
+            /**
+             * @description 直接关系标识，以字符串传输。
+             * @example 10001
+             */
+            bindingId: string;
+            /**
+             * Format: int32
+             * @description 直接关系版本；解除/换绑不可复用原版本。
+             * @example 1
+             */
+            bindingVersion: number;
+            /**
+             * @description 当前直接所属料车编码。
+             * @example VEH-002
+             */
+            vehicleCode: string;
+        };
+        /**
          * DirectBoxVehicleBindingLine
          * @description 当前料车直接绑定的一箱。解绑使用直接关系标识和版本，不使用装载关系。
          */
@@ -11883,6 +11977,8 @@ export interface components {
         /**
          * ReceivingOperationReceipt
          * @description 本次接收成功回执，包含作用对象、本次物流任务身份和确认后最新 version。affectedCount 是此次新增接收记录数，整车确认不覆盖先前单箱确认；无需接收批次。
+         *
+         *     2026-10-20.1：普通回执取消 operationNo，不取业务单据编号；requestId 关联原请求和防重，处理时间、影响数量及原有业务字段保留。历史成功请求按新结构投影，原业务不重做、旧证据不改写。
          */
         ReceivingOperationReceipt: {
             /**
@@ -11891,11 +11987,6 @@ export interface components {
              * @example 47ab7945-b324-4ed4-a10a-af734b83de07
              */
             requestId: string;
-            /**
-             * @description 本次业务操作的处理编号，用于追溯；不是物流任务编号。 本次业务处理编号；用于追溯，不是 AGV 任务号。
-             * @example CODE-001
-             */
-            operationNo: string;
             /**
              * Format: int32
              * @description 实际发生变更的关系条数，不一定等于物料件数。 本次实际变更的关系数量。
@@ -24950,7 +25041,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z",
                      *         "taskId": "10001",
@@ -25137,7 +25227,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z"
                      *       },
@@ -26146,7 +26235,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z"
                      *       },
@@ -26328,7 +26416,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z"
                      *       },
@@ -26511,7 +26598,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z"
                      *       },
@@ -26688,7 +26774,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z"
                      *       },
@@ -26871,7 +26956,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z"
                      *       },
@@ -27254,7 +27338,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z",
                      *         "box": {
@@ -27436,7 +27519,6 @@ export interface operations {
                      *       "message": "ok",
                      *       "data": {
                      *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "operationNo": "CODE-001",
                      *         "affectedCount": 1,
                      *         "processedTime": "2026-09-14T02:00:00Z",
                      *         "box": {
@@ -31507,6 +31589,7 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
                 };
             };
             /** @description Bad Request */
@@ -31662,6 +31745,13 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
                 };
+            };
+            /** @description 任务不存在或无结果文件；治具初始化SUCCESS且resultFileId=null时也返回404，不等于导入失败。先查询任务状态及resultFileId。 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Internal Server Error */
             500: {
