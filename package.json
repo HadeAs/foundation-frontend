@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "build:image": "bash deploy/build-image.sh",
     "typecheck": "vue-tsc -b",
     "api:business-types": "openapi-typescript doc/nari-logistics.openapi.json -o src/types/business-api.d.ts",
     "lint": "eslint .",

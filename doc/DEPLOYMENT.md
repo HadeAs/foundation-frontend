@@ -1,5 +1,7 @@
 # 正式环境部署
 
+更新日期：2026-10-23
+
 ## 1. 部署拓扑
 
 - 访问地址：`http://<服务器内网 IP>:8088`
@@ -51,20 +53,20 @@ docker inspect --format '{{json .NetworkSettings.Networks}}' foundation-backend
 
 ## 4. 本机构建镜像包
 
-进入前端源码目录，并执行构建脚本：
+进入前端源码目录，通过 npm 调用现有构建脚本（本机需有 npm）：
 
 ```bash
 cd /本机前端源码目录/industry-system-frontend
-./deploy/build-image.sh 1.0.0 linux/amd64
+npm run build:image -- 1.0.0
 ```
 
 参数说明：
 
 ```text
-./deploy/build-image.sh <版本号> [linux/amd64|linux/arm64]
+npm run build:image -- <版本号> [linux/amd64|linux/arm64]
 ```
 
-默认平台为 `linux/amd64`。构建成功后只需上传生成的镜像包：
+`--` 后的参数透传给 `deploy/build-image.sh`，版本号必填，不使用 package.json 中的 version 自动替代。默认平台为 `linux/amd64`；ARM64 示例：`npm run build:image -- 1.0.0 linux/arm64`。原来的 `./deploy/build-image.sh <版本号> [平台]` 命令仍可使用，构建流程不变。构建成功后只需上传生成的镜像包：
 
 ```text
 release/foundation-business-frontend-1.0.0.tar.gz
@@ -73,7 +75,7 @@ release/foundation-business-frontend-1.0.0.tar.gz
 如需改变输出目录，可设置 `OUTPUT_DIR`：
 
 ```bash
-OUTPUT_DIR=/tmp ./deploy/build-image.sh 1.0.0 linux/amd64
+OUTPUT_DIR=/tmp npm run build:image -- 1.0.0 linux/amd64
 ```
 
 ## 5. 首次上传部署文件
@@ -133,7 +135,7 @@ http://<服务器内网 IP>:8088
 本地构建新版本：
 
 ```bash
-./deploy/build-image.sh 1.0.1 linux/amd64
+npm run build:image -- 1.0.1 linux/amd64
 ```
 
 上传新镜像包：

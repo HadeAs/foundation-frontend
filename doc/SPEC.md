@@ -1,7 +1,7 @@
 # 工业系统管理平台前端 SPEC
 
 > 状态：已确认，作为首版开发与逐页验收基线  
-> 更新日期：2026-10-21
+> 更新日期：2026-10-23
 > 接口契约：统一保留 `doc/nari-logistics.openapi.json`（原 V10，当前修订 2026-10-21.3）；历史版本文件已移除。已适配定时任务毫秒间隔及日志策略（第 11.9 节）、交管区域基础资料 CRUD（第 18.7 节）及产线所属楼层（第 18 节）。本轮仅适配产线归属，新版生产计划规则差异仍待确认，不据此修改第 17 节的已确认行为；候选未联合冻结，PDA 及交管锁定/释放不纳入本轮 PC 实现，既有实现、原型及真实联调范围见对应章节。
 > 字典契约：`前端系统字典与枚举接入.md`
 
@@ -418,16 +418,21 @@ Vitest 至少覆盖：
 
 ### 15.1 Docker
 
+更新日期：2026-10-23。
+
 - Dockerfile 使用 Node 构建、Nginx 运行的多阶段镜像。
 - 前端源码只保存在本地构建机；镜像命名为 `foundation-business-frontend:<版本号>`，导出后传至服务器加载。
 - 服务器端 Compose 只运行已加载的前端镜像，不在服务器构建源码，也不从公共仓库拉取镜像。
 - 提供本地镜像构建导出、服务器升级和服务器版本回滚三个可执行脚本。
+- 本地可执行 `npm run build:image -- <版本号> [linux/amd64|linux/arm64]`，直接通过 Bash 调用现有 `deploy/build-image.sh`。版本必填并透传，不取 package.json 的 version；默认 linux/amd64，保留 OUTPUT_DIR 覆盖能力和原 Shell 入口，输出 `release/foundation-business-frontend-<版本号>.tar.gz`。普通 `npm run build` 行为不变，详见 [部署说明](./DEPLOYMENT.md)。
 - 前端与后端运行在不同容器中。
 - 两个容器加入后端 Compose 管理的 `foundation_default` 网络；前端 Compose 将其作为外部网络引用。
 - 前端通过宿主机 `8088` 端口提供 HTTP 访问。
 - 前端 Nginx 将 `/api` 代理到 `http://foundation-backend:8080`。
 - Nginx 配置 SPA History 回退：`try_files $uri $uri/ /index.html`。
 - `client_max_body_size` 设置为 `100m`。
+
+镜像命令验收：npm 入口指向原脚本；版本和可选平台按顺序透传；缺失/非法版本或非法平台在调用 Docker 前报错退出。命令接入仅做参数传递、Shell 语法和格式检查，不以此宣称已实际构建镜像；真实打包仍需本机 Docker/buildx/gzip 可用。本次无新增业务接口或待确认项。
 
 ### 15.2 GitHub Actions
 
