@@ -4,6 +4,9 @@ defineOptions({ name: 'ConfigManagementView' })
 import { ControlOutlined } from '@ant-design/icons-vue'
 import {
   Button as AButton,
+  Dropdown as ADropdown,
+  Menu as AMenu,
+  MenuItem as AMenuItem,
   Form as AForm,
   FormItem as AFormItem,
   Input as AInput,
@@ -30,6 +33,7 @@ import {
   type SysConfig,
 } from '@/api/config'
 import { getErrorMessage } from '@/api/http'
+import { isManagedJdbcKey, MANAGED_JDBC_MESSAGE, type JdbcProfile } from '@/api/jdbc-config'
 import ResizableTable from '@/components/common/ResizableTable.vue'
 import { useTablePagination } from '@/composables/use-table-pagination'
 import { useUnsavedChanges } from '@/composables/use-unsaved-changes'
@@ -37,6 +41,7 @@ import { formatDateTime } from '@/utils/date'
 import { createLatestRequest } from '@/utils/latest-request'
 
 import { getConfigValueError, type ConfigValueType } from './value'
+import JdbcConfigModal from './JdbcConfigModal.vue'
 
 type ConfigScope = 'FOUNDATION' | 'BUSINESS'
 type ConfigForm = Omit<ConfigRequest, 'configType' | 'configScope'> & {
@@ -76,6 +81,7 @@ const refreshingCache = ref(false)
 const deletingId = ref<number>()
 const editingId = ref<number>()
 const formRef = ref<FormInstance>()
+const jdbcProfile = ref<JdbcProfile>()
 
 const columns: TableColumnsType = [
   { title: '参数键', dataIndex: 'configKey', key: 'configKey', width: 210 },
@@ -106,7 +112,15 @@ const { requestClose: requestFormClose } = useUnsavedChanges(form, modalOpen)
 const modalTitle = computed(() => (editingId.value === undefined ? '新增参数' : '编辑参数'))
 
 const rules: FormProps['rules'] = {
-  configKey: [{ required: true, message: '请输入参数键', trigger: 'blur' }],
+  configKey: [
+    { required: true, message: '请输入参数键', trigger: 'blur' },
+    {
+      validator: async () => {
+        if (isManagedJdbcKey(form.configKey)) throw new Error(MANAGED_JDBC_MESSAGE)
+      },
+      trigger: 'blur',
+    },
+  ],
   configValue: [
     {
       validator: async () => {
@@ -177,7 +191,12 @@ function openCreate() {
 }
 
 function openEdit(record: SysConfig) {
-  if (record.configId === undefined || record.editable === false) return
+  if (
+    record.configId === undefined ||
+    record.editable === false ||
+    isManagedJdbcKey(record.configKey)
+  )
+    return
   editingId.value = record.configId
   Object.assign(form, defaultForm(), record, {
     configType: typeOptions.some((item) => item.value === record.configType)
@@ -217,7 +236,12 @@ async function submit() {
 }
 
 async function remove(record: SysConfig) {
-  if (record.configId === undefined || record.editable === false) return
+  if (
+    record.configId === undefined ||
+    record.editable === false ||
+    isManagedJdbcKey(record.configKey)
+  )
+    return
   deletingId.value = record.configId
   try {
     await deleteConfig(record.configId, record.version)
@@ -280,6 +304,15 @@ load()
       <header class="table-toolbar">
         <h1>参数列表</h1>
         <div class="toolbar-actions">
+          <a-dropdown :trigger="['click']">
+            <a-button>连接配置</a-button>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item key="MES" @click="jdbcProfile = 'MES'">MES 连接配置</a-menu-item>
+                <a-menu-item key="WMS" @click="jdbcProfile = 'WMS'">WMS 连接配置</a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
           <a-button :loading="refreshingCache" @click="refreshCache">刷新缓存</a-button>
           <a-button type="primary" @click="openCreate">新增参数</a-button>
         </div>
@@ -301,8 +334,21 @@ load()
             <code class="config-key">{{ record.configKey || '—' }}</code>
           </template>
           <template v-else-if="column.key === 'configValue'">
-            <span class="cell-text" :title="record.sensitiveFlag ? '敏感参数' : record.configValue">
-              {{ record.sensitiveFlag ? '••••••••' : record.configValue || '—' }}
+            <span
+              class="cell-text"
+              :title="
+                isManagedJdbcKey(record.configKey)
+                  ? MANAGED_JDBC_MESSAGE
+                  : record.sensitiveFlag
+                    ? '敏感参数'
+                    : record.configValue
+              "
+            >
+              {{
+                record.sensitiveFlag || isManagedJdbcKey(record.configKey)
+                  ? '••••••••'
+                  : record.configValue || '—'
+              }}
             </span>
           </template>
           <template v-else-if="column.key === 'configType'">
@@ -317,19 +363,32 @@ load()
             </a-tag>
           </template>
           <template v-else-if="column.key === 'editable'">
-            <a-tag :color="record.editable === false ? 'orange' : 'green'">
-              {{ record.editable === false ? '受保护' : '可编辑' }}
+            <a-tag
+              :color="
+                record.editable === false || isManagedJdbcKey(record.configKey) ? 'orange' : 'green'
+              "
+            >
+              {{
+                isManagedJdbcKey(record.configKey)
+                  ? '受管'
+                  : record.editable === false
+                    ? '受保护'
+                    : '可编辑'
+              }}
             </a-tag>
           </template>
           <template v-else-if="column.key === 'updatedTime'">
             <span class="cell-text">{{ formatDateTime(record.updatedTime) }}</span>
           </template>
           <template v-else-if="column.key === 'action'">
-            <div class="row-actions">
+            <div
+              class="row-actions"
+              :title="isManagedJdbcKey(record.configKey) ? MANAGED_JDBC_MESSAGE : undefined"
+            >
               <a-button
                 type="link"
                 size="small"
-                :disabled="record.editable === false"
+                :disabled="record.editable === false || isManagedJdbcKey(record.configKey)"
                 @click="openEdit(record)"
                 >编辑</a-button
               >
@@ -338,13 +397,14 @@ load()
                 description="删除后可能影响依赖该参数的系统功能。"
                 ok-text="删除"
                 cancel-text="取消"
+                :disabled="record.editable === false || isManagedJdbcKey(record.configKey)"
                 @confirm="remove(record)"
               >
                 <a-button
                   type="link"
                   danger
                   size="small"
-                  :disabled="record.editable === false"
+                  :disabled="record.editable === false || isManagedJdbcKey(record.configKey)"
                   :loading="deletingId === record.configId"
                   >删除</a-button
                 >
@@ -357,6 +417,14 @@ load()
         </template>
       </ResizableTable>
     </section>
+
+    <JdbcConfigModal
+      v-if="jdbcProfile"
+      :key="jdbcProfile"
+      :profile="jdbcProfile"
+      @close="jdbcProfile = undefined"
+      @saved="load"
+    />
 
     <a-modal
       :open="modalOpen"

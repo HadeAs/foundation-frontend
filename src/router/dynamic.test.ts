@@ -115,6 +115,23 @@ describe('dynamic routes', () => {
     }
   })
 
+  it('loads the platform long-token page from manually configured menu data', async () => {
+    const routes = createMenuRoutes([
+      {
+        menuId: 900,
+        menuName: '长期 Token',
+        menuType: 'MENU',
+        status: 1,
+        path: '/system/long-token',
+        component: '/system/long-token',
+        terminalType: 'PC',
+      },
+    ])
+    expect(routes).toHaveLength(1)
+    const module = await (routes[0]!.component as () => Promise<{ default: { name?: string } }>)()
+    expect(module.default.name).toBe('LongTokenManagementView')
+  })
+
   it('normalizes the backend root dashboard route', () => {
     const [route] = createMenuRoutes([
       {

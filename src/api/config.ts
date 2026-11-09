@@ -1,6 +1,7 @@
 import type { components } from '@/types/api'
 
-import { apiClient, type ApiResult, requireVersion, unwrapResult } from './http'
+import { apiClient, ApiError, type ApiResult, requireVersion, unwrapResult } from './http'
+import { isManagedJdbcKey, MANAGED_JDBC_MESSAGE } from './jdbc-config'
 
 export type SysConfig = components['schemas']['SysConfig']
 export type ConfigRequest = components['schemas']['ConfigRequest']
@@ -27,6 +28,7 @@ export async function pageConfigs(
 }
 
 export async function createConfig(request: ConfigRequest) {
+  if (isManagedJdbcKey(request.configKey)) throw new ApiError(MANAGED_JDBC_MESSAGE)
   return unwrapResult(await apiClient.post<ApiResult<SysConfig>>('/api/v1/system/configs', request))
 }
 
@@ -35,6 +37,7 @@ export async function updateConfig(
   request: ConfigRequest,
   version: number | undefined,
 ) {
+  if (isManagedJdbcKey(request.configKey)) throw new ApiError(MANAGED_JDBC_MESSAGE)
   return unwrapResult(
     await apiClient.put<ApiResult<SysConfig>>(`/api/v1/system/configs/${configId}`, {
       ...request,
