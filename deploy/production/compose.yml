@@ -1,0 +1,27 @@
+services:
+  frontend:
+    image: foundation-business-frontend:${FRONTEND_VERSION:?请设置前端版本}
+    platform: linux/amd64
+    pull_policy: never
+    container_name: foundation-business-frontend
+    restart: unless-stopped
+    ports:
+      - '8088:80'
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+        bind:
+          create_host_path: false
+    networks:
+      - backend-network
+    logging:
+      options:
+        max-size: 10m
+        max-file: '3'
+
+networks:
+  backend-network:
+    external: true
+    name: foundation-nari-prod_default

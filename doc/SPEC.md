@@ -1,7 +1,7 @@
 # 工业系统管理平台前端 SPEC
 
 > 状态：已确认，作为首版开发与逐页验收基线  
-> 更新日期：2026-11-09
+> 更新日期：2026-11-13
 > 接口契约：统一保留 `doc/nari-logistics.openapi.json`（原 V10，当前修订 2026-10-30.7）；历史版本文件已移除。已适配定时任务毫秒间隔及日志策略（第 11.9 节）、交管区域基础资料 CRUD（第 18.7 节）、产线所属楼层（第 18 节）、MES/WMS 连接配置（第 11.6 节）及平台长期 Token 管理（第 11.14 节）。不扩展设备集成、厂商 AGV 接口或生产计划规则；候选未联合冻结，PDA 及交管锁定/释放不纳入本轮 PC 实现，既有实现、原型及真实联调范围见对应章节。
 > 字典契约：`前端系统字典与枚举接入.md`
 
@@ -466,21 +466,29 @@ Vitest 至少覆盖：
 
 ### 15.1 Docker
 
-更新日期：2026-10-23。
+更新日期：2026-11-13。
 
 - Dockerfile 使用 Node 构建、Nginx 运行的多阶段镜像。
 - 前端源码只保存在本地构建机；镜像命名为 `foundation-business-frontend:<版本号>`，导出后传至服务器加载。
 - 服务器端 Compose 只运行已加载的前端镜像，不在服务器构建源码，也不从公共仓库拉取镜像。
-- 提供本地镜像构建导出、服务器升级和服务器版本回滚三个可执行脚本。
+- 提供本地镜像构建导出、旧环境服务器升级和版本回滚三个可执行脚本；旧环境升级、回滚脚本不直接适用于下述 NARI 生产环境。
 - 本地可执行 `npm run build:image -- <版本号> [linux/amd64|linux/arm64]`，直接通过 Bash 调用现有 `deploy/build-image.sh`。版本必填并透传，不取 package.json 的 version；默认 linux/amd64，保留 OUTPUT_DIR 覆盖能力和原 Shell 入口，输出 `release/foundation-business-frontend-<版本号>.tar.gz`。普通 `npm run build` 行为不变，详见 [部署说明](./DEPLOYMENT.md)。
 - 前端与后端运行在不同容器中。
-- 两个容器加入后端 Compose 管理的 `foundation_default` 网络；前端 Compose 将其作为外部网络引用。
+- 仓库默认配置及旧环境使用后端 Compose 管理的 `foundation_default` 网络；前端 Compose 将其作为外部网络引用。
 - 前端通过宿主机 `8088` 端口提供 HTTP 访问。
-- 前端 Nginx 将 `/api` 代理到 `http://foundation-backend:8080`。
+- 仓库默认 Nginx 配置将 `/api` 代理到 `http://foundation-backend:8080`；NARI 生产环境通过挂载配置覆盖后端地址。
 - Nginx 配置 SPA History 回退：`try_files $uri $uri/ /index.html`。
 - `client_max_body_size` 设置为 `100m`。
 
 镜像命令验收：npm 入口指向原脚本；版本和可选平台按顺序透传；缺失/非法版本或非法平台在调用 Docker 前报错退出。命令接入仅做参数传递、Shell 语法和格式检查，不以此宣称已实际构建镜像；真实打包仍需本机 Docker/buildx/gzip 可用。本次无新增业务接口或待确认项。
+
+NARI 生产环境部署约定：服务器 `172.25.2.25`（Ubuntu 20.04.6、AMD64）保持 Docker `20.10.18`，使用 Compose `v2.27.3`。前端单独部署到 `/home/pxc/phoenix/frontend`，Compose 项目为 `foundation-nari-frontend`，引用外部网络 `foundation-nari-prod_default`，挂载 Nginx 配置代理到 `http://backend:8080`，保留 `/api/v1` 路径，通过 HTTP 8088 提供访问。不覆盖后端项目的配置或 `.env`，不停止、重建后端。完整脚本部署、升级和回滚流程见 [生产环境部署文档](./PRODUCTION_DEPLOYMENT.md)。
+
+生产专用脚本位于 `deploy/production/`：`deploy.sh <镜像包> <Nginx模板>` 首次初始化配置并安装脚本；`upgrade.sh <镜像包>` 加载新版本；`rollback.sh <已保留版本>` 切换已有镜像。共用 `common.sh`，不替换旧环境脚本。校验 AMD64、既有网络中的运行中 backend 别名、Compose 容器归属、配置与运行镜像一致性；使用目录锁阻止并发。Compose/Nginx 预检通过前不切换版本；升级、回滚备份配置并保留其他环境变量，启动后必须达到 running + healthy。失败时尝试恢复原版本并再次验证健康，恢复成功仍返回非零，恢复失败明确告警。首次失败只清理本次新建配置及本项目容器；不删除镜像、用户目录或外部网络。回滚不恢复历史挂载配置、后端或数据库；强制终止及断电须人工恢复。已有手动部署不自动接管。
+
+脚本验收：Shell 语法检查和 `node --test deploy/test-production.mjs` 模拟测试覆盖首次部署、升级、回滚、配置保留、失败恢复、错误架构、无健康检查、错误容器归属、缺失后端别名、预检/加载失败、并发锁和重复部署；不把模拟结果视为真实 Docker 部署验收。
+
+生产部署验收：镜像为 `linux/amd64`；Compose 和 Nginx 配置检查通过；容器健康、首页及接口代理可用；人工验证登录、菜单、列表及站内刷新；后端未受影响。上线待验证项：8088 端口与内网访问控制、服务器 Docker 20.10.18 上的镜像实际运行，以及前端与后端候选 `4e50869` 的功能兼容性。此处为部署方案，不代表已在生产服务器执行或验收通过。
 
 ### 15.2 GitHub Actions
 
