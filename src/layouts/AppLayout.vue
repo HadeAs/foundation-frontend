@@ -24,6 +24,7 @@ import {
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import logisticsLogo from '@/assets/logistics-logo.png'
 import ChangePasswordModal from '@/components/layout/ChangePasswordModal.vue'
 import PageTabs from '@/components/layout/PageTabs.vue'
 import ThemePanel from '@/components/layout/ThemePanel.vue'
@@ -139,9 +140,9 @@ async function handleUserAction({ key }: { key: string | number }) {
       collapsible
     >
       <div class="shell-brand" :class="{ collapsed }">
-        <span class="brand-symbol"><i></i></span>
+        <img class="brand-logo" :src="logisticsLogo" :alt="collapsed ? '物流管理系统' : ''" />
         <span class="brand-title" :aria-hidden="collapsed">
-          <strong>工业系统</strong>
+          <strong>物流管理系统</strong>
         </span>
       </div>
       <a-menu
@@ -256,35 +257,12 @@ async function handleUserAction({ key }: { key: string | number }) {
   gap: 0;
   padding: 0;
 }
-.brand-symbol {
-  position: relative;
-  display: grid;
-  width: 28px;
-  height: 28px;
+.brand-logo {
+  display: block;
+  width: 56px;
+  height: 32px;
   flex: none;
-  border: 1px solid #35c8c7;
-  place-items: center;
-  transform: rotate(45deg);
-}
-.brand-symbol::before,
-.brand-symbol::after,
-.brand-symbol i {
-  position: absolute;
-  background: #35c8c7;
-  content: '';
-}
-.brand-symbol::before {
-  width: 13px;
-  height: 2px;
-}
-.brand-symbol::after {
-  width: 2px;
-  height: 13px;
-}
-.brand-symbol i {
-  width: 5px;
-  height: 5px;
-  background: #d8ffff;
+  object-fit: contain;
 }
 .brand-title {
   display: flex;

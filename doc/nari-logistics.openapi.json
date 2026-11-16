@@ -3,11 +3,11 @@
   "info": {
     "title": "南瑞物流、基座与第三方调度 API（完整整合候选）",
     "version": "1.0.0",
-    "description": "2026-10-29.1：新增MES/WMS专用连接配置查询与保存2项，明文输入／加密保存，保留原319项契约。新增接口来自本轮源码隔离运行时，尚未部署；原接口路径／模型保留原候选来源；通用参数四项写接口补充受管键限制说明。前端原型、联合评审和本次冻结待完成。\n\n2026-10-29.2用户确认：库房发货同箱允许多个L单及不同物料、批次、订单；按实际逐板明细返回和重建，不要求箱级三项同质。箱级每项摘要仅在该属性全箱唯一时填写，多值置空，数量按去重后的实际板件计算。原始WMS三列快照保留全部L单及重复行，清理前仍复核原始多重集。相同板件跨箱或不同lCode的来源冲突、坏码、范围外绑定、版本及任务保护继续拒绝。查询不写入／不清理；本轮仅源码及隔离测试，未对真实WMS执行提交或清理。\n\n2026-10-30.1新增9项第三方扫码/变量上报及Token/映射/留痕管理接口；原321项保持。仅源码及隔离测试候选，不代表日常运行时或镜像已更新。自动扫码不允许混料，位置仅有无物，线首线尾开关独立；空框装车逐箱回调计数、缺箱等待超时空车返程。\n\n2026-10-30.2新增平台长期Token管理4项，总334项；旧330项保持。基座前端只调用平台接口，业务接入范围由后端SPI注册，原Token与鉴权保持；基座V8仅新增菜单/管理员页面授权，未部署。\n2026-10-30.3平台集成Token显式接口授权：新增interfaces查询及authorization保存2项，合计336项；原平台创建/列表增量增加apiCodes与authorizationVersion，未更改PDA及旧业务接入路径。V9只建授权配置表，未部署。\n\n2026-10-30.4用户确认统一导入：保留原336项，合入5项厂商出站候选，总341项。336项由物流系统提供，5项由海康/斯坦德提供，操作级servers与独立认证边界保留；不新增物流Controller，不改变现有业务字段，不把完整整合稿用于业务生成。厂商正式协议及现有Apifox旧样例差异仍待比对，本轮未调用生产或修改云端。\n2026-10-30.5海康调试参数按DFPServer实际代码校准：字段大小写、S01、type00、ctnrTyp1、可变字符串优先级及旧点位格式均有来源；新增参数化示例，341项数量及服务地址/认证分离保持。后端现有直传策略和运行数据不改。\n2026-10-30.6按用户要求同步斯坦德站点/流程/取消模拟入参，核对DFPServer来源；priority误限0枚举放开，整合341项及厂商服务/认证边界保持，未调用真实调度。\n2026-10-30.7前端适配交付：保留341项完整范围和原来源；平台Token接口、设备接入与调度请求结构复核。海康已确认本地库位编码追加一次${05}、type00、由调度维护映射；斯坦德三个接口及海康用户确认通过，不等于回调实车全流程验收。本次本机18081不可访问，未重新导出运行时，不宣称对应旧镜像含最新能力。详见前端适配交付说明。",
-    "x-design-revision": "2026-10-30.7",
-    "x-foundation-head": "94d3229516d1473a7c139c29ccc3af923963131a",
+    "description": "2026-11-13.1：从本机IDEA后端实际HTTP导出frontend-runtime，并与当前工作树隔离运行时逐项核对paths/components一致。完整342项：337项物流后端运行接口＋5项厂商出站契约；新增运行连接状态GET /api/v1/dashboard/connections。保留45项PDA、6项平台长期Token、9项设备接入管理的既有公开设计及厂商示例，刷新其余运行接口与引用模型。运行连接状态使用2026-11-13用户冻结设计；其他范围维持原评审/冻结状态。导出不代表独立前端联调、生产部署或实车业务验收。源码存在未提交修改，未构建或导出配套镜像。",
+    "x-design-revision": "2026-11-13.1",
+    "x-foundation-head": "5034d6ce5706ee059e3b0f9409c991046663309f",
     "x-source-worktree-dirty": true,
-    "x-origin": "preserved-336-foundation-hosted-operations-plus-5-vendor-hosted-outbound-candidates",
+    "x-origin": "current-local-runtime-plus-preserved-local-design-contracts-and-vendor-outbound",
     "x-implementation-counts": {
       "local": 35,
       "partial": 10,
@@ -15,73 +15,63 @@
       "total": 45
     },
     "x-contract-checkpoints": {
-      "requirements": "2026-10-29 用户确认先完成后端专用查询/保存、兼容密文、契约及前端说明；前端表单原型未提供",
-      "review": "后端隔离测试通过；前后端联合评审待完成",
-      "freeze": "2026-10-29.1 新增范围为候选，尚未联合冻结；不改变原已确认范围"
+      "requirements": "2026-11-13 用户要求重新导出完整API供前端同步；沿用既有业务场景及需求，无新增交互。",
+      "review": "运行paths/components与当前源码隔离HTTP一致；本轮静态整合完成，独立前端评审与目标环境联调待完成；新增配置页面原型等既有缺项仍待补。",
+      "freeze": "运行连接状态首版按2026-11-13用户明确批准冻结；其余范围保留原状态，本次导出不构成新增联合冻结。"
     },
     "x-merged-sources": [
       {
         "file": "foundation.frontend-runtime.candidate.openapi.json",
-        "endpoint": "/v3/api-docs/frontend-runtime",
-        "capturedDate": "2026-10-21",
-        "sha256": "981c328b379e2c56ca4b92a25080bb24c4df4176b0d62c2b157ef483a2be300c",
-        "runtime": "foundation-backend:1.0.0-94d3229516d1-candidate-20261021114230",
-        "imageId": "sha256:df1d781bb1200e5412aa4c86d90d461a56a5acd17a1bf5f9f5da1527194e4353",
-        "buildInfo": {
-          "title": "Foundation Backend API",
-          "description": "工业系统基座后端 API。\n\n### OpenAPI JSON 下载\n\n- [独立前端运行接口（frontend-runtime）](/v3/api-docs/frontend-runtime?download=true&cacheBust=1)\n- [系统接口（system）](/v3/api-docs/system?download=true&cacheBust=1)\n- [业务接口（business）](/v3/api-docs/business?download=true&cacheBust=1)\n- [监控接口（monitor）](/v3/api-docs/monitor?download=true&cacheBust=1)\n- [开发中心接口（dev）](/v3/api-docs/dev?download=true&cacheBust=1)\n- [全部 V1 接口（foundation-v1）](/v3/api-docs/foundation-v1?download=true&cacheBust=1)\n",
-          "version": "1.0.0",
-          "x-build-time": "2026-10-21T03:43:28.543Z"
-        }
+        "endpoint": "http://127.0.0.1:18081/v3/api-docs/frontend-runtime?download=true",
+        "capturedDate": "2026-11-13",
+        "runtime": "existing local IDEA process PID 47645; not a Docker image",
+        "buildTime": "2026-11-13T08:11:00Z",
+        "operations": 337,
+        "verification": "paths and components exactly match current-worktree isolated real HTTP runtime; RuntimeOpenApiTest 2 passed, 0 skipped",
+        "isolatedMigrations": {
+          "foundation": "V1-V9",
+          "business": "complete project migration chain through V78"
+        },
+        "dailyDatabaseMigrations": "not queried; unchanged by this task"
       },
       {
-        "file": "nari-logistics.frontend.openapi.json",
-        "scope": "45 PDA public contracts preserved; current local implementation, pending joint acceptance"
+        "file": "docs/contracts/nari-logistics/生成输入/nari-logistics.frontend.openapi.json",
+        "scope": "preserved design contract; existing review/freeze state retained"
       },
       {
-        "file": "/Users/zhangruixuan/foundation-backups/nari-jdbc-contract-20261029-121146/foundation.frontend-runtime.candidate.openapi.json",
-        "endpoint": "/v3/api-docs/frontend-runtime",
-        "capturedDate": "2026-10-29",
-        "scope": "only GET/PUT /business/nari-logistics/jdbc-configs/{profile} and referenced schemas merged; old 319 operations preserved; annotate managed-key restrictions on four existing generic write operations",
-        "runtime": "isolated Spring Boot MockMvc / disposable MySQL; not a deployed image"
+        "file": "docs/contracts/system-management/long-tokens.candidate.openapi.json",
+        "scope": "preserved design contract; existing review/freeze state retained"
       },
       {
-        "file": "第三方对接/nari-logistics.integration.candidate.openapi.json",
-        "revision": "2026-10-30.1",
-        "operations": 9,
-        "source": "当前人工业务源码；仅隔离验证，未部署，非运行镜像快照"
+        "file": "docs/contracts/nari-logistics/第三方对接/nari-logistics.integration.candidate.openapi.json",
+        "scope": "preserved design contract; existing review/freeze state retained"
       },
       {
-        "file": "../system-management/long-tokens.candidate.openapi.json",
-        "revision": "2026-10-30.3",
-        "operations": 6,
-        "source": "显式接口授权候选，需求已确认，联合评审/冻结待完成，未部署"
+        "file": "docs/contracts/runtime-status/runtime-status.openapi.json",
+        "scope": "preserved design contract; existing review/freeze state retained"
       },
       {
         "file": "第三方对接/nari-logistics.agv.candidate.openapi.json",
-        "revision": "2026-10-15.6",
-        "scope": "5 OUTBOUND候选并入完整导入稿；2 INBOUND回调已存在且保持原样",
-        "operationsAdded": 5,
-        "runtimeHostedByFoundation": false,
-        "designRevision": "2026-10-30.6"
+        "scope": "5 vendor-hosted outbound operations preserved byte-equivalent as JSON values; separate servers/security"
       }
     ],
     "x-compatibility": {
       "runtimeSchemaVersion": "3.1.0",
       "combinedSchemaVersion": "3.0.3",
-      "nullableEquivalentConversions": 23,
-      "localPdaSchemas": 84
+      "nullableEquivalentConversions": 30,
+      "localPdaSchemas": 84,
+      "emptyRequiredArraysOmitted": 25
     },
     "x-operation-counts": {
-      "foundation": 116,
+      "foundation": 117,
       "nariCrud": 162,
       "pda": 45,
       "vendorCallbacks": 2,
       "connectionConfig": 2,
       "deviceIntegrationAndManagement": 9,
-      "foundationHosted": 336,
+      "foundationHosted": 337,
       "vendorOutbound": 5,
-      "total": 341
+      "total": 342
     },
     "x-historical-source": {
       "revision": "2026-10-15.1",
@@ -123,20 +113,6 @@
       "远端删除不按申请隔离；按已确认箱码谓词执行",
       "治具初始化复用异步任务：SUCCESS为成功且没有结果文件／successRows响应字段；缺必填scanCode仍返回500，为已复现待修错误映射。"
     ],
-    "x-base-contract-image": {
-      "tag": "foundation-backend:1.0.0-94d3229516d1-candidate-20261021114230",
-      "id": "sha256:df1d781bb1200e5412aa4c86d90d461a56a5acd17a1bf5f9f5da1527194e4353",
-      "platform": "linux/amd64",
-      "builtAt": "2026-10-21T03:44:01.665080091Z",
-      "exportedAt": "2026-10-21",
-      "sourceWorktreeDirty": true,
-      "runtimeMigrations": {
-        "foundation": 7,
-        "business": 75
-      },
-      "deployment": "isolated disposable test runtime only; daily database unchanged"
-    },
-    "x-base-contract-build-time": "2026-10-21T03:43:28.543Z",
     "x-behavior-checkpoints": {
       "2026-10-29.2": {
         "requirements": "用户确认库房发货允许同箱多L单、多物料／批次／订单；字段、页面交互和SQL范围不变",
@@ -193,14 +169,99 @@
       ]
     },
     "x-frontend-handoff": {
-      "date": "2026-10-30",
-      "reviewedSourceHead": "a86c0ffbb3f7bdf847cc18765c0f2fdd25029372",
-      "status": "candidate-pending-joint-review-and-freeze",
-      "runtimeVerified": false,
-      "runtimeReason": "本机18081未监听；本次未启动服务，不将静态整合稿当作同运行时镜像快照",
-      "scope": "341 operations: 336 foundation-hosted + 5 vendor-hosted outbound",
-      "deployment": "未部署、未构建或导出镜像；原历史来源元数据保留",
-      "sourceNote": "交付前基于本提交已有完整稿核对；本次仅更新交付元数据及说明"
+      "date": "2026-11-13",
+      "status": "candidate-with-frozen-runtime-status-subset",
+      "runtimeVerified": true,
+      "scope": "342 operations: 337 foundation-hosted + 5 vendor-hosted outbound",
+      "deployment": "existing local IDEA runtime read only; no service restart, daily migration, Docker build or image export",
+      "sourceNote": "existing local runtime and isolated current worktree paths/components match; no production or shared-environment version claim"
+    },
+    "x-historical-export": {
+      "x-merged-sources": [
+        {
+          "file": "foundation.frontend-runtime.candidate.openapi.json",
+          "endpoint": "/v3/api-docs/frontend-runtime",
+          "capturedDate": "2026-10-21",
+          "sha256": "981c328b379e2c56ca4b92a25080bb24c4df4176b0d62c2b157ef483a2be300c",
+          "runtime": "foundation-backend:1.0.0-94d3229516d1-candidate-20261021114230",
+          "imageId": "sha256:df1d781bb1200e5412aa4c86d90d461a56a5acd17a1bf5f9f5da1527194e4353",
+          "buildInfo": {
+            "title": "Foundation Backend API",
+            "description": "工业系统基座后端 API。\n\n### OpenAPI JSON 下载\n\n- [独立前端运行接口（frontend-runtime）](/v3/api-docs/frontend-runtime?download=true&cacheBust=1)\n- [系统接口（system）](/v3/api-docs/system?download=true&cacheBust=1)\n- [业务接口（business）](/v3/api-docs/business?download=true&cacheBust=1)\n- [监控接口（monitor）](/v3/api-docs/monitor?download=true&cacheBust=1)\n- [开发中心接口（dev）](/v3/api-docs/dev?download=true&cacheBust=1)\n- [全部 V1 接口（foundation-v1）](/v3/api-docs/foundation-v1?download=true&cacheBust=1)\n",
+            "version": "1.0.0",
+            "x-build-time": "2026-10-21T03:43:28.543Z"
+          }
+        },
+        {
+          "file": "nari-logistics.frontend.openapi.json",
+          "scope": "45 PDA public contracts preserved; current local implementation, pending joint acceptance"
+        },
+        {
+          "file": "/Users/zhangruixuan/foundation-backups/nari-jdbc-contract-20261029-121146/foundation.frontend-runtime.candidate.openapi.json",
+          "endpoint": "/v3/api-docs/frontend-runtime",
+          "capturedDate": "2026-10-29",
+          "scope": "only GET/PUT /business/nari-logistics/jdbc-configs/{profile} and referenced schemas merged; old 319 operations preserved; annotate managed-key restrictions on four existing generic write operations",
+          "runtime": "isolated Spring Boot MockMvc / disposable MySQL; not a deployed image"
+        },
+        {
+          "file": "第三方对接/nari-logistics.integration.candidate.openapi.json",
+          "revision": "2026-10-30.1",
+          "operations": 9,
+          "source": "当前人工业务源码；仅隔离验证，未部署，非运行镜像快照"
+        },
+        {
+          "file": "../system-management/long-tokens.candidate.openapi.json",
+          "revision": "2026-10-30.3",
+          "operations": 6,
+          "source": "显式接口授权候选，需求已确认，联合评审/冻结待完成，未部署"
+        },
+        {
+          "file": "第三方对接/nari-logistics.agv.candidate.openapi.json",
+          "revision": "2026-10-15.6",
+          "scope": "5 OUTBOUND候选并入完整导入稿；2 INBOUND回调已存在且保持原样",
+          "operationsAdded": 5,
+          "runtimeHostedByFoundation": false,
+          "designRevision": "2026-10-30.6"
+        }
+      ],
+      "x-base-contract-image": {
+        "tag": "foundation-backend:1.0.0-94d3229516d1-candidate-20261021114230",
+        "id": "sha256:df1d781bb1200e5412aa4c86d90d461a56a5acd17a1bf5f9f5da1527194e4353",
+        "platform": "linux/amd64",
+        "builtAt": "2026-10-21T03:44:01.665080091Z",
+        "exportedAt": "2026-10-21",
+        "sourceWorktreeDirty": true,
+        "runtimeMigrations": {
+          "foundation": 7,
+          "business": 75
+        },
+        "deployment": "isolated disposable test runtime only; daily database unchanged"
+      },
+      "x-base-contract-build-time": "2026-10-21T03:43:28.543Z",
+      "x-frontend-handoff": {
+        "date": "2026-10-30",
+        "reviewedSourceHead": "a86c0ffbb3f7bdf847cc18765c0f2fdd25029372",
+        "status": "candidate-pending-joint-review-and-freeze",
+        "runtimeVerified": false,
+        "runtimeReason": "本机18081未监听；本次未启动服务，不将静态整合稿当作同运行时镜像快照",
+        "scope": "341 operations: 336 foundation-hosted + 5 vendor-hosted outbound",
+        "deployment": "未部署、未构建或导出镜像；原历史来源元数据保留",
+        "sourceNote": "交付前基于本提交已有完整稿核对；本次仅更新交付元数据及说明"
+      },
+      "x-compatibility": {
+        "runtimeSchemaVersion": "3.1.0",
+        "combinedSchemaVersion": "3.0.3",
+        "nullableEquivalentConversions": 23,
+        "localPdaSchemas": 84
+      }
+    },
+    "x-build-time": "2026-11-13T08:11:00Z",
+    "x-implementation-counts-reassessed": false,
+    "x-runtime-status-contract": {
+      "source": "../runtime-status/runtime-status.openapi.json",
+      "status": "frozen-design",
+      "frozenDate": "2026-11-13",
+      "independentFrontendAcceptance": "pending"
     }
   },
   "servers": [
@@ -216,61 +277,136 @@
   ],
   "tags": [
     {
-      "name": "产线主工序配送区",
-      "description": "产线主工序配送区业务接口"
+      "name": "async-task-controller"
     },
     {
-      "name": "三、物流作业 / 缴库发起"
+      "name": "audit-log-controller"
     },
     {
-      "name": "一、常规作业 / 装车"
+      "name": "auth-controller"
     },
     {
-      "name": "二、库房作业 / 物料接收"
+      "name": "bootstrap-controller"
     },
     {
-      "name": "位置业务用途",
-      "description": "位置业务用途业务接口"
+      "name": "code-rule-controller"
     },
     {
-      "name": "缴库成功箱明细",
-      "description": "缴库成功箱明细业务接口"
+      "name": "config-controller"
     },
     {
-      "name": "三、物流作业 / 呼叫空载具"
+      "name": "dashboard-controller"
     },
     {
-      "name": "三、物流作业 / 发起物流任务"
+      "name": "dept-controller"
+    },
+    {
+      "name": "dict-controller"
+    },
+    {
+      "name": "file-controller"
+    },
+    {
+      "name": "import-controller"
+    },
+    {
+      "name": "job-controller"
+    },
+    {
+      "name": "lifecycle-controller"
+    },
+    {
+      "name": "log-controller"
+    },
+    {
+      "name": "menu-controller"
+    },
+    {
+      "name": "role-controller"
+    },
+    {
+      "name": "user-controller"
+    },
+    {
+      "name": "一、常规作业 / 位置绑定"
+    },
+    {
+      "name": "一、常规作业 / 卸车"
     },
     {
       "name": "一、常规作业 / 料箱绑车与解绑",
       "description": "App 首页常规作业新增两个独立入口：料箱绑车、料箱解绑。此处为共用接口分组，不表示合并为一个 App 入口。两个页面处理料箱与料车直接绑定，与现有装车/卸车的库位装载操作并列。"
     },
     {
-      "name": "一、常规作业 / 卸车"
+      "name": "一、常规作业 / 板件快捷绑箱"
     },
     {
-      "name": "工厂",
-      "description": "工厂业务接口"
+      "name": "一、常规作业 / 板件扫码绑箱"
+    },
+    {
+      "name": "一、常规作业 / 板件解绑"
+    },
+    {
+      "name": "一、常规作业 / 缴库申请"
+    },
+    {
+      "name": "一、常规作业 / 装车"
+    },
+    {
+      "name": "三、物流作业 / 交通管制"
+    },
+    {
+      "name": "三、物流作业 / 发起物流任务"
+    },
+    {
+      "name": "三、物流作业 / 取消物流任务"
+    },
+    {
+      "name": "三、物流作业 / 呼叫空载具"
     },
     {
       "name": "三、物流作业 / 按订单叫料",
       "description": "按生产订单查询候选料箱、确认叫料并创建运输任务。接口设计仍为待评审草案。"
     },
     {
-      "name": "缴库成功记录",
-      "description": "缴库成功记录业务接口"
+      "name": "三、物流作业 / 缴库发起"
     },
     {
-      "name": "一、常规作业 / 位置绑定"
+      "name": "业务操作记录",
+      "description": "业务操作记录业务接口"
     },
     {
-      "name": "固定位置",
-      "description": "固定位置业务接口"
+      "name": "二、库房作业 / 待接收物料清单"
     },
     {
-      "name": "容器规格",
-      "description": "容器规格业务接口"
+      "name": "二、库房作业 / 成品发货"
+    },
+    {
+      "name": "二、库房作业 / 物料接收"
+    },
+    {
+      "name": "交管区域",
+      "description": "交管区域业务接口"
+    },
+    {
+      "name": "产线",
+      "description": "产线业务接口"
+    },
+    {
+      "name": "产线主工序配送区",
+      "description": "产线主工序配送区业务接口"
+    },
+    {
+      "name": "位置业务库关联",
+      "description": "位置业务库关联业务接口"
+    },
+    {
+      "name": "位置业务用途",
+      "description": "位置业务用途业务接口"
+    },
+    {
+      "name": "位置允许容器规格",
+      "description": "位置允许容器规格业务接口"
     },
     {
       "name": "位置服务产线",
@@ -285,104 +421,95 @@
       "description": "区域业务接口"
     },
     {
-      "name": "物料绑箱关系",
-      "description": "物料绑箱关系业务接口"
+      "name": "南瑞物流 / 外部连接配置"
     },
     {
-      "name": "容器台账",
-      "description": "容器台账业务接口"
+      "name": "南瑞调度回调（协议候选）"
     },
     {
-      "name": "三、物流作业 / 取消物流任务"
-    },
-    {
-      "name": "二、库房作业 / 待接收物料清单"
-    },
-    {
-      "name": "箱车装载关系",
-      "description": "箱车装载关系业务接口"
-    },
-    {
-      "name": "产线",
-      "description": "产线业务接口"
-    },
-    {
-      "name": "生产计划单",
-      "description": "生产计划单业务接口"
-    },
-    {
-      "name": "资源产线映射",
-      "description": "资源产线映射业务接口"
-    },
-    {
-      "name": "二、库房作业 / 成品发货"
-    },
-    {
-      "name": "库房接收记录",
-      "description": "库房接收记录业务接口"
-    },
-    {
-      "name": "一、常规作业 / 板件扫码绑箱"
-    },
-    {
-      "name": "一、常规作业 / 缴库申请"
+      "name": "固定位置",
+      "description": "固定位置业务接口"
     },
     {
       "name": "存储区",
       "description": "存储区业务接口"
     },
     {
-      "name": "业务操作记录",
-      "description": "业务操作记录业务接口"
+      "name": "容器台账",
+      "description": "容器台账业务接口"
+    },
+    {
+      "name": "容器规格",
+      "description": "容器规格业务接口"
     },
     {
       "name": "容器运行状态",
       "description": "容器运行状态业务接口"
     },
     {
-      "name": "一、常规作业 / 板件解绑"
+      "name": "工厂",
+      "description": "工厂业务接口"
     },
     {
-      "name": "楼层",
-      "description": "楼层业务接口"
+      "name": "平台长期Token"
     },
     {
-      "name": "位置允许容器规格",
-      "description": "位置允许容器规格业务接口"
-    },
-    {
-      "name": "物流运输任务",
-      "description": "物流运输任务业务接口"
-    },
-    {
-      "name": "一、常规作业 / 板件快捷绑箱"
-    },
-    {
-      "name": "治具箱适用订单",
-      "description": "治具箱适用订单业务接口"
-    },
-    {
-      "name": "位置业务库关联",
-      "description": "位置业务库关联业务接口"
+      "name": "库房接收记录",
+      "description": "库房接收记录业务接口"
     },
     {
       "name": "料车装载位",
       "description": "料车装载位业务接口"
     },
     {
-      "name": "三、物流作业 / 交通管制"
+      "name": "楼层",
+      "description": "楼层业务接口"
     },
     {
-      "name": "交管区域",
-      "description": "交管区域业务接口"
+      "name": "治具箱适用订单",
+      "description": "治具箱适用订单业务接口"
+    },
+    {
+      "name": "物料绑箱关系",
+      "description": "物料绑箱关系业务接口"
+    },
+    {
+      "name": "物流运输任务",
+      "description": "物流运输任务业务接口"
+    },
+    {
+      "name": "生产计划单",
+      "description": "生产计划单业务接口"
+    },
+    {
+      "name": "第三方接入配置"
+    },
+    {
+      "name": "第三方设备上报"
+    },
+    {
+      "name": "第三方调度 / 斯坦德（物流调用厂商）",
+      "description": "外部厂商提供的候选接口；单独设置厂商服务地址和认证，不继承物流系统登录。"
     },
     {
       "name": "第三方调度 / 海康（物流调用厂商）",
       "description": "外部厂商提供的候选接口；单独设置厂商服务地址和认证，不继承物流系统登录。"
     },
     {
-      "name": "第三方调度 / 斯坦德（物流调用厂商）",
-      "description": "外部厂商提供的候选接口；单独设置厂商服务地址和认证，不继承物流系统登录。"
+      "name": "箱车装载关系",
+      "description": "箱车装载关系业务接口"
+    },
+    {
+      "name": "缴库成功箱明细",
+      "description": "缴库成功箱明细业务接口"
+    },
+    {
+      "name": "缴库成功记录",
+      "description": "缴库成功记录业务接口"
+    },
+    {
+      "name": "资源产线映射",
+      "description": "资源产线映射业务接口"
     }
   ],
   "paths": {
@@ -31938,8 +32065,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32005,8 +32131,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32072,8 +32197,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32140,8 +32264,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32219,8 +32342,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32300,8 +32422,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32377,8 +32498,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32444,8 +32564,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32525,8 +32644,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32606,8 +32724,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32663,8 +32780,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32763,8 +32879,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32830,8 +32945,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32918,8 +33032,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -32975,8 +33088,7 @@
                     "traceId": {
                       "type": "string"
                     }
-                  },
-                  "required": []
+                  }
                 }
               }
             }
@@ -33415,6 +33527,42 @@
           ]
         }
       }
+    },
+    "/api/v1/dashboard/connections": {
+      "get": {
+        "operationId": "getRuntimeConnections",
+        "summary": "读取运行连接状态缓存",
+        "description": "只要求有效登录；单项异常仍返回200。读取不触发外部探测。基础服务在前，按id排序。",
+        "responses": {
+          "200": {
+            "description": "状态缓存；Cache-Control: no-store",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "no-store"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeConnectionsResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "认证失效；由统一登录流程处理"
+          },
+          "500": {
+            "description": "状态服务异常；保留旧数据并标记未知"
+          },
+          "403": {
+            "description": "沿用既有匿名/拒绝访问行为；显示访问被拒绝及其他连接未知"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -33595,9 +33743,14 @@
             "format": "date-time"
           },
           "department": {
-            "type": "null",
-            "$ref": "#/components/schemas/UserDeptSummary",
-            "description": "关联部门摘要；未分配部门或历史部门不存在时为 null"
+            "type": "object",
+            "description": "关联部门摘要；未分配部门或历史部门不存在时为 null",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserDeptSummary"
+              }
+            ]
           },
           "roles": {
             "type": "array",
@@ -49435,8 +49588,7 @@
                 "reason": {
                   "type": "string"
                 }
-              },
-              "required": []
+              }
             }
           },
           "rejected": {
@@ -49454,8 +49606,7 @@
           "version": {
             "type": "integer"
           }
-        },
-        "required": []
+        }
       },
       "ExtVariableResult": {
         "type": "object",
@@ -49488,12 +49639,10 @@
                 "kind": {
                   "type": "string"
                 }
-              },
-              "required": []
+              }
             }
           }
-        },
-        "required": []
+        }
       },
       "ExtTokenCreated": {
         "type": "object",
@@ -49512,8 +49661,7 @@
           "enabled": {
             "type": "boolean"
           }
-        },
-        "required": []
+        }
       },
       "ExtTokenMetadata": {
         "type": "object",
@@ -49538,8 +49686,7 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "required": []
+        }
       },
       "ExtMapping": {
         "type": "object",
@@ -49579,8 +49726,7 @@
           "version": {
             "type": "integer"
           }
-        },
-        "required": []
+        }
       },
       "ExtEvent": {
         "type": "object",
@@ -49609,8 +49755,7 @@
           "received_time": {
             "type": "string"
           }
-        },
-        "required": []
+        }
       },
       "PlatformLongTokenScope": {
         "type": "object",
@@ -49674,8 +49819,7 @@
             "minimum": 0,
             "description": "授权配置版本；旧凭据未配置时为0，与凭据version独立"
           }
-        },
-        "required": []
+        }
       },
       "PlatformLongTokenCreated": {
         "type": "object",
@@ -49754,8 +49898,7 @@
           "pages": {
             "type": "integer"
           }
-        },
-        "required": []
+        }
       },
       "PlatformLongTokenApi": {
         "type": "object",
@@ -50063,6 +50206,153 @@
           "positionCode",
           "type"
         ]
+      },
+      "RuntimeConnectionStatus": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "group",
+          "kind",
+          "status",
+          "message",
+          "staleAfterSeconds",
+          "durationMillis",
+          "consecutiveFailures",
+          "lastCommunicationStatus",
+          "checkedAt",
+          "lastSuccessAt",
+          "lastCommunicationAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string",
+            "enum": [
+              "FOUNDATION",
+              "INTEGRATION"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "DATABASE",
+              "HTTP",
+              "MQTT",
+              "STORAGE",
+              "CUSTOM"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UP",
+              "WARN",
+              "DOWN",
+              "UNKNOWN",
+              "UNCONFIGURED",
+              "DISABLED"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "staleAfterSeconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "durationMillis": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "minimum": 0
+          },
+          "consecutiveFailures": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastCommunicationStatus": {
+            "type": "string",
+            "enum": [
+              "SUCCESS",
+              "FAILURE"
+            ],
+            "nullable": true
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastSuccessAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastCommunicationAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "RuntimeConnectionsOverview": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "refreshAfterSeconds",
+          "items"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "refreshAfterSeconds": {
+            "type": "integer",
+            "example": 15
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuntimeConnectionStatus"
+            }
+          }
+        }
+      },
+      "RuntimeConnectionsResult": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RuntimeConnectionsOverview"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "traceId": {
+            "type": "string",
+            "nullable": true
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -50079,86 +50369,5 @@
         "description": "256位随机长期Token，仅两个设备上报接口可用；库内只存SHA-256摘要，可停用"
       }
     }
-  },
-  "x-review-issues": [
-    {
-      "id": "B04",
-      "title": "快捷绑箱与解绑粒度",
-      "detail": "同方式追加，两种方式同周期不混用，数量行不支持部分减量；混料提示由人员决定继续，确认凭据绑定箱版本及本次内容，混装仅用于缴库，不参与生产配送。"
-    },
-    {
-      "id": "B05",
-      "title": "跨系统失败重试",
-      "detail": "第20项正常MES→SAP→WMS已实现，固定空inboundLocation；SAP全部返回号保留，部分成功／未知不重发，已有SAP成功只补WMS，已有WMS成功只补本地。真实SAP合并返回、部分成功及未知人工核查恢复仍待现场协议；不承诺跨系统本地事务回滚。"
-    },
-    {
-      "id": "B06",
-      "title": "容量与列表边界",
-      "detail": "箱／车明细、MES 拼板候选及当前位置候选全量返回；普通任务列表分页。整数计量已确认；编码长度、提交批次上限和实际规模属技术后补，全量查询不等于无限写入。"
-    },
-    {
-      "id": "B07",
-      "title": "接收与清理范围",
-      "detail": "复用库房送达taskId/version，单箱／整车及部分接收，不建接收批次。#23无需先接收，按客户确认箱码＋100用JDBC清理，不加lCode，保留LES绑定；明确失败可刷新后新请求重试，UNKNOWN／SENDING核查恢复待补。"
-    },
-    {
-      "id": "B08",
-      "title": "登录、版本与枚举",
-      "detail": "已确认全部运行接口只检查登录，不检查角色／对象权限标识，角色仅影响前端导航。当前本地聚合版本、运输状态、位置类型及板件批次已实现；调度状态映射仍待厂商协议。",
-      "status": "BUSINESS_CONFIRMED_LOCAL_SCOPE_DOCUMENTED_NOT_JOINTLY_FROZEN"
-    },
-    {
-      "id": "B09",
-      "title": "外部流程与最终状态",
-      "detail": "候选调度适配已实现直接位置普通任务发送、可信回调结算及取消受理／终结；配置和定时任务默认关闭。正式厂商文档、附框／接力、FLOW取消、机间认证及异常人工恢复待比对，SAP未知恢复边界保持。"
-    },
-    {
-      "id": "B10",
-      "title": "位置与装载位",
-      "detail": "已确认 slotCode 为有位料车装载位，locationCode 为物流固定位置；无位车用 DIRECT。当前查询按真实直接绑定解析起点；车上取箱／高低车接力不授予可创建资格，等待调度协议。",
-      "status": "BUSINESS_CONFIRMED_LOCAL_SCOPE_DOCUMENTED_NOT_JOINTLY_FROZEN"
-    },
-    {
-      "id": "R01",
-      "detail": "同目标按创建顺序 FIFO 排队、同请求逐箱放行已确认；可信空位来源及实际字段／有效期按协议后补，不新增计划暂停状态。"
-    },
-    {
-      "id": "R02",
-      "detail": "整批复核后逐箱建 QUEUED，任一项不合法整批拒绝；手动叫料无需生产计划，按位置来源库、同订单箱及运行状态筛选。铆接校验本地 NOT_RIVETED，治具校验 READY 与适用订单。不增加独立叫料结果接口。实际逐箱放行、车上取箱、失败恢复及幂等清理策略后补。",
-      "title": "叫料本地实现与外部边界",
-      "status": "BUSINESS_CONFIRMED_LOCAL_SCOPE_DOCUMENTED_NOT_JOINTLY_FROZEN"
-    },
-    {
-      "id": "R03",
-      "detail": "SOURCE／TARGET 存储区与后端选择已确认；位置品牌单值、位置用途多值，整车 STANDARD 与海康搬箱分开。taskType 固定 GENERAL，普通／附框接口独立；具体停车点清单及可达协议后补。"
-    },
-    {
-      "id": "R04",
-      "detail": "人员确认取消旧任务后，沿既有取消接口／结果查询，再刷新最新版本提交解绑；保留占用关系级监控抑制，重新绑定后重新评价，详见 U01。"
-    },
-    {
-      "id": "R05",
-      "detail": "后端只检查登录；前端角色维护页面／路由显示，禁止恢复独立隐藏对象权限 Seed。本地操作审计已接入；不将页面权限作为后端叫料资格条件。",
-      "title": "叫料认证与审计",
-      "status": "BUSINESS_CONFIRMED_LOCAL_SCOPE_DOCUMENTED_NOT_JOINTLY_FROZEN"
-    },
-    {
-      "id": "C01",
-      "title": "有位／无位车本地实现",
-      "detail": "SLOT／DIRECT 独立入口且同箱互斥，版本、换车确认及历史保护已实现。本轮不增加旧车整体版本字段；前端联合验收、实际调度装卸和厂商协议仍待完成。",
-      "status": "BUSINESS_CONFIRMED_LOCAL_SCOPE_DOCUMENTED_NOT_JOINTLY_FROZEN"
-    },
-    {
-      "id": "M01",
-      "title": "缴库尾单混装上下文",
-      "detail": "2026-10-12 已确认不增加用途选择；混料提示后人员决定是否继续，使用 confirmMixed 及服务端确认凭据，提示回执无写入。混装箱不参与生产配送／叫料；外部 MES／SAP／WMS 多组内容协议继续后补。 2026-10-15补充：数量快捷绑箱不允许缴库；WMS待上架仅写真实逐件唯一码。",
-      "status": "BUSINESS_CONFIRMED_CONTRACT_DRAFT"
-    },
-    {
-      "id": "U01",
-      "title": "解绑取消联动",
-      "detail": "已确认复用现有取消接口，再刷新后提交解绑。当前位置返回独立解绑资格及关联任务；仅从未发送的本地 QUEUED 可本地取消，已发送／未知等调度协议。逻辑解绑不等于物理空位，配置清箱用途按当前实现执行。自动监控重建与可信交接链仍待接入。",
-      "status": "BUSINESS_CONFIRMED_LOCAL_SCOPE_DOCUMENTED_NOT_JOINTLY_FROZEN"
-    }
-  ]
+  }
 }

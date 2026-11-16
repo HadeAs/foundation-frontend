@@ -45,10 +45,8 @@ export function createAppRouter(pinia: Pinia) {
     return true
   })
 
-  router.afterEach((to) => {
-    document.title = to.meta.title
-      ? `${String(to.meta.title)} · 工业系统管理平台`
-      : '工业系统管理平台'
+  router.afterEach(() => {
+    document.title = '南瑞物流'
   })
 
   return router

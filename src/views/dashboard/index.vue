@@ -25,6 +25,7 @@ import { useAuthStore } from '@/stores/auth'
 import { createLatestRequest } from '@/utils/latest-request'
 
 import { buildDonutGradient, buildMetricGroups, buildToneSegments } from './dashboard-charts'
+import RuntimeConnections from './RuntimeConnections.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -254,11 +255,12 @@ onMounted(() => load())
           </ul>
           <div v-else class="all-clear">
             <CheckCircleFilled /><strong>当前无待处理提醒</strong
-            ><span>系统各项状态处于预期范围</span>
+            ><span>概览接口未返回提醒</span>
           </div>
         </article>
       </section>
     </template>
+    <RuntimeConnections class="runtime-connections" />
   </main>
 </template>
 
@@ -273,12 +275,14 @@ onMounted(() => load())
   padding: 8px 10px 10px;
   overflow: hidden;
   color: var(--shell-ink);
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) minmax(180px, 0.75fr);
 }
 .dashboard-alert {
+  grid-row: 1;
   margin-bottom: 8px;
 }
 .dashboard-skeleton {
+  grid-row: 2 / 4;
   padding: 10px;
   background: var(--shell-panel);
 }
@@ -287,7 +291,7 @@ onMounted(() => load())
   margin-bottom: 8px;
   gap: 8px;
   grid-column: 1;
-  grid-row: 1;
+  grid-row: 2;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .metric-card {
@@ -384,7 +388,7 @@ onMounted(() => load())
   min-height: 0;
   gap: 8px;
   grid-column: 1;
-  grid-row: 2;
+  grid-row: 3;
   grid-template-columns: 1.25fr 1fr 1fr;
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
@@ -395,6 +399,10 @@ onMounted(() => load())
   overflow: hidden;
   border: 1px solid var(--shell-border);
   background: var(--shell-panel);
+}
+.runtime-connections {
+  grid-row: 4;
+  margin-top: 8px;
 }
 .panel-head {
   display: flex;

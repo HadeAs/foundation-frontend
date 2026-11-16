@@ -9,6 +9,7 @@
     "build:image": "bash deploy/build-image.sh",
     "typecheck": "vue-tsc -b",
     "api:business-types": "openapi-typescript doc/nari-logistics.openapi.json -o src/types/business-api.d.ts",
+    "api:system-types": "node scripts/generate-system-api.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
