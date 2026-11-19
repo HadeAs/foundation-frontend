@@ -10,15 +10,7 @@ import {
   message,
   type TableColumnsType,
 } from 'ant-design-vue'
-import {
-  computed,
-  onActivated,
-  onBeforeUnmount,
-  onDeactivated,
-  onMounted,
-  reactive,
-  ref,
-} from 'vue'
+import { onActivated, onBeforeUnmount, onDeactivated, onMounted, reactive, ref } from 'vue'
 import { getErrorMessage } from '@/api/http'
 import {
   canAuthorizeToken,
@@ -39,8 +31,7 @@ import LongTokenSecret from '@/components/system/long-token/LongTokenSecret.vue'
 import { useTablePagination } from '@/composables/use-table-pagination'
 import { formatDateTime } from '@/utils/date'
 
-const scopes = ref<LongTokenScope[]>([]),
-  scopeCode = ref(''),
+const scope = ref<LongTokenScope>(),
   scopesLoading = ref(false),
   scopeError = ref('')
 const filters = reactive({ keyword: '', enabled: undefined as 'true' | 'false' | undefined })
@@ -49,10 +40,6 @@ const rows = ref<LongTokenMetadata[]>([]),
   loading = ref(false),
   error = ref('')
 const { currentPage, pageSize, total, pagination, handleTableChange } = useTablePagination(load)
-const scope = computed(() => scopes.value.find((item) => item.scopeCode === scopeCode.value))
-const scopeOptions = computed(() =>
-  scopes.value.map((item) => ({ label: item.name, value: item.scopeCode })),
-)
 const editorOpen = ref(false),
   editing = ref<LongTokenMetadata>(),
   secret = ref('')
@@ -66,7 +53,6 @@ let epoch = 0,
   activated = false
 const columns: TableColumnsType = [
   { title: 'Token 名称', key: 'name', dataIndex: 'name', width: 220, ellipsis: true },
-  { title: '接入范围', key: 'scopeName', dataIndex: 'scopeName', width: 180 },
   { title: '状态', key: 'enabled', width: 100 },
   { title: '授权接口', key: 'apiCodes', width: 120 },
   { title: '创建时间', key: 'createdTime', width: 180 },
@@ -75,14 +61,14 @@ const columns: TableColumnsType = [
 ]
 async function loadScopes() {
   const request = ++scopeEpoch
+  scope.value = undefined
+  rows.value = []
   scopesLoading.value = true
   scopeError.value = ''
   try {
     const result = await getLongTokenScopes()
     if (request !== scopeEpoch) return
-    scopes.value = result
-    if (!result.some((item) => item.scopeCode === scopeCode.value))
-      scopeCode.value = result[0]?.scopeCode || ''
+    scope.value = result[0]
     currentPage.value = 1
     await load()
   } catch (cause) {
@@ -99,7 +85,7 @@ async function load() {
   const request = ++epoch
   rows.value = []
   error.value = ''
-  if (!scopeCode.value) {
+  if (!scope.value) {
     total.value = 0
     loading.value = false
     return
@@ -107,7 +93,7 @@ async function load() {
   loading.value = true
   try {
     const result = await pageLongTokens({
-      scopeCode: scopeCode.value,
+      scopeCode: scope.value.scopeCode,
       page: currentPage.value,
       size: pageSize.value,
       ...applied.value,
@@ -140,11 +126,6 @@ function query() {
 function reset() {
   filters.keyword = ''
   filters.enabled = undefined
-  query()
-}
-function changeScope() {
-  editorOpen.value = false
-  currentPage.value = 1
   query()
 }
 function openCreate() {
@@ -210,15 +191,6 @@ onBeforeUnmount(leave)
   <main class="management-page">
     <section class="query-panel">
       <div class="token-filters">
-        <a-select
-          v-model:value="scopeCode"
-          aria-label="接入范围"
-          placeholder="请选择接入范围"
-          :options="scopeOptions"
-          :loading="scopesLoading"
-          :disabled="scopesLoading || !!scopeError"
-          @change="changeScope"
-        />
         <a-input
           v-model:value="filters.keyword"
           aria-label="Token 名称"
@@ -267,10 +239,7 @@ onBeforeUnmount(leave)
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'scopeName'">{{
-            record.scopeName || scope?.name || record.scopeCode
-          }}</template>
-          <template v-else-if="column.key === 'enabled'"
+          <template v-if="column.key === 'enabled'"
             ><a-tag :color="record.enabled === true ? 'green' : undefined">{{
               record.enabled === true ? '启用' : record.enabled === false ? '已停用' : '未知'
             }}</a-tag></template
@@ -312,7 +281,7 @@ onBeforeUnmount(leave)
           ><DataState
             :loading="loading || scopesLoading"
             :error="scopeError || error"
-            :empty-text="scopes.length ? '暂无符合条件的 Token' : '暂无可用接入范围'"
+            :empty-text="scope ? '暂无符合条件的 Token' : '暂无可用接入范围'"
             @retry="scopeError ? loadScopes() : load()"
         /></template>
       </ResizableTable>
@@ -359,7 +328,7 @@ onBeforeUnmount(leave)
 <style scoped>
 .token-filters {
   display: grid;
-  grid-template-columns: 220px minmax(220px, 1fr) 150px;
+  grid-template-columns: minmax(220px, 1fr) 150px;
   gap: 8px;
   width: min(780px, 70%);
 }

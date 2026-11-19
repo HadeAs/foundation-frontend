@@ -85,6 +85,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/long-tokens/{scopeCode}/{tokenId}/authorization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 修改长期Token允许调用的接口
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        put: operations["system_long_token_authorization_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/jobs/{jobId}": {
         parameters: {
             query?: never;
@@ -393,6 +413,50 @@ export interface paths {
         post?: never;
         /** 删除业务操作记录 */
         delete: operations["delete_17"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/jdbc-configs/{profile}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询 MES/WMS 连接配置
+         * @description profile 为 MES 或 WMS；不返回明文密码、密码密文或运行密钥，不连接远端数据库。
+         */
+        get: operations["nariJdbcConfigGet"];
+        /**
+         * 保存 MES/WMS 连接配置
+         * @description 明文密码仅用于服务端加密，留空保留原密文；已有配置须提交version。保存只更新本地参数，不验证远端连接、不执行远端业务。
+         */
+        put: operations["nariJdbcConfigSave"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/integration-management/mappings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 修改变量映射
+         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        put: operations["nari_ext_mapping_update"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -812,6 +876,50 @@ export interface paths {
         put?: never;
         /** 批量删除菜单子树 */
         post: operations["batchDelete_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/long-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 分页查询长期Token元数据
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        get: operations["system_long_token_page"];
+        put?: never;
+        /**
+         * 创建长期Token（明文仅返回一次）
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        post: operations["system_long_token_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/long-tokens/{scopeCode}/{tokenId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 停用长期Token
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        post: operations["system_long_token_revoke"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2243,7 +2351,7 @@ export interface paths {
          *
          *     人工位置绑定后去向场景：先完成位置与容器绑定，再由前端提示回线边库、指定其他位置或暂不运输。绑定成功不表示运输任务已创建；选择运输后调用 POST /logistics/tasks。
          *     待评审 R04：旧描述及铆接/治具场景存在绑定后自动回库。本草案仅提出人工弹窗流程绑定不自动派单；自动业务入口的适用范围与互斥须先确认，不能直接取消所有自动回库，也不能让两条路径重复创建运输。绑定接口请求及成功回执结构不变。
-         *     绑定改变容器版本。选择运输后先使用 GET /logistics/options?scanCode=<绑定位置码> 重新查询对象、当前版本、起始位置及后端确定的 vendor/taskType，再提交创建请求，不沿用绑定前版本。指定其他位置使用其候选位置；回线边库不要求员工选目标。回库资格不能仅由普通运输的候选列表是否为空判断，该查询对回库资格的兼容说明列入 R03 评审。
+         *     绑定改变容器版本。选择运输后先使用 GET /logistics/options?scanCode=<绑定位置码> 重新查询对象、当前版本、起始位置及后端确定的 vendor/taskType，再提交创建请求，不沿用绑定前版本。指定其他位置使用其候选位置；回线边库不要求员工选目标。回库按钮按GET /logistics/options返回的returnLineSideEligibility.allowed及reason置灰和展示原因；此增量已于2026-11-16由用户确认冻结，不根据普通运输候选数量推断。
          */
         post: operations["nari_locations_bind_container"];
         delete?: never;
@@ -2366,6 +2474,114 @@ export interface paths {
          *     新增确认规则：料箱直接绑定料车与库位装载互斥。存在有效直接关系时装车查询返回 eligibility.allowed=false 并提示；批量装车提交也必须原子复核并拒绝，不隐式解除直接关系。与直接绑定写入共用锁定及互斥规则，防止并发产生两种关系。
          */
         post: operations["nari_loading_batch_load"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/integration/variable-values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 第三方变量值上报
+         * @description 仅专用长期接入Token；普通用户登录Token不接受。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        post: operations["nari_ext_values"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/integration/box-scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 第三方扫码过滤绑箱
+         * @description 仅专用长期接入Token；普通用户登录Token不接受。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        post: operations["nari_ext_scan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/integration-management/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询接入Token元数据
+         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        get: operations["nari_ext_token_list"];
+        put?: never;
+        /**
+         * 创建长期接入Token
+         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        post: operations["nari_ext_token_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/integration-management/tokens/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 停用接入Token
+         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        post: operations["nari_ext_token_revoke"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/integration-management/mappings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询变量映射
+         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        get: operations["nari_ext_mapping_list"];
+        put?: never;
+        /**
+         * 创建变量映射
+         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        post: operations["nari_ext_mapping_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3253,6 +3469,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/long-tokens/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询长期Token接入范围
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        get: operations["system_long_token_scopes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/long-tokens/interfaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询后端声明的可授权接口
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        get: operations["system_long_token_interfaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/lifecycle/overview": {
         parameters: {
             query?: never;
@@ -3665,6 +3921,26 @@ export interface paths {
             cookie?: never;
         };
         get: operations["overview_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 读取运行连接状态缓存
+         * @description 只要求有效登录；单项异常仍返回200。读取不触发外部探测。基础服务在前，按id排序。
+         */
+        get: operations["getRuntimeConnections"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4121,7 +4397,9 @@ export interface paths {
         };
         /**
          * 查询物流发起信息及可选目标位置
-         * @description ### 当前实现（2026-10-15.1）
+         * @description 2026-11-16.1：新增returnLineSideEligibility，扫码成功后前端据allowed置灰回库按钮，禁用时展示reason；判断包含实时空位及预占，提交仍重新校验。本次增量已由用户确认冻结，独立前端适配验收待执行。
+         *
+         *     ### 当前实现（2026-10-15.1）
          *     状态：部分实现。
          *
          *     解析容器／位置码和可信起点，展开 TARGET 候选；当前只支持地面容器，车上取箱不授予创建资格。
@@ -4267,6 +4545,26 @@ export interface paths {
          *     新增确认规则：料箱直接绑定料车与库位装载互斥。存在有效直接关系时装车查询返回 eligibility.allowed=false 并提示；批量装车提交也必须原子复核并拒绝，不隐式解除直接关系。与直接绑定写入共用锁定及互斥规则，防止并发产生两种关系。
          */
         get: operations["nari_loading_boxes_query"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/integration-management/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 游标查询接入处理留痕
+         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
+         */
+        get: operations["nari_ext_event_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4431,282 +4729,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/business/nari-logistics/jdbc-configs/{profile}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 查询 MES/WMS 连接配置
-         * @description profile 为 MES 或 WMS；不返回明文密码、密码密文或运行密钥，不连接远端数据库。
-         */
-        get: operations["nariJdbcConfigGet"];
-        /**
-         * 保存 MES/WMS 连接配置
-         * @description 明文密码仅用于服务端加密，留空保留原密文；已有配置须提交version。保存只更新本地参数，不验证远端连接、不执行远端业务。
-         */
-        put: operations["nariJdbcConfigSave"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/nari-logistics/integration/box-scans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 第三方扫码过滤绑箱
-         * @description 仅专用长期接入Token；普通用户登录Token不接受。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        post: operations["nari_ext_scan"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/nari-logistics/integration/variable-values": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 第三方变量值上报
-         * @description 仅专用长期接入Token；普通用户登录Token不接受。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        post: operations["nari_ext_values"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/nari-logistics/integration-management/tokens": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 查询接入Token元数据
-         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        get: operations["nari_ext_token_list"];
-        put?: never;
-        /**
-         * 创建长期接入Token
-         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        post: operations["nari_ext_token_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/nari-logistics/integration-management/tokens/{id}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 停用接入Token
-         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        post: operations["nari_ext_token_revoke"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/nari-logistics/integration-management/mappings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 查询变量映射
-         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        get: operations["nari_ext_mapping_list"];
-        put?: never;
-        /**
-         * 创建变量映射
-         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        post: operations["nari_ext_mapping_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/nari-logistics/integration-management/mappings/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 修改变量映射
-         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        put: operations["nari_ext_mapping_update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business/nari-logistics/integration-management/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 游标查询接入处理留痕
-         * @description 使用现有用户登录Token；长期接入Token不能调用。 候选2026-10-30.1，需求已确认，联合评审/冻结待完成。
-         */
-        get: operations["nari_ext_event_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens/scopes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 查询长期Token接入范围
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        get: operations["system_long_token_scopes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 分页查询长期Token元数据
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        get: operations["system_long_token_page"];
-        put?: never;
-        /**
-         * 创建长期Token（明文仅返回一次）
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        post: operations["system_long_token_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens/{scopeCode}/{tokenId}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 停用长期Token
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        post: operations["system_long_token_revoke"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens/interfaces": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 查询后端声明的可授权接口
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        get: operations["system_long_token_interfaces"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens/{scopeCode}/{tokenId}/authorization": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 修改长期Token允许调用的接口
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        put: operations["system_long_token_authorization_update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/rcms/services/rest/hikRpcService/genAgvSchedulingTask": {
         parameters: {
             query?: never;
@@ -4810,26 +4832,6 @@ export interface paths {
          *     2026-10-30.6按DFPServer实际组参补模拟示例和字段来源；priority为整数，站点不追加海康后缀。样例不自动发送，现场站点/模板需确认。
          */
         post: operations["nari_outbound_standard_cancel"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/connections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 读取运行连接状态缓存
-         * @description 只要求有效登录；单项异常仍返回200。读取不触发外部探测。基础服务在前，按id排序。
-         */
-        get: operations["getRuntimeConnections"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5939,6 +5941,50 @@ export interface components {
             idempotentKey?: string;
             /** Format: int32 */
             version?: number;
+        };
+        NariJdbcConfigSave: {
+            enabled: boolean;
+            jdbcUrl: string;
+            username: string;
+            /** @description 仅输入新密码；不传、null或空字符串保留原密码；首次保存必填 */
+            password?: string | null;
+            driverClassName: string;
+            /**
+             * Format: int32
+             * @description 已有配置保存必填当前版本；首次创建不传
+             */
+            version?: number | null;
+        };
+        ApiResultNariJdbcConfig: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariJdbcConfig"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariJdbcConfig: {
+            profile?: string;
+            configured?: boolean;
+            enabled?: boolean;
+            jdbcUrl?: string;
+            username?: string;
+            driverClassName?: string;
+            passwordSet?: boolean;
+            /** Format: int32 */
+            version?: number | null;
+        };
+        ApiResultMapStringObject: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
         };
         NariLogisticsTaskUpdateRequest: {
             /**
@@ -9446,17 +9492,6 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        ApiResultMapStringObject: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: {
-                [key: string]: unknown;
-            };
-            /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
-        };
         ApiResultSessionResponse: {
             /** Format: int32 */
             code?: number;
@@ -10506,6 +10541,13 @@ export interface components {
             /** @description 当前业务规则允许的完整目标位置候选。 本次查询范围的完整候选数组，不分页、不截断；无候选返回 []。 */
             destinations: components["schemas"]["DestinationOption"][];
             eligibility: components["schemas"]["Eligibility"];
+            /** @description 回线边库按钮资格，独立于普通运输eligibility与destinations；综合当前对象、来源位置、线边库目标配置、可信空闲/预占及接力条件。false时置灰并展示reason，true时reason为null。查询不预占，提交仍重新校验。2026-11-16.1本次增量经用户确认冻结。 */
+            returnLineSideEligibility: {
+                /** @description 当前是否允许发起回线边库 */
+                allowed: boolean;
+                /** @description 不可用原因；allowed=true时为null，false时为非空中文提示 */
+                reason: string | null;
+            };
         };
         /**
          * EmptyVehicleOrigin
@@ -12502,38 +12544,63 @@ export interface components {
              */
             containerVersion: number;
         };
-        NariJdbcConfigSave: {
-            enabled: boolean;
-            jdbcUrl: string;
-            username: string;
-            /** @description 仅输入新密码；不传、null或空字符串保留原密码；首次保存必填 */
-            password?: string | null;
-            driverClassName: string;
-            /**
-             * Format: int32
-             * @description 已有配置保存必填当前版本；首次创建不传
-             */
-            version?: number | null;
+        PlatformLongTokenScope: {
+            scopeCode: string;
+            name: string;
+            description: string;
         };
-        NariJdbcConfig: {
-            profile?: string;
-            configured?: boolean;
+        PlatformLongTokenMetadata: {
+            /** @description 接入范围内唯一的凭据编号，按字符串传输 */
+            tokenId?: string;
+            name?: string;
+            scopeCode?: string;
+            scopeName?: string;
             enabled?: boolean;
-            jdbcUrl?: string;
-            username?: string;
-            driverClassName?: string;
-            passwordSet?: boolean;
-            /** Format: int32 */
-            version?: number | null;
-        };
-        ApiResultNariJdbcConfig: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["NariJdbcConfig"];
+            version?: number;
             /** Format: date-time */
-            timestamp?: string;
-            traceId?: string;
+            createdTime?: string;
+            /** Format: date-time */
+            revokedTime?: string | null;
+            /** @description 实际授权接口代码；空数组表示无接口权限。声明移除后不再放行 */
+            apiCodes?: string[];
+            /** @description 授权配置版本；旧凭据未配置时为0，与凭据version独立 */
+            authorizationVersion?: number;
+        };
+        PlatformLongTokenCreated: {
+            metadata: components["schemas"]["PlatformLongTokenMetadata"];
+            /** @description 仅本次创建响应包含明文，关闭后不可找回，不得写入浏览器持久存储 */
+            token: string;
+        };
+        PlatformLongTokenCreateRequest: {
+            scopeCode: string;
+            name: string;
+            /** @description 显式授权；空数组无权限；未提供时仅兼容原设备上报两接口，不自动包含未来新增接口 */
+            apiCodes?: string[];
+        };
+        PlatformLongTokenRevokeRequest: {
+            version: number;
+        };
+        PlatformLongTokenPage: {
+            records?: components["schemas"]["PlatformLongTokenMetadata"][];
+            total?: number;
+            size?: number;
+            current?: number;
+            pages?: number;
+        };
+        PlatformLongTokenApi: {
+            apiCode: string;
+            /** @description 接口所属分组；区别于凭据提供者scopeCode，不限制管理员显式跨分组授权 */
+            scopeCode: string;
+            name: string;
+            method: string;
+            path: string;
+        };
+        PlatformLongTokenAuthorizationRequest: {
+            /** @description 显式授权；空数组无权限；未提供时仅兼容原设备上报两接口，不自动包含未来新增接口 */
+            apiCodes: string[];
+            authorizationVersion: number;
+            /** @description 凭据版本，防止与停用并发冲突 */
+            version: number;
         };
         ExtScanRequest: {
             boxCode: string;
@@ -12637,63 +12704,43 @@ export interface components {
             result_json?: string;
             received_time?: string;
         };
-        PlatformLongTokenScope: {
-            scopeCode: string;
+        RuntimeConnectionStatus: {
+            id: string;
             name: string;
-            description: string;
-        };
-        PlatformLongTokenMetadata: {
-            /** @description 接入范围内唯一的凭据编号，按字符串传输 */
-            tokenId?: string;
-            name?: string;
-            scopeCode?: string;
-            scopeName?: string;
-            enabled?: boolean;
-            version?: number;
+            /** @enum {string} */
+            group: "FOUNDATION" | "INTEGRATION";
+            /** @enum {string} */
+            kind: "DATABASE" | "HTTP" | "MQTT" | "STORAGE" | "CUSTOM";
+            /** @enum {string} */
+            status: "UP" | "WARN" | "DOWN" | "UNKNOWN" | "UNCONFIGURED" | "DISABLED";
+            message: string;
+            staleAfterSeconds: number;
+            /** Format: int64 */
+            durationMillis: number | null;
+            consecutiveFailures: number;
+            /** @enum {string|null} */
+            lastCommunicationStatus: "SUCCESS" | "FAILURE" | null;
             /** Format: date-time */
-            createdTime?: string;
+            checkedAt: string | null;
             /** Format: date-time */
-            revokedTime?: string | null;
-            /** @description 实际授权接口代码；空数组表示无接口权限。声明移除后不再放行 */
-            apiCodes?: string[];
-            /** @description 授权配置版本；旧凭据未配置时为0，与凭据version独立 */
-            authorizationVersion?: number;
+            lastSuccessAt: string | null;
+            /** Format: date-time */
+            lastCommunicationAt: string | null;
         };
-        PlatformLongTokenCreated: {
-            metadata: components["schemas"]["PlatformLongTokenMetadata"];
-            /** @description 仅本次创建响应包含明文，关闭后不可找回，不得写入浏览器持久存储 */
-            token: string;
+        RuntimeConnectionsOverview: {
+            /** Format: date-time */
+            generatedAt: string;
+            /** @example 15 */
+            refreshAfterSeconds: number;
+            items: components["schemas"]["RuntimeConnectionStatus"][];
         };
-        PlatformLongTokenCreateRequest: {
-            scopeCode: string;
-            name: string;
-            /** @description 显式授权；空数组无权限；未提供时仅兼容原设备上报两接口，不自动包含未来新增接口 */
-            apiCodes?: string[];
-        };
-        PlatformLongTokenRevokeRequest: {
-            version: number;
-        };
-        PlatformLongTokenPage: {
-            records?: components["schemas"]["PlatformLongTokenMetadata"][];
-            total?: number;
-            size?: number;
-            current?: number;
-            pages?: number;
-        };
-        PlatformLongTokenApi: {
-            apiCode: string;
-            /** @description 接口所属分组；区别于凭据提供者scopeCode，不限制管理员显式跨分组授权 */
-            scopeCode: string;
-            name: string;
-            method: string;
-            path: string;
-        };
-        PlatformLongTokenAuthorizationRequest: {
-            /** @description 显式授权；空数组无权限；未提供时仅兼容原设备上报两接口，不自动包含未来新增接口 */
-            apiCodes: string[];
-            authorizationVersion: number;
-            /** @description 凭据版本，防止与停用并发冲突 */
-            version: number;
+        RuntimeConnectionsResult: {
+            code: number;
+            message: string;
+            data: components["schemas"]["RuntimeConnectionsOverview"];
+            /** Format: date-time */
+            timestamp: string;
+            traceId: string | null;
         };
         NariAgvHikReply: {
             reqCode?: string;
@@ -12792,44 +12839,6 @@ export interface components {
              * @enum {string}
              */
             type: "00";
-        };
-        RuntimeConnectionStatus: {
-            id: string;
-            name: string;
-            /** @enum {string} */
-            group: "FOUNDATION" | "INTEGRATION";
-            /** @enum {string} */
-            kind: "DATABASE" | "HTTP" | "MQTT" | "STORAGE" | "CUSTOM";
-            /** @enum {string} */
-            status: "UP" | "WARN" | "DOWN" | "UNKNOWN" | "UNCONFIGURED" | "DISABLED";
-            message: string;
-            staleAfterSeconds: number;
-            /** Format: int64 */
-            durationMillis: number | null;
-            consecutiveFailures: number;
-            /** @enum {string|null} */
-            lastCommunicationStatus: "SUCCESS" | "FAILURE" | null;
-            /** Format: date-time */
-            checkedAt: string | null;
-            /** Format: date-time */
-            lastSuccessAt: string | null;
-            /** Format: date-time */
-            lastCommunicationAt: string | null;
-        };
-        RuntimeConnectionsOverview: {
-            /** Format: date-time */
-            generatedAt: string;
-            /** @example 15 */
-            refreshAfterSeconds: number;
-            items: components["schemas"]["RuntimeConnectionStatus"][];
-        };
-        RuntimeConnectionsResult: {
-            code: number;
-            message: string;
-            data: components["schemas"]["RuntimeConnectionsOverview"];
-            /** Format: date-time */
-            timestamp: string;
-            traceId: string | null;
         };
     };
     responses: never;
@@ -13559,6 +13568,67 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
                 };
+            };
+        };
+    };
+    system_long_token_authorization_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scopeCode: string;
+                tokenId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformLongTokenAuthorizationRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["PlatformLongTokenMetadata"];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 范围/参数无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未登录 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 接入Token无后台访问权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -16561,6 +16631,258 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
                 };
+            };
+        };
+    };
+    nariJdbcConfigGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile: "MES" | "WMS";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": 0,
+                     *       "message": "ok",
+                     *       "data": {
+                     *         "profile": "MES",
+                     *         "configured": true,
+                     *         "enabled": true,
+                     *         "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
+                     *         "username": "database_user",
+                     *         "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
+                     *         "passwordSet": true,
+                     *         "version": 1
+                     *       },
+                     *       "timestamp": "2026-10-29T04:00:00Z",
+                     *       "traceId": "example-only"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiResultNariJdbcConfig"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description 现有配置无效，或运行密钥／密文校验失败；不连接远端 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nariJdbcConfigSave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile: "MES" | "WMS";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "enabled": true,
+                 *       "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
+                 *       "username": "database_user",
+                 *       "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
+                 *       "version": 1
+                 *     }
+                 */
+                "application/json": components["schemas"]["NariJdbcConfigSave"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": 0,
+                     *       "message": "ok",
+                     *       "data": {
+                     *         "profile": "MES",
+                     *         "configured": true,
+                     *         "enabled": true,
+                     *         "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
+                     *         "username": "database_user",
+                     *         "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
+                     *         "passwordSet": true,
+                     *         "version": 1
+                     *       },
+                     *       "timestamp": "2026-10-29T04:00:00Z",
+                     *       "traceId": "example-only"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiResultNariJdbcConfig"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description 版本冲突或并发创建冲突，请重新查询 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description 现有配置无效，或运行密钥／密文校验失败；不连接远端 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_ext_mapping_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtMappingRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["ExtMapping"];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -20043,6 +20365,185 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
                 };
+            };
+        };
+    };
+    system_long_token_page: {
+        parameters: {
+            query: {
+                scopeCode: string;
+                page?: number;
+                size?: number;
+                keyword?: string;
+                enabled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["PlatformLongTokenPage"];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 范围/参数无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未登录 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 接入Token无后台访问权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    system_long_token_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformLongTokenCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["PlatformLongTokenCreated"];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 范围/参数无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未登录 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 接入Token无后台访问权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    system_long_token_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scopeCode: string;
+                tokenId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformLongTokenRevokeRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: unknown;
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 范围/参数无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未登录 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 接入Token无后台访问权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -27846,6 +28347,412 @@ export interface operations {
             };
         };
     };
+    nari_ext_values: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtVariableRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["ExtVariableResult"];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    nari_ext_scan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtScanRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["ExtScanResult"];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    nari_ext_token_list: {
+        parameters: {
+            query?: {
+                afterId?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["ExtTokenMetadata"][];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    nari_ext_token_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtTokenName"];
+            };
+        };
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["ExtTokenCreated"];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    nari_ext_token_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtVersion"];
+            };
+        };
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: unknown;
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    nari_ext_mapping_list: {
+        parameters: {
+            query?: {
+                afterId?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["ExtMapping"][];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    nari_ext_mapping_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtMappingRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["ExtMapping"];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     nari_empty_vehicles_call: {
         parameters: {
             query?: never;
@@ -32024,6 +32931,114 @@ export interface operations {
             };
         };
     };
+    system_long_token_scopes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["PlatformLongTokenScope"][];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 范围/参数无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未登录 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 接入Token无后台访问权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    system_long_token_interfaces: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["PlatformLongTokenApi"][];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 范围/参数无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未登录 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 接入Token无后台访问权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     overview: {
         parameters: {
             query?: never;
@@ -33566,6 +34581,49 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
                 };
+            };
+        };
+    };
+    getRuntimeConnections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 状态缓存；Cache-Control: no-store */
+            200: {
+                headers: {
+                    /** @example no-store */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuntimeConnectionsResult"];
+                };
+            };
+            /** @description 认证失效；由统一登录流程处理 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 沿用既有匿名/拒绝访问行为；显示访问被拒绝及其他连接未知 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 状态服务异常；保留旧数据并标记未知 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -36912,6 +37970,63 @@ export interface operations {
             };
         };
     };
+    nari_ext_event_list: {
+        parameters: {
+            query?: {
+                afterId?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: number;
+                        message?: string;
+                        data?: components["schemas"]["ExtEvent"][];
+                        timestamp?: string;
+                        traceId?: string;
+                    };
+                };
+            };
+            /** @description 输入无效 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 无有效凭据 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 凭据不允许访问该接口 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 版本或配置冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     nari_empty_vehicles_origins_query: {
         parameters: {
             query: {
@@ -37635,1069 +38750,6 @@ export interface operations {
             };
         };
     };
-    nariJdbcConfigGet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                profile: "MES" | "WMS";
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "profile": "MES",
-                     *         "configured": true,
-                     *         "enabled": true,
-                     *         "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
-                     *         "username": "database_user",
-                     *         "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
-                     *         "passwordSet": true,
-                     *         "version": 1
-                     *       },
-                     *       "timestamp": "2026-10-29T04:00:00Z",
-                     *       "traceId": "example-only"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiResultNariJdbcConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description 现有配置无效，或运行密钥／密文校验失败；不连接远端 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
-    nariJdbcConfigSave: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                profile: "MES" | "WMS";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                /**
-                 * @example {
-                 *       "enabled": true,
-                 *       "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
-                 *       "username": "database_user",
-                 *       "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
-                 *       "version": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["NariJdbcConfigSave"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "profile": "MES",
-                     *         "configured": true,
-                     *         "enabled": true,
-                     *         "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
-                     *         "username": "database_user",
-                     *         "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
-                     *         "passwordSet": true,
-                     *         "version": 1
-                     *       },
-                     *       "timestamp": "2026-10-29T04:00:00Z",
-                     *       "traceId": "example-only"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiResultNariJdbcConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description 版本冲突或并发创建冲突，请重新查询 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description 现有配置无效，或运行密钥／密文校验失败；不连接远端 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-        };
-    };
-    nari_ext_scan: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtScanRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtScanResult"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    nari_ext_values: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtVariableRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtVariableResult"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    nari_ext_token_list: {
-        parameters: {
-            query?: {
-                afterId?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtTokenMetadata"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    nari_ext_token_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtTokenName"];
-            };
-        };
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtTokenCreated"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    nari_ext_token_revoke: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtVersion"];
-            };
-        };
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: unknown;
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    nari_ext_mapping_list: {
-        parameters: {
-            query?: {
-                afterId?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtMapping"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    nari_ext_mapping_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtMappingRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtMapping"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    nari_ext_mapping_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtMappingRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtMapping"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    nari_ext_event_list: {
-        parameters: {
-            query?: {
-                afterId?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtEvent"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 输入无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 无有效凭据 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据不允许访问该接口 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 版本或配置冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_scopes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenScope"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_page: {
-        parameters: {
-            query: {
-                scopeCode: string;
-                page?: number;
-                size?: number;
-                keyword?: string;
-                enabled?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenPage"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformLongTokenCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenCreated"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_revoke: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scopeCode: string;
-                tokenId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformLongTokenRevokeRequest"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: unknown;
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_interfaces: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenApi"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_authorization_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scopeCode: string;
-                tokenId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformLongTokenAuthorizationRequest"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenMetadata"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     nari_outbound_hikvision_create: {
         parameters: {
             query?: never;
@@ -38817,49 +38869,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["NariAgvStandardReply"];
                 };
-            };
-        };
-    };
-    getRuntimeConnections: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 状态缓存；Cache-Control: no-store */
-            200: {
-                headers: {
-                    /** @example no-store */
-                    "Cache-Control"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RuntimeConnectionsResult"];
-                };
-            };
-            /** @description 认证失效；由统一登录流程处理 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 沿用既有匿名/拒绝访问行为；显示访问被拒绝及其他连接未知 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 状态服务异常；保留旧数据并标记未知 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

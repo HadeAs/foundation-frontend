@@ -79,7 +79,7 @@ describe('长期 Token 管理页', () => {
       enabled: undefined,
     })
     wrapper.findComponent(Input).vm.$emit('update:value', ' scanner ')
-    wrapper.findAllComponents(Select)[1]!.vm.$emit('update:value', 'false')
+    wrapper.getComponent(Select).vm.$emit('update:value', 'false')
     await button(wrapper, '查询').trigger('click')
     await flushPromises()
     expect(api.pageLongTokens).toHaveBeenLastCalledWith(
@@ -102,28 +102,18 @@ describe('长期 Token 管理页', () => {
       expect.objectContaining({ keyword: '', enabled: undefined, page: 1 }),
     )
     const tableColumns = wrapper.findComponent(ResizableTable).props('columns')
+    expect(tableColumns.some((column) => column.key === 'scopeName')).toBe(false)
     expect(tableColumns.some((column) => column.sorter)).toBe(false)
   })
-  it('切换范围时丢弃旧范围的迟到响应', async () => {
-    let resolve!: (value: api.LongTokenPage) => void
-    vi.mocked(api.pageLongTokens).mockReturnValueOnce(
-      new Promise((done) => {
-        resolve = done
-      }),
-    )
+  it('多个范围时无范围选择器，列表和创建均使用后端首项', async () => {
+    vi.mocked(api.getLongTokenScopes).mockResolvedValue([...scopes].reverse())
     const wrapper = create()
     await flushPromises()
-    const select = wrapper.findAllComponents(Select)[0]!
-    select.vm.$emit('update:value', 'two')
-    select.vm.$emit('change', 'two')
-    await flushPromises()
-    resolve({ records: [{ ...record, name: '旧范围记录' }], total: 1 })
-    await flushPromises()
-    expect(wrapper.text()).not.toContain('旧范围记录')
-    const table = wrapper.findComponent(ResizableTable).props() as unknown as {
-      dataSource: api.LongTokenMetadata[]
-    }
-    expect(table.dataSource[0]!.scopeCode).toBe('two')
+    expect(wrapper.findAllComponents(Select)).toHaveLength(1)
+    expect(wrapper.getComponent(Select).attributes('aria-label')).toBe('Token 状态')
+    expect(api.pageLongTokens).toHaveBeenCalledWith(expect.objectContaining({ scopeCode: 'two' }))
+    await button(wrapper, '创建Token').trigger('click')
+    expect(wrapper.getComponent(LongTokenEditor).props('scope')).toEqual(scopes[1])
   })
   it('范围加载失败与空范围不会创建无效 Token', async () => {
     vi.mocked(api.getLongTokenScopes).mockRejectedValueOnce(new ApiError('未部署长期 Token 接口'))
