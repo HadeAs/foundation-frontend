@@ -26,8 +26,6 @@ function item(overrides: Partial<RuntimeConnection> = {}): RuntimeConnection {
     staleAfterSeconds: 30,
     durationMillis: 0,
     consecutiveFailures: 0,
-    lastCommunicationAt: null,
-    lastCommunicationStatus: null,
     ...overrides,
   }
 }
@@ -54,7 +52,7 @@ describe('运行连接状态', () => {
     vi.useRealTimers()
   })
 
-  for (const status of Object.keys(connectionStates) as RuntimeConnection['status'][]) {
+  for (const status of Object.keys(connectionStates) as (keyof typeof connectionStates)[]) {
     it(`展示 ${status} 的文字与颜色`, () => {
       expect(connectionState(item({ status }), Date.parse(timestamp), false)).toMatchObject(
         connectionStates[status],
@@ -64,14 +62,45 @@ describe('运行连接状态', () => {
 
   it('过期、缺失检查时间和查询失败不能继续显示正常', () => {
     expect(connectionState(item(), Date.parse(timestamp) + 30000, false).label).toBe('未知')
-    expect(connectionState(item({ checkedAt: null }), Date.parse(timestamp), false).label).toBe(
-      '未知',
-    )
+    expect(
+      connectionState(item({ checkedAt: undefined }), Date.parse(timestamp), false).label,
+    ).toBe('未知')
     expect(connectionState(item(), Date.parse(timestamp), true).label).toBe('未知')
     expect(
-      connectionState(item({ status: 'DISABLED', checkedAt: null }), Date.parse(timestamp), false)
-        .label,
+      connectionState(
+        item({ status: 'DISABLED', checkedAt: undefined }),
+        Date.parse(timestamp),
+        false,
+      ).label,
     ).toBe('停用')
+  })
+
+  it('缺少快照时间、有效期或状态均不推断为正常', () => {
+    expect(connectionState(item(), NaN, false).label).toBe('未知')
+    expect(
+      connectionState(item({ staleAfterSeconds: undefined }), Date.parse(timestamp), false).label,
+    ).toBe('未知')
+    expect(connectionState(item({ status: undefined }), Date.parse(timestamp), false).label).toBe(
+      '未知',
+    )
+  })
+
+  it('缺少分组或 ID 的连接不影响其他服务展示，SAP 保留后端探测说明', async () => {
+    request.mockResolvedValueOnce(
+      snapshot([
+        item({ id: 'nari.sap.warehouse', group: 'INTEGRATION', name: 'SAP', message: 'TCP 可达' }),
+        item({ id: undefined, group: 'INTEGRATION', name: '外部连接' }),
+        { name: '待识别连接' },
+      ]),
+    )
+    const wrapper = mount(RuntimeConnections, { global: { stubs } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('TCP 可达')
+    expect(wrapper.text()).toContain('外部连接')
+    expect(wrapper.text()).toContain('未分组')
+    expect(wrapper.text()).toContain('待识别连接')
+    expect(wrapper.text()).toContain('未知')
+    wrapper.unmount()
   })
 
   it('按服务端间隔刷新，失败保留旧数据并标记未知，恢复后清除错误', async () => {

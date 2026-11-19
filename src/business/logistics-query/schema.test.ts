@@ -67,6 +67,11 @@ describe('物流查询五对象契约', () => {
     expect(fields.objectId!.target).toBeUndefined()
     expect(fields.productionPlanId!.target).toBeUndefined()
   })
+  it('线边库入库快照仅在任务详情展示', () => {
+    const { snapshots, columns, sort } = queryObjects.task
+    expect(snapshots).toContain('lineSideInboundSnapshot')
+    expect([...columns, ...filterKeys('task'), ...sort]).not.toContain('lineSideInboundSnapshot')
+  })
   it('快照 JSON 格式化，其他内容原样保留，不生成 HTML', () => {
     expect(snapshotText('{"a":0}')).toBe('{\n  "a": 0\n}')
     expect(snapshotText('<img src=x>')).toBe('<img src=x>')

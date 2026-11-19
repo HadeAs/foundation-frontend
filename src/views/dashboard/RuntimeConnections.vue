@@ -31,14 +31,17 @@ const intervalSeconds = computed(() => {
 const groups = computed(() => {
   const serverNow =
     Date.parse(snapshot.value?.generatedAt || '') + Math.max(0, now.value - receivedAt)
-  return [
+  const items = snapshot.value?.items || []
+  const sections = [
     { key: 'FOUNDATION', label: '基础服务' },
     { key: 'INTEGRATION', label: '外部集成' },
-  ].map((group) => ({
+  ]
+  if (items.some((item) => !item.group)) sections.push({ key: '', label: '未分组' })
+  return sections.map((group) => ({
     ...group,
-    items: (snapshot.value?.items || [])
-      .filter((item) => item.group === group.key)
-      .sort((a, b) => a.id.localeCompare(b.id))
+    items: items
+      .filter((item) => (item.group ?? '') === group.key)
+      .sort((a, b) => (a.id ?? '').localeCompare(b.id ?? ''))
       .map((item) => ({
         ...item,
         display: connectionState(item, serverNow, Boolean(error.value)),
@@ -46,7 +49,7 @@ const groups = computed(() => {
   }))
 })
 
-function time(value: string | null) {
+function time(value?: string | null) {
   return value && dayjs(value).isValid() ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—'
 }
 
@@ -139,7 +142,7 @@ onUnmounted(() => {
     <div class="connections-body" :aria-busy="loading">
       <div v-if="loading && !snapshot" class="connections-loading"><a-spin /> 正在读取连接状态</div>
       <a-empty
-        v-else-if="!snapshot?.items.length"
+        v-else-if="!snapshot?.items?.length"
         :image="AEmpty.PRESENTED_IMAGE_SIMPLE"
         :description="error ? '连接状态未知，请重试' : '暂无连接状态'"
       />
@@ -150,7 +153,7 @@ onUnmounted(() => {
           <ul v-else>
             <li v-for="item in group.items" :key="item.id" class="connection-item">
               <div class="connection-title">
-                <strong>{{ item.name }}</strong>
+                <strong>{{ item.name || item.id || '—' }}</strong>
                 <a-tag :color="item.display.color">{{ item.display.label }}</a-tag>
               </div>
               <p v-if="item.display.reason" class="muted">{{ item.display.reason }}</p>
@@ -159,7 +162,7 @@ onUnmounted(() => {
                 <summary>检查详情</summary>
                 <dl>
                   <dt>连接类型</dt>
-                  <dd>{{ item.kind }}</dd>
+                  <dd>{{ item.kind || '—' }}</dd>
                   <dt>最近检查</dt>
                   <dd>{{ time(item.checkedAt) }}</dd>
                   <dt>最近成功</dt>
@@ -167,7 +170,7 @@ onUnmounted(() => {
                   <dt>检查耗时</dt>
                   <dd>{{ item.durationMillis == null ? '—' : `${item.durationMillis} ms` }}</dd>
                   <dt>连续失败</dt>
-                  <dd>{{ item.consecutiveFailures }}</dd>
+                  <dd>{{ item.consecutiveFailures ?? '—' }}</dd>
                   <dt>最近通信</dt>
                   <dd>{{ time(item.lastCommunicationAt) }}</dd>
                   <dt>通信结果</dt>

@@ -18,8 +18,12 @@ export function connectionState(item: RuntimeConnection, serverNow: number, fail
   if (!Number.isFinite(checkedAt)) {
     return { ...connectionStates.UNKNOWN, reason: '尚无有效检查时间' }
   }
-  if (!Number.isFinite(serverNow) || serverNow - checkedAt >= item.staleAfterSeconds * 1000) {
+  const ttl = item.staleAfterSeconds
+  if (!Number.isFinite(serverNow) || ttl == null || !Number.isFinite(ttl) || ttl <= 0) {
+    return { ...connectionStates.UNKNOWN, reason: '缺少有效快照时间或有效期' }
+  }
+  if (serverNow - checkedAt >= ttl * 1000) {
     return { ...connectionStates.UNKNOWN, reason: '检查结果已过期' }
   }
-  return { ...(connectionStates[item.status] || connectionStates.UNKNOWN), reason: '' }
+  return { ...(connectionStates[item.status ?? 'UNKNOWN'] || connectionStates.UNKNOWN), reason: '' }
 }

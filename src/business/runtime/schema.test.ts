@@ -28,6 +28,15 @@ describe('运行对象 V9 契约', () => {
       expect(contract.paths).toHaveProperty(`/api/v1/business/${config.resource}`)
       expect(contract.paths).toHaveProperty(`/api/v1/business/${config.resource}/{id}`)
     })
+  it('线边库位置仅作为详情关联，不参与列表、筛选或排序', () => {
+    const { fields, columns, filters, more } = runtimeObjects.containerState
+    expect(fields).toContainEqual(
+      expect.objectContaining({ key: 'lineSideLocationId', target: 'location' }),
+    )
+    expect([...columns, ...filters, ...more, ...runtimeSortFields]).not.toContain(
+      'lineSideLocationId',
+    )
+  })
   it('关系默认有效、状态不限、载具更换或清除时清空槽位', () => {
     expect(defaultRuntimeFilters('vehicleLoad')).toEqual({ bindingStatus: 'ACTIVE' })
     expect(defaultRuntimeFilters('boxBinding')).toEqual({ bindingStatus: 'ACTIVE' })

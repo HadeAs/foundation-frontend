@@ -120,6 +120,7 @@ export const runtimeObjects: Record<RuntimeType, RuntimeConfig> = {
       enumeration('rivetState', '铆接状态', 'nari_rivet_state'),
       enumeration('fixtureState', '治具状态', 'nari_fixture_state'),
       relation('lastProductionLineId', '最近产线', 'line'),
+      relation('lineSideLocationId', '线边库位置', 'location'),
       field('reservationKey', '预占标识'),
       time('reservedTime', '预占时间'),
       field('warehouseRequestId', '缴库请求 ID'),

@@ -595,6 +595,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/business/nari-line-side-inbound-record/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询四楼线边入库记录详情 */
+        get: operations["nari_line_side_inbound_record_get"];
+        /** 更新四楼线边入库记录 */
+        put: operations["nari_line_side_inbound_record_update"];
+        post?: never;
+        /** 删除四楼线边入库记录 */
+        delete: operations["nari_line_side_inbound_record_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/business/nari-line-process-storage-zone/{id}": {
         parameters: {
             query?: never;
@@ -1844,27 +1863,7 @@ export interface paths {
         put?: never;
         /**
          * 提交缴库申请
-         * @description 2026-10-19核对：当前错误体没有公开持久化检查点或续办动作，HTTP409/code40900和503/code500均不能独自判断是否可换UUID；data=null。下列内部状态仅解释源码，不是响应字段，禁止前端解析message作状态判断。
-         *     MES_REJECTED／MES_FAILED、TOKEN_FAILED、SAP_NOT_SENT以及符合现有解析规则的SAP_REJECTED，在失败状态和解除保护已成功落库的前提下，没有SAP缴库／WMS写入效果，原请求仍重放失败，刷新后新UUID可重新尝试。但前端目前缺乏可信的机器判别依据，应保持原请求待核实。
-         *     SAP_PARTIAL／SAP_UNKNOWN、MES_SENDING／SAP_SENDING／WMS_SENDING／WMS_UNKNOWN保留保护，不重发；SAP_SUCCEEDED／WMS_FAILED允许原UUID＋完整原请求（含旧version）仅补WMS。若WMS_SUCCEEDED检查点已独立保存，原请求仅补本地成功记录；若远端已成功但该检查点未存下，则仍停SENDING，不能靠重发推定回滚。
-         *     成功回放原回执，不重新申请SAP。未知／部分成功的人工恢复、按请求状态查询及稳定业务错误标识尚未实现；本修订只校正说明，不把这些能力描述为已提供。
-         *
-         *     既有正常流程及校验：
-         *     当前实现（2026-10-15.5）：正常缴库链已实现，部分成功／未知人工核查尚未实现，因此为PARTIAL。只接收真实逐板BY_CODE普通物料箱，可单箱或整车，允许缴库尾单混装；数量快捷绑箱不允许缴库。按原requestId固定全部箱／绑定身份、内容键及连接配置摘要，warehouseRequestId只保护内容，不冒充运输预占。
-         *
-         *     MES：独立JDBC按BAR_CODE批量查t_b_order_product.IF_DONE_FLAG，每码须存在且数值=1；同码多行须全部为1，不任取第一行。不存在／未完成返回409，读取失败503；尚无SAP／WMS效果时解除内容保护，原失败请求重放失败，新尝试刷新后用新requestId。
-         *
-         *     SAP：从数据库参数nari.sap.warehouse读取Token及申请完整地址。Token用POST JSON {}，校验access_token及正数expires_in，不持久化／打印Token。申请POST JSON数组，access_token头；按SAP订单聚合，一码1，plantCode=0909、storageDuration=60、inboundLocation固定空字符串、makeDocPerson=当前登录账号、createTime=Asia/Shanghai日期。同订单多物料拒绝，不任取第一条。
-         *
-         *     按旧代码推导整体code=0，明细E失败；保留所有返回单号及错误，不按结果顺序匹配订单。空结果／缺成功单号／成功条目数与订单组数不符保守UNKNOWN；同单号可跨明细重复，单号集合去重。全明细E且无单号可明确拒绝；部分成功、HTTP／应答异常、顶层非0或其他不完整返回都保留已有信息待核查，不重新发SAP。真实SAP样例和是否合并返回需现场验收。
-         *
-         *     SAP成功事实先独立提交，再写WMS待上架；WMS明确失败保留SAP单号及内容保护，原requestId及完整原请求（含旧version）只补WMS，不重复申请SAP。SAP已成功、WMS未开始的持久检查点可继续WMS；WMS成功事实已独立保存但成功主表未落库时，只补本地成功记录。SENDING／UNKNOWN及SAP部分成功禁止自动重发，人工核查恢复待补。
-         *
-         *     WMS使用此前确认的lCode=LES applicationNo、cartCode可空、批次解析、一板数量1及100写入规则。三步全部成功才一次事务生成NariWarehouseRecord及成功箱明细、将warehouseRequestId保护交给activeBoxId、保存成功回执；旧历史内容键（含归档）也禁止重复缴库。申请号复用nari.numbering.operation-rule。成功原请求回放。运输需之后独立创建，不代表已入库。
-         *
-         *     前端：503不一定没有SAP/WMS效果；保留原requestId及原完整请求。明确WMS失败可原样重试，未知由后端阻止；不得自动创建新请求或自行清除保护。无需新增inboundLocation输入。当前源码已测试，未真实MES／SAP／WMS联调、部署或联合冻结。
-         *
-         *     编号边界（2026-10-20.1）：applicationNo 是业务单据编号，仍由后端读取 nari.numbering.operation-rule 对应的启用规则生成；前端不提交编码规则。此参数不再用于普通操作回执。
+         * @description 2026-11-18已确认：所有通过缴库申请的箱／载具，在MES完工校验、SAP申请及本地成功记录完成后返回，申请阶段不写WMS。新成功回执wmsPendingCreated=false仍表示缴库申请成功；WMS待上架改在三楼POST /receiving/confirm时生成。旧已完成请求原样回放，历史true保留；SAP成功或旧WMS明确失败检查点只补本地并延后WMS，旧WMS已成功仅补本地并保留true。SAP部分／未知及旧WMS发送中／未知不得重新发送。requestId与完整Body、操作人绑定，不能更换ID重复申请同批内容。
          */
         post: operations["nari_warehouse_applications_submit"];
         delete?: never;
@@ -2065,7 +2064,10 @@ export interface paths {
         put?: never;
         /**
          * 提交成品发货
-         * @description 2026-10-29.2用户确认：库房发货同箱允许多个L单及不同物料、批次、订单；按实际逐板明细返回和重建，不要求箱级三项同质。箱级每项摘要仅在该属性全箱唯一时填写，多值置空，数量按去重后的实际板件计算。原始WMS三列快照保留全部L单及重复行，清理前仍复核原始多重集。相同板件跨箱或不同lCode的来源冲突、坏码、范围外绑定、版本及任务保护继续拒绝。查询不写入／不清理；本轮仅源码及隔离测试，未对真实WMS执行提交或清理。
+         * @description ### 当前编号规则（2026-11-17，用户已确认）
+         *     新建单据由后端读取 nari.numbering.shipping-rule 独立每日取号，格式 FHDyyyyMMdd-000001。原有编号及原requestId回放保留，不重新取号；缺少本项配置时拒绝，不回退旧共享规则。前端不提交规则编码。以下历史编号配置说明由本节替代，其他业务与防重约定保持。
+         *
+         *     2026-10-29.2用户确认：库房发货同箱允许多个L单及不同物料、批次、订单；按实际逐板明细返回和重建，不要求箱级三项同质。箱级每项摘要仅在该属性全箱唯一时填写，多值置空，数量按去重后的实际板件计算。原始WMS三列快照保留全部L单及重复行，清理前仍复核原始多重集。相同板件跨箱或不同lCode的来源冲突、坏码、范围外绑定、版本及任务保护继续拒绝。查询不写入／不清理；本轮仅源码及隔离测试，未对真实WMS执行提交或清理。
          *
          *     2026-10-19核对：没有按原发货UUID查询处理状态／执行人工恢复的PDA接口。对象查询展示当前箱范围和WMS来源，不能作为原发货请求的终态证明。后台未决巡检只读，不解锁、不补发、不制造成功。
          *     LES换绑成功后WMS明确未写入或回滚：内部FAILED；原UUID＋完整原请求（包括旧version）仅重试原WMS清理，复核LES范围和原始远端多重集，不重新换绑。来源变更整批不删，保留LES重建和保护，原请求不采用新的WMS内容，缺少人工解决入口。
@@ -2104,21 +2106,9 @@ export interface paths {
         put?: never;
         /**
          * 确认物料接收
-         * @description ### 本轮调整（2026-10-20.1）
-         *     普通操作成功回执不再返回 operationNo，也不依赖 nari.numbering.operation-rule。请求不变；前端不传编码规则或操作编号。requestId 防重、业务版本／状态保护与历史记录保留。历史成功请求仅按新结构回放，不重复执行业务。接收记录本身仍由后端按 nari.numbering.receiving-rule 生成 receivingNo。
+         * @description 2026-11-18已确认：三楼扫描箱只确认本箱，扫描载具确认本次可信送达固定范围内全部剩余箱。对尚未生成待上架的新缴库内容，后端以原缴库申请号、原申请操作人及载具快照、真实逐件板件生成WMS待上架；不同申请来源保留各自申请号，在一个WMS事务内写入全部本次范围，再原子完成本地接收。旧版申请阶段已成功生成待上架的内容不重写WMS。成功后刷新任务及清单，按接收范围解除装载与载具位置关系，保留板件绑定。WMS明确失败返回503，同用户原requestId及完整Body可重试；未知或处理中禁止重写，原请求再次提交返回409待核查；已持久化WMS成功而本地接收失败时原请求仅补本地。确认仍使用task.version，不使用箱／车版本。四楼入库不走此WMS流程。
          *
-         *     ### 当前实现（2026-10-15.1）
-         *     状态：本地逻辑已实现（须满足前置）。
-         *
-         *     扫描箱确认单箱、扫描车确认本批剩余箱；核对当前内容，写接收记录并返回最新任务版本。
-         *
-         *     前置与边界：可信送达、当前 taskId／version、object；可选 remark；接收记录编号规则（nari.numbering.receiving-rule）。
-         *
-         *     object 为本次扫描对象；扫描箱仅确认该箱，扫描车确认本次固定范围中剩余箱，可附 remark；以回执最新 task.version 继续后续操作。
-         *
-         *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
-         *
-         *     确认本次已可信送达库房运输的接收范围：taskId 是物流运输任务 ID，object 为查询识别的 BOX／VEHICLE。扫描箱只确认该箱，扫描车原子确认固定送达范围中全部尚未确认箱，已有接收记录保留。version 原样回传本次运输任务的接收范围版本，不接受容器版本替代。无需独立接收批次或多个任务选择。 同请求重放原回执；新请求重复确认已全部接收范围明确拒绝。接收不自动卸车、不解绑 LES 板件；每箱确认后才创建记录，整车提交同事务写尚未确认箱。 可选 remark 保存到本次新增的接收记录，既有单箱确认记录不覆盖；可备注清点差异，不新增实收数量或差异处理状态。
+         *     2026-11-18接收解绑确认：3F确认接收、4F人工入库及AGV自动入库成功时，关闭本次接收箱的SLOT／DIRECT装载关系并保留历史；整车接收解除该载具与位置的绑定，单箱接收仅在父车已无剩余箱时解除父车位置。其他箱及板件绑定保留。位置解除后presenceState=UNKNOWN，不推断空闲；4F已接收箱保存公共入库地标。解绑与本地接收／入库同事务，失败一起回滚，成功重放不重复解绑；3F已持久化WMS成功后原请求只补本地。已部署，真实页面／实车待验收。
          */
         post: operations["nari_receiving_confirm"];
         delete?: never;
@@ -2156,6 +2146,10 @@ export interface paths {
          *     affectedCount为本次完成清理的箱数，原始远端删行数另记操作记录；零匹配行可成功，不表示已清点。登记及保存结果会推进任务版本，成功／失败后必须重新查询任务取得最新version。本接口保持原OperationReceipt，不增加版本字段。
          *
          *     认证：只检查登录；角色菜单控制前端页面和路由。无真实专有驱动联调、旧修订当时无配套新镜像（本次已另附同运行时候选镜像）、未联合冻结。
+         *
+         *     ### 2026-11-18 收货入口复用
+         *     保持原3楼独立清理入口和资格；4楼复用页面不得显示或调用此动作，入库成功不触发WMS清理。本次不改变请求结构或原清理条件。
+         *     对接说明：业务说明/物料接收入口复用与前端对接.md。本次仅说明调整，无新增运行参数或DTO。
          */
         post: operations["nari_receiving_clear_wms_bindings"];
         delete?: never;
@@ -2204,7 +2198,10 @@ export interface paths {
         put?: never;
         /**
          * 确认按订单叫料
-         * @description 2026-10-15.6当前实现：逐箱本地排队；启用调度处理器后只有目标可信EMPTY、无预占且前序已结算才放行。回调完成占用目标，须真实卸载／信号使其再次空闲；OPC接入仍待补。
+         * @description ### 当前编号规则（2026-11-17，用户已确认）
+         *     新建单据由后端读取 nari.numbering.order-call-rule 独立每日取号，格式 JLDyyyyMMdd-000001。原有编号及原requestId回放保留，不重新取号；缺少本项配置时拒绝，不回退旧共享规则。前端不提交规则编码。以下历史编号配置说明由本节替代，其他业务与防重约定保持。
+         *
+         *     2026-10-15.6当前实现：逐箱本地排队；启用调度处理器后只有目标可信EMPTY、无预占且前序已结算才放行。回调完成占用目标，须真实卸载／信号使其再次空闲；OPC接入仍待补。
          *
          *     ### 当前实现（2026-10-15.1）
          *     状态：部分实现。
@@ -2258,6 +2255,9 @@ export interface paths {
          *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
          *
          *     创建物流运输任务，返回真实任务身份与实际 A／B，不代表运输完成。候选按业务基准位置的 SOURCE／TARGET 存储区关联展开其下真实 NariLocation，再按用途、产线、规格、占用／预占及业务资格筛选。回线边库采用 TARGET 和运行用途选择库类别，不使用 BOX_TARGET／FIXTURE_TARGET 或独立点对点关系。 后端按实际搬运对象和业务确定品牌：位置箱作业使用位置唯一 agvVendor，同品牌高／低车由调度选择；当前整车运输使用 STANDARD。停车点上的车与车上箱是不同搬运对象，海康取放箱不得改成斯坦德搬整车。位置配置缺失／无法识别对象或不支持组合时明确失败，不采用默认品牌。 taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。 destinationMode=RETURN_LINE_SIDE 由后端分配具体空闲兼容位置；SPECIFIED 按提交目标复核。同 requestId 同内容重放，人工／自动共用资源互斥；绑定成功与运输创建独立。 位置支持多用途配置，筛选后按位置去重，不重复派单。
+         *     2026-11-18修订：3F库房整车发货至4F指定LINE_SIDE_INBOUND地标时自动关联发货箱及物料，无需选箱或提交lineSideInbound；入库范围由后端固定，可信完成后本地入库。来源诊断只读，分拣未接入，原回库资格保持。
+         *
+         *     2026-11-18接收解绑确认：3F确认接收、4F人工入库及AGV自动入库成功时，关闭本次接收箱的SLOT／DIRECT装载关系并保留历史；整车接收解除该载具与位置的绑定，单箱接收仅在父车已无剩余箱时解除父车位置。其他箱及板件绑定保留。位置解除后presenceState=UNKNOWN，不推断空闲；4F已接收箱保存公共入库地标。解绑与本地接收／入库同事务，失败一起回滚，成功重放不重复解绑；3F已持久化WMS成功后原请求只补本地。已部署，真实页面／实车待验收。
          */
         post: operations["nari_logistics_tasks_create"];
         delete?: never;
@@ -2279,10 +2279,12 @@ export interface paths {
          * 取消物流任务
          * @description 2026-10-19当前实现核对（替代15.1仅本地取消说明）：从未发送的本地QUEUED可直接取消并释放本次预占；已ACCEPTED／RUNNING的海康、斯坦德BY_STATION候选可向调度发起取消。FLOW在prepareCancel阶段返回503，尚未发送且本次事务未登记取消记录，不保证结果查询存在。当前没有独立的未支持业务错误标识，503本身不能证明未发送。
          *     支持分支先独立提交取消记录SENDING和active_cancel_request_id，再发送；网络异常或非成功业务码均保守UNKNOWN，不把厂商非零码猜成无外部效果的明确拒绝。结果查询将内部SENDING和ACCEPTED都投影为ACCEPTED，UNKNOWN／FAILED独立返回；ACCEPTED不表示终结，也不能判断HTTP是否已经发出。
-         *     可信取消回调才返回CANCELLED；运输先完成时取消结果为FAILED。取货后CANCELLED仍可未结算，保留实物保护，必须刷新位置及unbindEligibility；不能推定已离开或直接解绑。
+         *     斯坦德BY_STATION取消成功回执code=0直接返回CANCELLED，海康在可信取消回调后返回CANCELLED；运输先完成时取消结果为FAILED。取货后CANCELLED仍可未结算，保留实物保护，必须刷新位置及unbindEligibility；不能推定已离开或直接解绑。
          *     结果404只说明查询时没有可见的本任务＋requestId可信记录（或任务不存在），可能请求未登记／仍未提交／记录不再可见，不证明调用未发生或结果过期。当前无自动过期协议，未决请求不得因503／404换新UUID。稳定未发送标识、未支持分支的结果登记保证及人工恢复尚未补齐。
          *
          *     认证：运行接口只检查登录；角色菜单控制前端页面和路由。请求与成功响应保持；本次未联合冻结。
+         *
+         *     2026-11-17用户确认并冻结本次取消语义修正：斯坦德BY_STATION取消接口code=0即取消完成，无额外取消回调，因此同步返回CANCELLED并更新任务终态；海康仍为ACCEPTED后等待取消回调。非成功码/超时继续UNKNOWN且不自动重发，运输先完成不能被取消覆盖。旧版已记录ACCEPTED的斯坦德成功取消，可用原人员/原requestId/原内容回放补本地结算，不重复调用厂商。保留物理绑定；已有取货事实时取消仍保留实物保护待核查。此段取代上述两品牌均需取消回调的旧说明，接口结构及认证保持。
          */
         post: operations["nari_logistics_tasks_cancel"];
         delete?: never;
@@ -2474,6 +2476,58 @@ export interface paths {
          *     新增确认规则：料箱直接绑定料车与库位装载互斥。存在有效直接关系时装车查询返回 eligibility.allowed=false 并提示；批量装车提交也必须原子复核并拒绝，不隐式解除直接关系。与直接绑定写入共用锁定及互斥规则，防止并发产生两种关系。
          */
         post: operations["nari_loading_batch_load"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/line-side/inbounds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 分页查询本地入库历史摘要
+         * @description ### 2026-11-18 收货入口复用
+         *     复用清单页“4楼入库记录”页签，列表均已入库，含AGV自动及人工。PENDING不能显示为待收货，无确认接收按钮。支持boxCode、inboundMode、syncStatus、inboundFrom、inboundTo、page、size；不支持locationCode、vehicleCode或taskId筛选。列表不加载大物料快照。
+         *     对接说明：业务说明/物料接收入口复用与前端对接.md。本次仅说明调整，无新增运行参数或DTO。
+         */
+        get: operations["nari_line_side_inbound_list"];
+        put?: never;
+        /**
+         * 人工扫码确认本地入库
+         * @description ### 2026-11-18 收货入口复用
+         *     复用现有接收页面的4楼人工确认；提交预检返回的版本、来源及摘要，不能用task.version替代。成功为本地已入库，PENDING仅是分拣待接入；人工动作会解除本箱旧直接位置或装车关系，不删除物料。confirmOverwrite=true当前拒绝；不调用旧receiving/confirm或WMS清理。
+         *     对接说明：业务说明/物料接收入口复用与前端对接.md。本次仅说明调整，无新增运行参数或DTO。
+         *
+         *     2026-11-18接收解绑确认：3F确认接收、4F人工入库及AGV自动入库成功时，关闭本次接收箱的SLOT／DIRECT装载关系并保留历史；整车接收解除该载具与位置的绑定，单箱接收仅在父车已无剩余箱时解除父车位置。其他箱及板件绑定保留。位置解除后presenceState=UNKNOWN，不推断空闲；4F已接收箱保存公共入库地标。解绑与本地接收／入库同事务，失败一起回滚，成功重放不重复解绑；3F已持久化WMS成功后原请求只补本地。已部署，真实页面／实车待验收。
+         */
+        post: operations["nari_line_side_inbound_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-logistics/line-side/inbounds/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 人工公共地标入库预检查
+         * @description ### 2026-11-18 收货入口复用
+         *     复用现有“物料接收”的4楼人工入库分支；输入箱码＋地标码，按顶层allowed/reason展示资格，保留boxVersion、locationVersion、shippingOperationId及contentHash。两码改变须重新预检，不支持扫码车整批确认。远端UNKNOWN表示未查询。
+         *     对接说明：业务说明/物料接收入口复用与前端对接.md。本次仅说明调整，无新增运行参数或DTO。
+         */
+        post: operations["nari_line_side_inbound_preview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2799,8 +2853,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 斯坦德调度事件回调（候选）
-         * @description 按配置的orderState映射事件，未知不结算；返回厂商原始reqCode/code/message，正式协议待比对。
+         * 斯坦德调度状态回调
+         * @description 用户2026-11-17确认：斯坦德结束时回调，orderState=1表示完成。生产按states={"1":"COMPLETED"}映射，其他未配置状态及缺失状态不结算。upperId必填且为原物流任务编号。保留登录、已发送任务身份、协议快照、实物预占与幂等校验；返回原始reqCode/code/message。以后仅按已确认协议增加状态映射，不推测其他值。
+         *     2026-11-17用户确认并冻结callbackToken增量：斯坦德无请求头配置入口，可在JSON根对象携带专用长期Token，仅授权NARI_STANDARD_CALLBACK；或使用原Authorization，二选一。空security项表示可省略Authorization而必须使用Body凭据，绝非匿名接口。错误/停用/未授权密钥拒绝；仅显式本回调接受JSON凭据，不接受URL参数或普通登录Token。64KiB有界严格JSON解析，拒绝重复字段及尾随内容，凭据在业务前移除并进行日志脱敏；无Content-Type配置时，合法带凭据JSON可兼容处理。
          */
         post: operations["nari_agv_standard_callback"];
         delete?: never;
@@ -2874,7 +2929,16 @@ export interface paths {
         /** 分页查询固定位置 */
         get: operations["page_19"];
         put?: never;
-        /** 创建固定位置 */
+        /**
+         * 创建固定位置
+         * @description 2026-11-17确认：新建固定位置同时初始化EMPTY及初始化时间，不创建容器占用、预占或传感器事实；不重置已有位置的运行状态。
+         *     2026-11-17确认：新建固定位置同时初始化EMPTY及初始化时间，不创建容器占用、预占或传感器事实；不重置已有位置的运行状态。
+         *     2026-11-17确认：新建固定位置同时初始化EMPTY及初始化时间，不创建容器占用、预占或传感器事实；不重置已有位置的运行状态。
+         *     2026-11-17确认：新建固定位置同时初始化EMPTY及初始化时间，不创建容器占用、预占或传感器事实；不重置已有位置的运行状态。
+         *     2026-11-17确认：新建固定位置同时初始化EMPTY及初始化时间，不创建容器占用、预占或传感器事实；不重置已有位置的运行状态。
+         *     2026-11-17确认：新建固定位置同时初始化EMPTY及初始化时间，不创建容器占用、预占或传感器事实；不重置已有位置的运行状态。
+         *     2026-11-17确认：新建固定位置同时初始化EMPTY及初始化时间，不创建容器占用、预占或传感器事实；不重置已有位置的运行状态。
+         */
         post: operations["create_21"];
         delete?: never;
         options?: never;
@@ -3068,6 +3132,41 @@ export interface paths {
         put?: never;
         /** 批量删除位置允许容器规格 */
         post: operations["batchDelete_25"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-line-side-inbound-record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询四楼线边入库记录 */
+        get: operations["nari_line_side_inbound_record_page"];
+        put?: never;
+        /** 创建四楼线边入库记录 */
+        post: operations["nari_line_side_inbound_record_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/business/nari-line-side-inbound-record/batch/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量删除四楼线边入库记录 */
+        post: operations["nari_line_side_inbound_record_batch_delete"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3939,6 +4038,8 @@ export interface paths {
         /**
          * 读取运行连接状态缓存
          * @description 只要求有效登录；单项异常仍返回200。读取不触发外部探测。基础服务在前，按id排序。
+         *
+         *     2026-11-17：新增SAP缴库服务nari.sap.warehouse。UP仅指配置中的认证及申请服务端口可达，不代表认证或缴库业务成功；监控不取Token、不发送HTTP或提交申请。通用items字段不变。
          */
         get: operations["getRuntimeConnections"];
         put?: never;
@@ -4003,9 +4104,7 @@ export interface paths {
         };
         /**
          * 查询缴库申请对象
-         * @description 2026-10-15.5：查询本地箱／车范围、完整板件及版本，评估真实逐码、未冻结／未成功内容、普通板件箱及MES／SAP／WMS独立配置。查询不请求MES完成标记、SAP Token／申请或WMS，不产生缴库事实；eligibility=true不表示MES已通过，实际提交仍逐件校验。名称／单位无来源省略，materials按契约返回。运行接口仅检查登录。
-         *
-         *     2026-10-21.1：OPERATION业务单据规则未就绪时资格不可用；查询不消耗编号。
+         * @description 2026-11-18缴库时点修订：查询单箱或载具完整箱／物料范围，按本地内容、MES／SAP配置及申请编号配置给出资格。本查询不调用外部，不依赖WMS配置、不生成待上架；实际MES完工校验及SAP成功在提交时确认。App关联物料按orderNo分类，保留板件、批次、数量及所属箱。
          */
         get: operations["nari_warehouse_applications_objects_query"];
         put?: never;
@@ -4237,21 +4336,7 @@ export interface paths {
         };
         /**
          * 查询对象接收任务
-         * @description 2026-10-15.6当前实现：除已有可信事实查询外，已接入候选调度完成事务所产生的WAREHOUSE_DELIVERY固定箱送达；需要真实／测试桩完成回调，不能通过CRUD伪造送达。
-         *
-         *     ### 当前实现（2026-10-15.1）
-         *     状态：本地逻辑已实现（须满足前置）。
-         *
-         *     按对象与可选 taskId 查询可信送达固定箱范围，表达单箱／整批及部分接收。
-         *
-         *     前置与边界：真实 COMPLETED 且 settled 的 WAREHOUSE_DELIVERY、固定成功箱快照；事实生产链待外部接入。
-         *
-         *
-         *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
-         *
-         *     扫描箱／车按本次已可信送达物流任务的冻结箱范围查询，卸车后仍按原送达范围定位，不能用当前装载代替。箱返回本箱内容；车返回本次完整范围及 PENDING／PARTIAL／RECEIVED、已接收箱数和总数。存在多个未完成交付冲突返回 409，不任取第一条。无范围时省略 task，boxes=[]、总量为 0。可携带已知 taskId 查询已接收范围及清理结果，仍复核 scanCode 对象属于该固定范围；不增加员工多任务选择。对象不存在 404、编码歧义 400。查询完整一致，不分页不截断；确认提交 taskId、version、object。
-         *
-         *     2026-10-21.1：仍待接收时，RECEIVING规则未就绪会反馈不可确认；已接收项仍按已完成展示。查询不消耗编号。
+         * @description 三楼按scanCode及可选taskId查询可信缴库送达固定范围。新缴库内容在确认接收时生成WMS待上架，查询无外部写入。task.eligibility包含当前固定内容、接收编号及需要时的WMS配置；接收在途或结果待核查时不可再次提交。扫箱只显示本箱，扫车显示固定范围，不读取后来装入的箱代替。
          */
         get: operations["nari_receiving_tasks_query"];
         put?: never;
@@ -4271,24 +4356,7 @@ export interface paths {
         };
         /**
          * 分页查询待接收物料清单
-         * @description 2026-10-15.6当前实现：来源为可信已结算缴库送达范围，候选斯坦德回调可生产该事实；不由当前车上箱推断，完整现场链路待正式协议联调。
-         *
-         *     ### 当前实现（2026-10-15.1）
-         *     状态：本地逻辑已实现（须满足前置）。
-         *
-         *     从可信已结算送达范围减已接收记录，分页展示 PENDING／PARTIAL。
-         *
-         *     前置与边界：真实送达固定快照和接收事实；不把当前车载箱替代送达范围。
-         *
-         *
-         *     认证：运行接口只检查登录；角色菜单仅用于前端页面及路由。下列保留原业务契约说明；实现可用范围以本节为准。
-         *
-         *     ### 待接收物料清单
-         *     按载具号、库位号筛选当前待接收任务，分页提供任务号、载具、库位及创建时间等展示信息，支持滚动加载。
-         *
-         *     默认 createdTime DESC、taskId DESC；本候选不新增可选排序字段。
-         *
-         *     联合评审／冻结状态见本文件 info；业务规则仍由后端再次校验。
+         * @description 三楼分页读取可信缴库送达后尚未全部接收的任务，保留部分接收；新缴库内容在POST /receiving/confirm生成WMS待上架。eligibility按固定范围、本地内容、编号和需要时的WMS配置及原接收检查点计算。四楼已入库历史使用原line-side接口。
          */
         get: operations["nari_receiving_pending_tasks_query"];
         put?: never;
@@ -4412,6 +4480,7 @@ export interface paths {
          *     扫描载具、料箱或业务位置，由后端按 scanCode 唯一识别对象与实际起始位置，歧义或无有效关联明确失败。候选按业务基准位置的 SOURCE／TARGET 存储区关联展开其下真实 NariLocation，再按用途、产线、规格、占用／预占及业务资格筛选。回线边库采用 TARGET 和运行用途选择库类别，不使用 BOX_TARGET／FIXTURE_TARGET 或独立点对点关系。 后端按实际搬运对象和业务确定品牌：位置箱作业使用位置唯一 agvVendor，同品牌高／低车由调度选择；当前整车运输使用 STANDARD。停车点上的车与车上箱是不同搬运对象，海康取放箱不得改成斯坦德搬整车。位置配置缺失／无法识别对象或不支持组合时明确失败，不采用默认品牌。 taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。 完整候选一致读取、不分页；查询不改关系，目标由员工选择，最终提交重新校验。 位置支持多用途配置，筛选后按位置去重，不重复派单。
          *
          *     2026-10-21.1：缴库处理中或已缴库冻结的箱不允许普通物流运输，已缴库箱使用缴库运输专用流程；TASK编码规则缺失、停用或无法预览时eligibility.allowed=false。查询不消耗编号。
+         *     2026-11-18修订：3F库房整车发货至4F指定LINE_SIDE_INBOUND地标时自动关联发货箱及物料，无需选箱或提交lineSideInbound；入库范围由后端固定，可信完成后本地入库。来源诊断只读，分拣未接入，原回库资格保持。
          */
         get: operations["nari_logistics_origins_and_destinations_query"];
         put?: never;
@@ -4553,6 +4622,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/business/nari-logistics/line-side/inbounds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询入库固定物料明细
+         * @description ### 2026-11-18 收货入口复用
+         *     复用清单详情组件，路径id必须为入库记录id，不能使用taskId或发货操作ID。展示本次固定materials，不能读当前箱绑定替代。历史详情只读，AGV记录不追加人工确认。
+         *     对接说明：业务说明/物料接收入口复用与前端对接.md。本次仅说明调整，无新增运行参数或DTO。
+         */
+        get: operations["nari_line_side_inbound_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/business/nari-logistics/integration-management/events": {
         parameters: {
             query?: never;
@@ -4626,6 +4717,10 @@ export interface paths {
          *     当前实现（2026-10-15.4）：SHIPPING分支已接入WMS mes_material_records按箱码读取，返回sourceSystem=WMS、实际逐板码及解析属性；查询不写LES、不删除WMS。其余场景继续读取对应LES真实当前／冻结快照。来源失败不返回部分结果，缺名称／单位省略。
          *
          *     认证：运行接口只检查登录；角色控制页面及路由。请求及响应结构保持。
+         *
+         *     ### 2026-11-18 收货入口复用
+         *     原3楼接收可沿context=RECEIVING查询，已有receiving/tasks.boxes[].materials时直接展示。4楼使用preview或历史detail中的固定materials，不新增4楼context枚举，不将当前绑定或已清空WMS作为历史依据。
+         *     对接说明：业务说明/物料接收入口复用与前端对接.md。本次仅说明调整，无新增运行参数或DTO。
          */
         get: operations["nari_boxes_materials_query"];
         put?: never;
@@ -4827,9 +4922,9 @@ export interface paths {
         put?: never;
         /**
          * 斯坦德取消站点运输任务（调用调度）
-         * @description 仅候选BY_STATION取消；FLOW在旧分流缺失，当前503不调用。不新增暂停／继续API。 HTTP成功且业务code=0仅表示受理。网络／应答异常不重发，使用原任务号及操作记录核查。
-         *     本接口由厂商调度提供，不部署在物流后端；使用本操作servers指定的厂商地址占位，导入后配置现场真实地址。security=[]用于避免继承物流登录Token，不代表厂商无需认证；认证须按厂商实际要求单独配置。现有Apifox旧海康样例存在字段大小写、任务类型和位置类型差异，正式报文仍待现场比对。
-         *     2026-10-30.6按DFPServer实际组参补模拟示例和字段来源；priority为整数，站点不追加海康后缀。样例不自动发送，现场站点/模板需确认。
+         * @description 仅候选BY_STATION取消；FLOW在旧分流缺失，当前503不调用。不新增暂停／继续API。 HTTP成功且业务code=0表示取消已完成（2026-11-17用户确认）。网络／应答异常不重发，使用原任务号及操作记录核查。
+         *     2026-10-30.6已核对DFPServer实际DTO和构造：priority为整数；站点按LocationCode传递，不套海康拼接；流程使用CustomBusinessId作为URL参数。样例仅模拟，不代表现场站点/模板或取消协议已验收。
+         *     2026-11-17用户确认：code=0表示取消已完成，无另行取消回调；物流系统据此原子更新任务为CANCELLED。该语义仅适用斯坦德取消，创建成功码仍只表示接单。
          */
         post: operations["nari_outbound_standard_cancel"];
         delete?: never;
@@ -4916,7 +5011,7 @@ export interface components {
             /** Format: date-time */
             updatedTime?: string;
             /** @description 关联部门摘要；未分配部门或历史部门不存在时为 null */
-            department?: components["schemas"]["UserDeptSummary"] | null;
+            department?: components["schemas"]["UserDeptSummary"];
             /** @description 关联角色摘要；没有角色时返回空数组 */
             roles: components["schemas"]["UserRoleSummary"][];
         };
@@ -5035,6 +5130,38 @@ export interface components {
             createdTime?: string;
             /** Format: date-time */
             updatedTime?: string;
+        };
+        Authorization: {
+            apiCodes: string[];
+            /** Format: int32 */
+            authorizationVersion: number;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultMetadata: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["Metadata"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        Metadata: {
+            tokenId?: string;
+            name?: string;
+            scopeCode?: string;
+            scopeName?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            revokedTime?: string;
+            apiCodes?: string[];
+            /** Format: int32 */
+            authorizationVersion?: number;
         };
         JobRequest: {
             jobName: string;
@@ -5975,6 +6102,16 @@ export interface components {
             /** Format: int32 */
             version?: number | null;
         };
+        Mapping: {
+            /** Format: int64 */
+            tokenId: number;
+            variableCode: string;
+            kind: string;
+            targetCode: string;
+            enabled: boolean;
+            /** Format: int32 */
+            version?: number;
+        };
         ApiResultMapStringObject: {
             /** Format: int32 */
             code?: number;
@@ -6063,6 +6200,7 @@ export interface components {
             triggerMode?: string;
             vendor?: string;
             warehouseBoxSnapshot?: string;
+            lineSideInboundSnapshot?: string;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -6380,6 +6518,78 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
+        NariLineSideInboundRecordUpdateRequest: {
+            /**
+             * Format: int32
+             * @description 更新时必须提交当前版本
+             */
+            version: number;
+        };
+        ApiResultNariLineSideInboundRecordResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariLineSideInboundRecordResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLineSideInboundRecordResponse: {
+            /** Format: int64 */
+            id?: number;
+            boxCode?: string;
+            /** Format: int64 */
+            boxId?: number;
+            /** Format: int64 */
+            boxSequence?: number;
+            contentHash?: string;
+            externalRequestId?: string;
+            externalResultCode?: string;
+            groupKey?: string;
+            inboundKey?: string;
+            inboundMode?: string;
+            /** Format: date-time */
+            inboundTime?: string;
+            /** Format: date-time */
+            lastSentTime?: string;
+            lineSideCode?: string;
+            locationCode?: string;
+            /** Format: int64 */
+            locationId?: number;
+            materialSnapshot?: string;
+            /** Format: date-time */
+            nextCheckTime?: string;
+            operatorIdentity?: string;
+            overwriteConfirmed?: boolean;
+            overwriteConfirmedBy?: string;
+            /** Format: date-time */
+            overwriteConfirmedTime?: string;
+            shippingNo?: string;
+            /** Format: int64 */
+            shippingOperationId?: number;
+            sourceKey?: string;
+            /** Format: int32 */
+            syncAttemptCount?: number;
+            /** Format: date-time */
+            syncedTime?: string;
+            syncReason?: string;
+            syncStatus?: string;
+            /** Format: int64 */
+            taskId?: number;
+            /** Format: int32 */
+            totalQuantity?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            updatedTime?: string;
+            /** Format: date */
+            bizDate?: string;
+            sourceSystem?: string;
+            traceId?: string;
+            idempotentKey?: string;
+            /** Format: int32 */
+            version?: number;
+        };
         NariLineProcessStorageZoneUpdateRequest: {
             /** @description 不传保留原值；禁止清空 */
             enabled?: boolean;
@@ -6674,6 +6884,8 @@ export interface components {
             /** Format: int32 */
             totalQuantity?: number;
             warehouseRequestId?: string;
+            /** Format: int64 */
+            lineSideLocationId?: number;
             /** Format: date-time */
             createdTime?: string;
             /** Format: date-time */
@@ -6865,6 +7077,28 @@ export interface components {
              * @example 1
              */
             version: number;
+        };
+        Create: {
+            scopeCode: string;
+            name: string;
+            apiCodes?: string[];
+        };
+        ApiResultCreated: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["Created"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        Created: {
+            metadata?: components["schemas"]["Metadata"];
+            token?: string;
+        };
+        Revoke: {
+            /** Format: int32 */
+            version?: number;
         };
         ApiResultSysAsyncTask: {
             /** Format: int32 */
@@ -7167,6 +7401,1126 @@ export interface components {
              */
             version?: number;
         };
+        nariWarehouseLogisticsTasksCreate_CreateWarehouseLogisticsRequest: {
+            requestId: string;
+            scanType: string;
+            scanCode: string;
+            object: components["schemas"]["nariWarehouseLogisticsTasksCreate_CreateWarehouseLogisticsRequestObject"];
+            /** Format: int32 */
+            version: number;
+            destinationLocationCode: string;
+        };
+        nariWarehouseLogisticsTasksCreate_CreateWarehouseLogisticsRequestObject: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariWarehouseLogisticsTasksCreate_TaskCreationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariWarehouseLogisticsTasksCreate_TaskCreationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariWarehouseLogisticsTasksCreate_TaskCreationResponse: {
+            requestId: string;
+            task: components["schemas"]["nariWarehouseLogisticsTasksCreate_TaskCreationResponseTask"];
+        };
+        nariWarehouseLogisticsTasksCreate_TaskCreationResponseTask: {
+            taskId: string;
+            taskNo: string;
+            /** Format: int32 */
+            version: number;
+            vendor: string;
+            taskType: string;
+            container: components["schemas"]["nariWarehouseLogisticsTasksCreate_TaskCreationResponseTaskContainer"];
+            origin: components["schemas"]["nariWarehouseLogisticsTasksCreate_TaskCreationResponseTaskOrigin"];
+            destination: components["schemas"]["nariWarehouseLogisticsTasksCreate_TaskCreationResponseTaskDestination"];
+            agvCode?: string;
+            agvName?: string;
+            status: string;
+            statusName: string;
+            triggerMode: string;
+            /** Format: date-time */
+            createdTime: string;
+        };
+        nariWarehouseLogisticsTasksCreate_TaskCreationResponseTaskContainer: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariWarehouseLogisticsTasksCreate_TaskCreationResponseTaskContainerLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariWarehouseLogisticsTasksCreate_TaskCreationResponseTaskContainerLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariWarehouseLogisticsTasksCreate_TaskCreationResponseTaskDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariWarehouseLogisticsTasksCreate_TaskCreationResponseTaskOrigin: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariWarehouseApplicationsSubmit_ObjectSubmitRequest: {
+            requestId: string;
+            object: components["schemas"]["nariWarehouseApplicationsSubmit_ObjectSubmitRequestObject"];
+            /** Format: int32 */
+            version: number;
+        };
+        nariWarehouseApplicationsSubmit_ObjectSubmitRequestObject: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariWarehouseApplicationsSubmit_WarehouseApplicationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariWarehouseApplicationsSubmit_WarehouseApplicationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        /** @description 缴库申请成功回执：新申请已完成MES校验、SAP申请及本地记录，待上架在三楼确认接收时生成；旧成功请求保留其历史事实。 */
+        nariWarehouseApplicationsSubmit_WarehouseApplicationResponse: {
+            requestId: string;
+            applicationNo: string;
+            sapDocumentNos: string[];
+            /**
+             * @description 本次申请成功时是否已经生成WMS待上架。新成功请求返回false，申请仍成功；旧版本已完成请求可回放true。前端不得把false判为申请失败或再次申请。
+             * @example false
+             */
+            wmsPendingCreated: boolean;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        nariVehicleDirectBindingsUnbindSelected_DirectBoxUnbindSelectedRequest: {
+            requestId: string;
+            vehicleCode: string;
+            /** Format: int32 */
+            vehicleVersion: number;
+            items: components["schemas"]["nariVehicleDirectBindingsUnbindSelected_DirectBoxUnbindSelectedRequestItemsItem"][];
+        };
+        nariVehicleDirectBindingsUnbindSelected_DirectBoxUnbindSelectedRequestItemsItem: {
+            bindingId: string;
+            /** Format: int32 */
+            bindingVersion: number;
+            boxCode: string;
+            /** Format: int32 */
+            boxVersion: number;
+        };
+        ApiResultNariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponse: {
+            requestId: string;
+            vehicle: components["schemas"]["nariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponseVehicle"];
+            bindings: components["schemas"]["nariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponseBindingsItem"][];
+            /** Format: int64 */
+            bindingCount: number;
+        };
+        nariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponseBindingsItem: {
+            bindingId: string;
+            /** Format: int32 */
+            bindingVersion: number;
+            box: components["schemas"]["nariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponseBindingsItemBox"];
+        };
+        nariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponseBindingsItemBox: {
+            boxCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponseVehicle: {
+            vehicleCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariVehicleDirectBindingsUnbindAll_DirectBoxUnbindAllRequest: {
+            requestId: string;
+            vehicleCode: string;
+            /** Format: int32 */
+            vehicleVersion: number;
+        };
+        ApiResultNariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponse: {
+            requestId: string;
+            vehicle: components["schemas"]["nariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponseVehicle"];
+            bindings: components["schemas"]["nariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponseBindingsItem"][];
+            /** Format: int64 */
+            bindingCount: number;
+        };
+        nariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponseBindingsItem: {
+            bindingId: string;
+            /** Format: int32 */
+            bindingVersion: number;
+            box: components["schemas"]["nariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponseBindingsItemBox"];
+        };
+        nariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponseBindingsItemBox: {
+            boxCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponseVehicle: {
+            vehicleCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariVehicleDirectBindingsBind_DirectBoxBatchBindRequest: {
+            requestId: string;
+            vehicleCode: string;
+            /** Format: int32 */
+            vehicleVersion: number;
+            items: components["schemas"]["nariVehicleDirectBindingsBind_DirectBoxBatchBindRequestItemsItem"][];
+        };
+        nariVehicleDirectBindingsBind_DirectBoxBatchBindRequestItemsItem: {
+            boxCode: string;
+            /** Format: int32 */
+            boxVersion: number;
+            expectedBinding: components["schemas"]["nariVehicleDirectBindingsBind_DirectBoxBatchBindRequestItemsItemExpectedBinding"];
+            confirmRebind: boolean;
+        };
+        nariVehicleDirectBindingsBind_DirectBoxBatchBindRequestItemsItemExpectedBinding: {
+            bindingId: string;
+            /** Format: int32 */
+            bindingVersion: number;
+            vehicleCode: string;
+        };
+        ApiResultNariVehicleDirectBindingsBind_DirectBindingMutationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariVehicleDirectBindingsBind_DirectBindingMutationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariVehicleDirectBindingsBind_DirectBindingMutationResponse: {
+            requestId: string;
+            vehicle: components["schemas"]["nariVehicleDirectBindingsBind_DirectBindingMutationResponseVehicle"];
+            bindings: components["schemas"]["nariVehicleDirectBindingsBind_DirectBindingMutationResponseBindingsItem"][];
+            /** Format: int64 */
+            bindingCount: number;
+        };
+        nariVehicleDirectBindingsBind_DirectBindingMutationResponseBindingsItem: {
+            bindingId: string;
+            /** Format: int32 */
+            bindingVersion: number;
+            box: components["schemas"]["nariVehicleDirectBindingsBind_DirectBindingMutationResponseBindingsItemBox"];
+        };
+        nariVehicleDirectBindingsBind_DirectBindingMutationResponseBindingsItemBox: {
+            boxCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariVehicleDirectBindingsBind_DirectBindingMutationResponseVehicle: {
+            vehicleCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariTrafficAreasRelease_TrafficActionRequest: {
+            requestId: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariTrafficAreasRelease_TrafficArea: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariTrafficAreasRelease_TrafficArea"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariTrafficAreasRelease_TrafficArea: {
+            areaCode: string;
+            areaName: string;
+            /** Format: int32 */
+            version: number;
+            status: string;
+            lastOperatorName?: string;
+            /** Format: date-time */
+            lastOperationTime?: string;
+        };
+        nariTrafficAreasLock_TrafficActionRequest: {
+            requestId: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariTrafficAreasLock_TrafficArea: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariTrafficAreasLock_TrafficArea"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariTrafficAreasLock_TrafficArea: {
+            areaCode: string;
+            areaName: string;
+            /** Format: int32 */
+            version: number;
+            status: string;
+            lastOperatorName?: string;
+            /** Format: date-time */
+            lastOperationTime?: string;
+        };
+        nariShippingSubmit_ShippingRequest: {
+            requestId: string;
+            scanType: string;
+            scanCode: string;
+            object: components["schemas"]["nariShippingSubmit_ShippingRequestObject"];
+            /** Format: int32 */
+            version: number;
+        };
+        nariShippingSubmit_ShippingRequestObject: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariShippingSubmit_ShippingResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariShippingSubmit_ShippingResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariShippingSubmit_ShippingResponse: {
+            requestId: string;
+            shippingNo: string;
+            object: components["schemas"]["nariShippingSubmit_ShippingResponseObject"];
+            canCreateLogisticsTask: boolean;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        nariShippingSubmit_ShippingResponseObject: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariShippingSubmit_ShippingResponseObjectLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariShippingSubmit_ShippingResponseObjectLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariReceivingConfirm_ReceivingConfirmRequest: {
+            requestId: string;
+            taskId: string;
+            /** Format: int32 */
+            version: number;
+            object: components["schemas"]["nariReceivingConfirm_ReceivingConfirmRequestObject"];
+            remark?: string;
+        };
+        nariReceivingConfirm_ReceivingConfirmRequestObject: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariReceivingConfirm_ReceivingOperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariReceivingConfirm_ReceivingOperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariReceivingConfirm_ReceivingOperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+            taskId: string;
+            object: components["schemas"]["nariReceivingConfirm_ReceivingOperationReceiptObject"];
+            /** Format: int32 */
+            version: number;
+        };
+        nariReceivingConfirm_ReceivingOperationReceiptObject: {
+            containerType: string;
+            containerCode: string;
+        };
+        nariReceivingClearWmsBindings_ClearWmsBindingsRequest: {
+            requestId: string;
+            taskId: string;
+            /** Format: int32 */
+            version: number;
+            object: components["schemas"]["nariReceivingClearWmsBindings_ClearWmsBindingsRequestObject"];
+        };
+        nariReceivingClearWmsBindings_ClearWmsBindingsRequestObject: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariReceivingClearWmsBindings_OperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariReceivingClearWmsBindings_OperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariReceivingClearWmsBindings_OperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        nariPanelsJointCandidatesQuery_JointCandidatesRequest: {
+            pendingPanelCodes: string[];
+        };
+        ApiResultNariPanelsJointCandidatesQuery_JointCandidatesResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariPanelsJointCandidatesQuery_JointCandidatesResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariPanelsJointCandidatesQuery_JointCandidatesResponse: {
+            candidates: components["schemas"]["nariPanelsJointCandidatesQuery_JointCandidatesResponseCandidatesItem"][];
+        };
+        nariPanelsJointCandidatesQuery_JointCandidatesResponseCandidatesItem: {
+            panelCode: string;
+            materialCode: string;
+            materialName?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            currentBoxCode?: string;
+            eligibility: components["schemas"]["nariPanelsJointCandidatesQuery_JointCandidatesResponseCandidatesItemEligibility"];
+            materialBatch?: string;
+        };
+        nariPanelsJointCandidatesQuery_JointCandidatesResponseCandidatesItemEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariOrderCallsSubmit_OrderCallRequest: {
+            requestId: string;
+            orderNo: string;
+            destinationLocationCode: string;
+            /** Format: int32 */
+            destinationVersion: number;
+            boxes: components["schemas"]["nariOrderCallsSubmit_OrderCallRequestBoxesItem"][];
+        };
+        nariOrderCallsSubmit_OrderCallRequestBoxesItem: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariOrderCallsSubmit_OrderCallResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariOrderCallsSubmit_OrderCallResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariOrderCallsSubmit_OrderCallResponse: {
+            requestId: string;
+            callNo: string;
+            orderNo: string;
+            destination: components["schemas"]["nariOrderCallsSubmit_OrderCallResponseDestination"];
+            tasks: components["schemas"]["nariOrderCallsSubmit_OrderCallResponseTasksItem"][];
+            /** Format: date-time */
+            createdTime: string;
+        };
+        nariOrderCallsSubmit_OrderCallResponseDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariOrderCallsSubmit_OrderCallResponseTasksItem: {
+            boxCode: string;
+            taskId: string;
+            taskNo: string;
+            dispatchState: string;
+            reason?: string;
+        };
+        nariLogisticsTasksCreate_CreateLogisticsRequest: {
+            requestId: string;
+            object: components["schemas"]["nariLogisticsTasksCreate_CreateLogisticsRequestObject"];
+            /** Format: int32 */
+            version: number;
+            vendor: string;
+            taskType: string;
+            originLocationCode: string;
+            destinationLocationCode?: string;
+            shippingNo?: string;
+            destinationMode?: string;
+        };
+        nariLogisticsTasksCreate_CreateLogisticsRequestObject: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariLogisticsTasksCreate_TaskCreationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLogisticsTasksCreate_TaskCreationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLogisticsTasksCreate_TaskCreationResponse: {
+            requestId: string;
+            task: components["schemas"]["nariLogisticsTasksCreate_TaskCreationResponseTask"];
+        };
+        nariLogisticsTasksCreate_TaskCreationResponseTask: {
+            taskId: string;
+            taskNo: string;
+            /** Format: int32 */
+            version: number;
+            vendor: string;
+            taskType: string;
+            container: components["schemas"]["nariLogisticsTasksCreate_TaskCreationResponseTaskContainer"];
+            origin: components["schemas"]["nariLogisticsTasksCreate_TaskCreationResponseTaskOrigin"];
+            destination: components["schemas"]["nariLogisticsTasksCreate_TaskCreationResponseTaskDestination"];
+            agvCode?: string;
+            agvName?: string;
+            status: string;
+            statusName: string;
+            triggerMode: string;
+            /** Format: date-time */
+            createdTime: string;
+        };
+        nariLogisticsTasksCreate_TaskCreationResponseTaskContainer: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariLogisticsTasksCreate_TaskCreationResponseTaskContainerLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariLogisticsTasksCreate_TaskCreationResponseTaskContainerLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLogisticsTasksCreate_TaskCreationResponseTaskDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLogisticsTasksCreate_TaskCreationResponseTaskOrigin: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLogisticsTasksCancel_CancelTaskRequest: {
+            requestId: string;
+            /** Format: int32 */
+            version: number;
+            reason?: string;
+            unbindContext?: components["schemas"]["nariLogisticsTasksCancel_CancelTaskRequestUnbindContext"];
+        };
+        nariLogisticsTasksCancel_CancelTaskRequestUnbindContext: {
+            locationCode: string;
+            /** Format: int32 */
+            version: number;
+            container: components["schemas"]["nariLogisticsTasksCancel_CancelTaskRequestUnbindContextContainer"];
+            /** Format: int32 */
+            containerVersion: number;
+        };
+        nariLogisticsTasksCancel_CancelTaskRequestUnbindContextContainer: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariLogisticsTasksCancel_TaskCancellationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLogisticsTasksCancel_TaskCancellationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLogisticsTasksCancel_TaskCancellationResponse: {
+            requestId: string;
+            taskId: string;
+            taskNo: string;
+            cancelStatus: string;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        nariLocationsUnbindContainer_UnbindLocationRequest: {
+            requestId: string;
+            locationCode: string;
+            /** Format: int32 */
+            version: number;
+            container: components["schemas"]["nariLocationsUnbindContainer_UnbindLocationRequestContainer"];
+            /** Format: int32 */
+            containerVersion: number;
+        };
+        nariLocationsUnbindContainer_UnbindLocationRequestContainer: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariLocationsUnbindContainer_OperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLocationsUnbindContainer_OperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLocationsUnbindContainer_OperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        nariLocationsBindContainer_BindLocationRequest: {
+            requestId: string;
+            locationCode: string;
+            /** Format: int32 */
+            version: number;
+            container: components["schemas"]["nariLocationsBindContainer_BindLocationRequestContainer"];
+            /** Format: int32 */
+            containerVersion: number;
+        };
+        nariLocationsBindContainer_BindLocationRequestContainer: {
+            containerType: string;
+            containerCode: string;
+        };
+        ApiResultNariLocationsBindContainer_OperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLocationsBindContainer_OperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLocationsBindContainer_OperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        nariLoadingUnloadSelected_UnloadSelectedRequest: {
+            requestId: string;
+            vehicleCode: string;
+            /** Format: int32 */
+            version: number;
+            items: components["schemas"]["nariLoadingUnloadSelected_UnloadSelectedRequestItemsItem"][];
+        };
+        nariLoadingUnloadSelected_UnloadSelectedRequestItemsItem: {
+            id: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariLoadingUnloadSelected_OperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLoadingUnloadSelected_OperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLoadingUnloadSelected_OperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        nariLoadingUnloadAll_UnloadAllRequest: {
+            requestId: string;
+            vehicleCode: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariLoadingUnloadAll_OperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLoadingUnloadAll_OperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLoadingUnloadAll_OperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        nariLoadingBatchLoad_BatchLoadRequest: {
+            requestId: string;
+            items: components["schemas"]["nariLoadingBatchLoad_BatchLoadRequestItemsItem"][];
+        };
+        nariLoadingBatchLoad_BatchLoadRequestItemsItem: {
+            boxCode: string;
+            /** Format: int32 */
+            boxVersion: number;
+            slotCode: string;
+            /** Format: int32 */
+            slotVersion: number;
+        };
+        ApiResultNariLoadingBatchLoad_OperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLoadingBatchLoad_OperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLoadingBatchLoad_OperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+        };
+        NariLineSideManualRequest: {
+            requestId: string;
+            boxCode: string;
+            locationCode: string;
+            /** Format: int32 */
+            boxVersion: number;
+            /** Format: int32 */
+            locationVersion: number;
+            shippingOperationId: string;
+            contentHash: string;
+            confirmOverwrite?: boolean;
+        };
+        ApiResultNariLineSideInboundDetail: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariLineSideInboundDetail"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLineSideInboundDetail: {
+            id?: string;
+            /** Format: int32 */
+            version?: number;
+            groupKey?: string;
+            inboundMode?: string;
+            taskId?: string;
+            shippingOperationId?: string;
+            shippingNo?: string;
+            boxCode?: string;
+            locationCode?: string;
+            lineSideCode?: string;
+            /** Format: int32 */
+            totalQuantity?: number;
+            inboundTime?: string;
+            syncStatus?: string;
+            overwriteConfirmed?: boolean;
+            syncedTime?: string;
+            syncReason?: string;
+            materials?: components["schemas"]["NariLineSideMaterial"][];
+            contentHash?: string;
+            externalRequestId?: string;
+            boxSequence?: string;
+            operatorIdentity?: string;
+        };
+        NariLineSideMaterial: {
+            panelCode?: string;
+            materialCode?: string;
+            materialBatch?: string;
+            orderNo?: string;
+            /** Format: int32 */
+            quantity?: number;
+        };
+        NariLineSidePreviewRequest: {
+            boxCode: string;
+            locationCode: string;
+        };
+        ApiResultNariLineSidePreview: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariLineSidePreview"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLineSidePreview: {
+            boxCode?: string;
+            locationCode?: string;
+            lineSideCode?: string;
+            /** Format: int32 */
+            boxVersion?: number;
+            /** Format: int32 */
+            locationVersion?: number;
+            shippingOperationId?: string;
+            shippingNo?: string;
+            contentHash?: string;
+            materials?: components["schemas"]["NariLineSideMaterial"][];
+            /** Format: int32 */
+            totalQuantity?: number;
+            remoteDataState?: string;
+            requiresOverwriteConfirmation?: boolean;
+            sorterConnected?: boolean;
+            allowed?: boolean;
+            reason?: string;
+        };
+        Values: {
+            items: components["schemas"]["Variable"][];
+        };
+        Variable: {
+            variableCode: string;
+            /** Format: int32 */
+            value: number;
+        };
+        Scan: {
+            boxCode: string;
+            panelCodes: unknown[];
+        };
+        TokenName: {
+            name: string;
+        };
+        Version: {
+            /** Format: int32 */
+            version?: number;
+        };
+        nariEmptyVehiclesCall_CallEmptyVehicleRequest: {
+            requestId: string;
+            originLocationCode: string;
+            destinationLocationCode: string;
+            vehicleCode: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariEmptyVehiclesCall_TaskCreationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariEmptyVehiclesCall_TaskCreationResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariEmptyVehiclesCall_TaskCreationResponse: {
+            requestId: string;
+            task: components["schemas"]["nariEmptyVehiclesCall_TaskCreationResponseTask"];
+        };
+        nariEmptyVehiclesCall_TaskCreationResponseTask: {
+            taskId: string;
+            taskNo: string;
+            /** Format: int32 */
+            version: number;
+            vendor: string;
+            taskType: string;
+            container: components["schemas"]["nariEmptyVehiclesCall_TaskCreationResponseTaskContainer"];
+            origin: components["schemas"]["nariEmptyVehiclesCall_TaskCreationResponseTaskOrigin"];
+            destination: components["schemas"]["nariEmptyVehiclesCall_TaskCreationResponseTaskDestination"];
+            agvCode?: string;
+            agvName?: string;
+            status: string;
+            statusName: string;
+            triggerMode: string;
+            /** Format: date-time */
+            createdTime: string;
+        };
+        nariEmptyVehiclesCall_TaskCreationResponseTaskContainer: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariEmptyVehiclesCall_TaskCreationResponseTaskContainerLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariEmptyVehiclesCall_TaskCreationResponseTaskContainerLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariEmptyVehiclesCall_TaskCreationResponseTaskDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariEmptyVehiclesCall_TaskCreationResponseTaskOrigin: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariBoxesBindingsUnbindSelected_BoxSelectedRequest: {
+            requestId: string;
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            items: components["schemas"]["nariBoxesBindingsUnbindSelected_BoxSelectedRequestItemsItem"][];
+        };
+        nariBoxesBindingsUnbindSelected_BoxSelectedRequestItemsItem: {
+            id: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariBoxesBindingsUnbindSelected_BoxOperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariBoxesBindingsUnbindSelected_BoxOperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariBoxesBindingsUnbindSelected_BoxOperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+            box: components["schemas"]["nariBoxesBindingsUnbindSelected_BoxOperationReceiptBox"];
+        };
+        nariBoxesBindingsUnbindSelected_BoxOperationReceiptBox: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int32 */
+            materialQuantity: number;
+        };
+        nariBoxesBindingsUnbindAll_BoxAllRequest: {
+            requestId: string;
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariBoxesBindingsUnbindAll_BoxOperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariBoxesBindingsUnbindAll_BoxOperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariBoxesBindingsUnbindAll_BoxOperationReceipt: {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+            box: components["schemas"]["nariBoxesBindingsUnbindAll_BoxOperationReceiptBox"];
+        };
+        nariBoxesBindingsUnbindAll_BoxOperationReceiptBox: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int32 */
+            materialQuantity: number;
+        };
+        nariBoxesBindingsBindByOrder_BoxOrderRequest: {
+            requestId: string;
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            orderNo: string;
+            /** Format: int32 */
+            quantity: number;
+            panelCode: string;
+            confirmMixed?: boolean;
+            confirmationToken?: string;
+        };
+        ApiResultNariBoxesBindingsBindByOrder_BoxOperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariBoxesBindingsBindByOrder_BoxOperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariBoxesBindingsBindByOrder_BoxOperationReceipt: components["schemas"]["nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant1"] | components["schemas"]["nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant2"];
+        nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant1: components["schemas"]["nariBoxesBindingsBindByOrder_BoxOperationReceipt"] & {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+            box: components["schemas"]["nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant1Box"];
+        };
+        nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant1Box: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int32 */
+            materialQuantity: number;
+        };
+        nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant2: components["schemas"]["nariBoxesBindingsBindByOrder_BoxOperationReceipt"] & {
+            resultType: string;
+            requestId: string;
+            confirmationType: string;
+            message: string;
+            box: components["schemas"]["nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant2Box"];
+            confirmationToken: string;
+        };
+        nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant2Box: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant2BoxLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariBoxesBindingsBindByOrder_BoxOperationReceipt_Variant2BoxLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariBoxesBindingsBindByCodes_BoxCodesRequest: {
+            requestId: string;
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            panelCodes: string[];
+            confirmMixed?: boolean;
+            confirmationToken?: string;
+        };
+        ApiResultNariBoxesBindingsBindByCodes_BoxOperationReceipt: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariBoxesBindingsBindByCodes_BoxOperationReceipt"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariBoxesBindingsBindByCodes_BoxOperationReceipt: components["schemas"]["nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant1"] | components["schemas"]["nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant2"];
+        nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant1: components["schemas"]["nariBoxesBindingsBindByCodes_BoxOperationReceipt"] & {
+            requestId: string;
+            /** Format: int32 */
+            affectedCount: number;
+            /** Format: date-time */
+            processedTime: string;
+            box: components["schemas"]["nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant1Box"];
+        };
+        nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant1Box: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int32 */
+            materialQuantity: number;
+        };
+        nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant2: components["schemas"]["nariBoxesBindingsBindByCodes_BoxOperationReceipt"] & {
+            resultType: string;
+            requestId: string;
+            confirmationType: string;
+            message: string;
+            box: components["schemas"]["nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant2Box"];
+            confirmationToken: string;
+        };
+        nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant2Box: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant2BoxLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariBoxesBindingsBindByCodes_BoxOperationReceipt_Variant2BoxLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
         StandardCallback: {
             upperId: string;
             orderKey?: string;
@@ -7180,6 +8534,8 @@ export interface components {
             executingIndex?: string;
             updateTime?: string;
             doneTime?: string;
+            /** @description 斯坦德专用长期回调密钥；无Authorization时使用，必须获得本接口授权；入业务前剥离，不留存。与请求头认证二选一。 */
+            callbackToken?: string;
         };
         CallbackAck: {
             reqCode?: string;
@@ -7274,6 +8630,13 @@ export interface components {
             /** Format: int64 */
             locationId: number;
             remark?: string;
+            /**
+             * Format: int32
+             * @description 更新时必填；新增时留空
+             */
+            version?: number;
+        };
+        NariLineSideInboundRecordRequest: {
             /**
              * Format: int32
              * @description 更新时必填；新增时留空
@@ -7512,6 +8875,56 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["SysMenu"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultMetadata: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultMetadata"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultMetadata: {
+            records?: components["schemas"]["Metadata"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        ApiResultListScope: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["Scope"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        Scope: {
+            scopeCode?: string;
+            name?: string;
+            description?: string;
+        };
+        Api: {
+            apiCode?: string;
+            scopeCode?: string;
+            name?: string;
+            method?: string;
+            path?: string;
+        };
+        ApiResultListApi: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["Api"][];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
@@ -8176,6 +9589,47 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
+        ApiResultRuntimeConnectionsOverview: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["RuntimeConnectionsOverview"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        RuntimeConnectionStatus: {
+            id?: string;
+            name?: string;
+            /** @enum {string} */
+            group?: "FOUNDATION" | "INTEGRATION";
+            /** @enum {string} */
+            kind?: "DATABASE" | "HTTP" | "MQTT" | "STORAGE" | "CUSTOM";
+            /** @enum {string} */
+            status?: "UP" | "WARN" | "DOWN" | "UNKNOWN" | "UNCONFIGURED" | "DISABLED";
+            message?: string;
+            /** Format: date-time */
+            checkedAt?: string;
+            /** Format: date-time */
+            lastSuccessAt?: string;
+            /** Format: int32 */
+            staleAfterSeconds?: number;
+            /** Format: int64 */
+            durationMillis?: number;
+            /** Format: int32 */
+            consecutiveFailures?: number;
+            /** Format: date-time */
+            lastCommunicationAt?: string;
+            /** @enum {string} */
+            lastCommunicationStatus?: "SUCCESS" | "FAILURE";
+        };
+        RuntimeConnectionsOverview: {
+            /** Format: date-time */
+            generatedAt?: string;
+            /** Format: int32 */
+            refreshAfterSeconds?: number;
+            items?: components["schemas"]["RuntimeConnectionStatus"][];
+        };
         NariWarehouseRecordQuery: {
             /** Format: int64 */
             page?: number;
@@ -8721,6 +10175,1248 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
+        ApiResultNariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponse: {
+            object: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseObject"];
+            origin: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseOrigin"];
+            vendor: string;
+            taskType: string;
+            recommendedDestination: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseRecommendedDestination"];
+            destinations: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseDestinationsItem"][];
+            eligibility: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseEligibility"];
+            boxes: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseBoxesItem"][];
+            /** Format: int32 */
+            totalMaterialQuantity: number;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseBoxesItem: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int32 */
+            materialQuantity: number;
+            materials: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseBoxesItemMaterialsItem"][];
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseBoxesItemMaterialsItem: {
+            panelCode?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            materialCode: string;
+            materialName?: string;
+            /** Format: int32 */
+            quantity: number;
+            unit?: string;
+            lineType: string;
+            materialBatch?: string;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseDestinationsItem: {
+            location: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseDestinationsItemLocation"];
+            recommended: boolean;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseDestinationsItemLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode: string;
+            floorName: string;
+            areaCode: string;
+            areaName: string;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseObject: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseObjectLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseObjectLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseOrigin: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponseRecommendedDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode: string;
+            floorName: string;
+            areaCode: string;
+            areaName: string;
+        };
+        ApiResultNariWarehouseApplicationsObjectsQuery_BusinessObjectResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariWarehouseApplicationsObjectsQuery_BusinessObjectResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariWarehouseApplicationsObjectsQuery_BusinessObjectResponse: {
+            scanType: string;
+            scanCode: string;
+            object: components["schemas"]["nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseObject"];
+            boxes: components["schemas"]["nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseBoxesItem"][];
+            /** Format: int32 */
+            totalMaterialQuantity: number;
+            eligibility: components["schemas"]["nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseEligibility"];
+        };
+        nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseBoxesItem: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int32 */
+            materialQuantity: number;
+            materials: components["schemas"]["nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseBoxesItemMaterialsItem"][];
+        };
+        nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseBoxesItemMaterialsItem: {
+            panelCode?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            materialCode: string;
+            materialName?: string;
+            /** Format: int32 */
+            quantity: number;
+            unit?: string;
+            lineType: string;
+            materialBatch?: string;
+        };
+        nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseObject: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseObjectLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariWarehouseApplicationsObjectsQuery_BusinessObjectResponseObjectLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        ApiResultNariVehiclesLoadsQuery_VehicleLoadsResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariVehiclesLoadsQuery_VehicleLoadsResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariVehiclesLoadsQuery_VehicleLoadsResponse: {
+            vehicle: components["schemas"]["nariVehiclesLoadsQuery_VehicleLoadsResponseVehicle"];
+            /** Format: int32 */
+            loadedBoxCount: number;
+            loads: components["schemas"]["nariVehiclesLoadsQuery_VehicleLoadsResponseLoadsItem"][];
+            /** Format: int32 */
+            totalMaterialQuantity: number;
+        };
+        nariVehiclesLoadsQuery_VehicleLoadsResponseLoadsItem: {
+            id?: string;
+            /** Format: int32 */
+            version?: number;
+            slotCode: string;
+            /** Format: int32 */
+            slotVersion: number;
+            box?: components["schemas"]["nariVehiclesLoadsQuery_VehicleLoadsResponseLoadsItemBox"];
+            materials: components["schemas"]["nariVehiclesLoadsQuery_VehicleLoadsResponseLoadsItemMaterialsItem"][];
+        };
+        nariVehiclesLoadsQuery_VehicleLoadsResponseLoadsItemBox: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariVehiclesLoadsQuery_VehicleLoadsResponseLoadsItemBoxLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariVehiclesLoadsQuery_VehicleLoadsResponseLoadsItemBoxLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariVehiclesLoadsQuery_VehicleLoadsResponseLoadsItemMaterialsItem: {
+            panelCode?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            materialCode: string;
+            materialName?: string;
+            /** Format: int32 */
+            quantity: number;
+            unit?: string;
+            lineType: string;
+            materialBatch?: string;
+        };
+        nariVehiclesLoadsQuery_VehicleLoadsResponseVehicle: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariVehiclesLoadsQuery_VehicleLoadsResponseVehicleLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariVehiclesLoadsQuery_VehicleLoadsResponseVehicleLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        ApiResultNariVehicleDirectBindingsQuery_DirectVehicleBindingsResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariVehicleDirectBindingsQuery_DirectVehicleBindingsResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariVehicleDirectBindingsQuery_DirectVehicleBindingsResponse: {
+            vehicle: components["schemas"]["nariVehicleDirectBindingsQuery_DirectVehicleBindingsResponseVehicle"];
+            bindings: components["schemas"]["nariVehicleDirectBindingsQuery_DirectVehicleBindingsResponseBindingsItem"][];
+            /** Format: int64 */
+            bindingCount: number;
+        };
+        nariVehicleDirectBindingsQuery_DirectVehicleBindingsResponseBindingsItem: {
+            bindingId: string;
+            /** Format: int32 */
+            bindingVersion: number;
+            box: components["schemas"]["nariVehicleDirectBindingsQuery_DirectVehicleBindingsResponseBindingsItemBox"];
+        };
+        nariVehicleDirectBindingsQuery_DirectVehicleBindingsResponseBindingsItemBox: {
+            boxCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariVehicleDirectBindingsQuery_DirectVehicleBindingsResponseVehicle: {
+            vehicleCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponse: {
+            vehicle: components["schemas"]["nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseVehicle"];
+            box: components["schemas"]["nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseBox"];
+            currentBinding: components["schemas"]["nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseCurrentBinding"];
+            currentVehicle: components["schemas"]["nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseCurrentVehicle"];
+            requiresRebindConfirmation: boolean;
+            eligibility: components["schemas"]["nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseEligibility"];
+        };
+        nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseBox: {
+            boxCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseCurrentBinding: {
+            bindingId: string;
+            /** Format: int32 */
+            bindingVersion: number;
+            vehicleCode: string;
+        };
+        nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseCurrentVehicle: {
+            vehicleCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponseVehicle: {
+            vehicleCode: string;
+            displayName: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultNariVehicleSlotsQuery_VehicleSlotResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariVehicleSlotsQuery_VehicleSlotResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariVehicleSlotsQuery_VehicleSlotResponse: {
+            slotCode: string;
+            /** Format: int32 */
+            version: number;
+            vehicle: components["schemas"]["nariVehicleSlotsQuery_VehicleSlotResponseVehicle"];
+            box?: components["schemas"]["nariVehicleSlotsQuery_VehicleSlotResponseBox"];
+            eligibility: components["schemas"]["nariVehicleSlotsQuery_VehicleSlotResponseEligibility"];
+        };
+        nariVehicleSlotsQuery_VehicleSlotResponseBox: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariVehicleSlotsQuery_VehicleSlotResponseBoxLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariVehicleSlotsQuery_VehicleSlotResponseBoxLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariVehicleSlotsQuery_VehicleSlotResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariVehicleSlotsQuery_VehicleSlotResponseVehicle: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariVehicleSlotsQuery_VehicleSlotResponseVehicleLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariVehicleSlotsQuery_VehicleSlotResponseVehicleLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        ApiResultNariTrafficAreasQuery_TrafficAreaPage: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariTrafficAreasQuery_TrafficAreaPage"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariTrafficAreasQuery_TrafficAreaPage: {
+            records: components["schemas"]["nariTrafficAreasQuery_TrafficAreaPageRecordsItem"][];
+            /** Format: int64 */
+            total: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            current: number;
+            /** Format: int32 */
+            pages: number;
+        };
+        nariTrafficAreasQuery_TrafficAreaPageRecordsItem: {
+            areaCode: string;
+            areaName: string;
+            /** Format: int32 */
+            version: number;
+            status: string;
+            lastOperatorName?: string;
+            /** Format: date-time */
+            lastOperationTime?: string;
+        };
+        ApiResultNariShippingObjectsQuery_BusinessObjectResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariShippingObjectsQuery_BusinessObjectResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariShippingObjectsQuery_BusinessObjectResponse: {
+            scanType: string;
+            scanCode: string;
+            object: components["schemas"]["nariShippingObjectsQuery_BusinessObjectResponseObject"];
+            boxes: components["schemas"]["nariShippingObjectsQuery_BusinessObjectResponseBoxesItem"][];
+            /** Format: int32 */
+            totalMaterialQuantity: number;
+            eligibility: components["schemas"]["nariShippingObjectsQuery_BusinessObjectResponseEligibility"];
+        };
+        nariShippingObjectsQuery_BusinessObjectResponseBoxesItem: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int32 */
+            materialQuantity: number;
+            materials: components["schemas"]["nariShippingObjectsQuery_BusinessObjectResponseBoxesItemMaterialsItem"][];
+        };
+        nariShippingObjectsQuery_BusinessObjectResponseBoxesItemMaterialsItem: {
+            panelCode?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            materialCode: string;
+            materialName?: string;
+            /** Format: int32 */
+            quantity: number;
+            unit?: string;
+            lineType: string;
+            materialBatch?: string;
+        };
+        nariShippingObjectsQuery_BusinessObjectResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariShippingObjectsQuery_BusinessObjectResponseObject: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariShippingObjectsQuery_BusinessObjectResponseObjectLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariShippingObjectsQuery_BusinessObjectResponseObjectLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        ApiResultNariReceivingTasksQuery_ReceivingTaskResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponse: {
+            object: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseObject"];
+            task?: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseTask"];
+            boxes: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseBoxesItem"][];
+            /** Format: int32 */
+            totalMaterialQuantity: number;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseBoxesItem: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int32 */
+            materialQuantity: number;
+            materials: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseBoxesItemMaterialsItem"][];
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseBoxesItemMaterialsItem: {
+            panelCode?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            materialCode: string;
+            materialName?: string;
+            /** Format: int32 */
+            quantity: number;
+            unit?: string;
+            lineType: string;
+            materialBatch?: string;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseObject: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseObjectLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseObjectLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseTask: {
+            taskId: string;
+            taskNo: string;
+            /** Format: int32 */
+            version: number;
+            object: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseTaskObject"];
+            location?: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseTaskLocation"];
+            status: string;
+            statusName: string;
+            /** Format: date-time */
+            createdTime: string;
+            eligibility: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseTaskEligibility"];
+            /** Format: int64 */
+            totalBoxCount: number;
+            /** Format: int64 */
+            receivedBoxCount: number;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseTaskEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseTaskLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseTaskObject: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariReceivingTasksQuery_ReceivingTaskResponseTaskObjectLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariReceivingTasksQuery_ReceivingTaskResponseTaskObjectLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        ApiResultNariReceivingPendingTasksQuery_ReceivingTaskPage: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariReceivingPendingTasksQuery_ReceivingTaskPage"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariReceivingPendingTasksQuery_ReceivingTaskPage: {
+            records: components["schemas"]["nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItem"][];
+            /** Format: int64 */
+            total: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            current: number;
+            /** Format: int32 */
+            pages: number;
+        };
+        nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItem: {
+            taskId: string;
+            taskNo: string;
+            /** Format: int32 */
+            version: number;
+            object: components["schemas"]["nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItemObject"];
+            location?: components["schemas"]["nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItemLocation"];
+            status: string;
+            statusName: string;
+            /** Format: date-time */
+            createdTime: string;
+            eligibility: components["schemas"]["nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItemEligibility"];
+            /** Format: int64 */
+            totalBoxCount: number;
+            /** Format: int64 */
+            receivedBoxCount: number;
+        };
+        nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItemEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItemLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItemObject: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItemObjectLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariReceivingPendingTasksQuery_ReceivingTaskPageRecordsItemObjectLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        ApiResultNariPanelsQuery_PanelSummary: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariPanelsQuery_PanelSummary"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariPanelsQuery_PanelSummary: {
+            panelCode: string;
+            materialCode: string;
+            materialName?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            currentBoxCode?: string;
+            eligibility: components["schemas"]["nariPanelsQuery_PanelSummaryEligibility"];
+            materialBatch?: string;
+        };
+        nariPanelsQuery_PanelSummaryEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        ApiResultNariOrderCallsCandidatesQuery_OrderCallCandidatesResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariOrderCallsCandidatesQuery_OrderCallCandidatesResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariOrderCallsCandidatesQuery_OrderCallCandidatesResponse: {
+            orderNo: string;
+            destination: components["schemas"]["nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseDestination"];
+            /** Format: int32 */
+            destinationVersion: number;
+            boxes: components["schemas"]["nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseBoxesItem"][];
+            eligibility: components["schemas"]["nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseEligibility"];
+        };
+        nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseBoxesItem: {
+            boxCode: string;
+            /** Format: int32 */
+            version: number;
+            orderNo: string;
+            origin: components["schemas"]["nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseBoxesItemOrigin"];
+            /** Format: int32 */
+            materialQuantity: number;
+            eligibility: components["schemas"]["nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseBoxesItemEligibility"];
+        };
+        nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseBoxesItemEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseBoxesItemOrigin: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode: string;
+            floorName: string;
+            areaCode: string;
+            areaName: string;
+        };
+        nariOrderCallsCandidatesQuery_OrderCallCandidatesResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        ApiResultNariLogisticsTasksCancellationQuery_TaskCancellationStatusResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLogisticsTasksCancellationQuery_TaskCancellationStatusResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLogisticsTasksCancellationQuery_TaskCancellationStatusResponse: {
+            requestId: string;
+            taskId: string;
+            taskNo: string;
+            cancelStatus: string;
+            /** Format: date-time */
+            processedTime: string;
+            reason?: string;
+        };
+        ApiResultNariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponse: {
+            object: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseObject"];
+            origin: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseOrigin"];
+            vendor: string;
+            taskType: string;
+            recommendedDestination?: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseRecommendedDestination"];
+            destinations: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseDestinationsItem"][];
+            eligibility: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseEligibility"];
+            returnLineSideEligibility: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseReturnLineSideEligibility"];
+            lineSideInboundSources?: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseLineSideInboundSourcesItem"][];
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseDestinationsItem: {
+            location: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseDestinationsItemLocation"];
+            recommended: boolean;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseDestinationsItemLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode: string;
+            floorName: string;
+            areaCode: string;
+            areaName: string;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseLineSideInboundSourcesItem: {
+            boxCode: string;
+            shippingOperationId?: string;
+            shippingNo?: string;
+            contentHash?: string;
+            allowed: boolean;
+            reason?: string | null;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseObject: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseObjectLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseObjectLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseOrigin: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseRecommendedDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode: string;
+            floorName: string;
+            areaCode: string;
+            areaName: string;
+        };
+        nariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponseReturnLineSideEligibility: {
+            allowed: boolean;
+            reason: string | null;
+        };
+        ApiResultNariLogisticsCancellableTasksQuery_LogisticsTaskPage: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLogisticsCancellableTasksQuery_LogisticsTaskPage"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLogisticsCancellableTasksQuery_LogisticsTaskPage: {
+            records: components["schemas"]["nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItem"][];
+            /** Format: int64 */
+            total: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            current: number;
+            /** Format: int32 */
+            pages: number;
+        };
+        nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItem: {
+            taskId: string;
+            taskNo: string;
+            /** Format: int32 */
+            version: number;
+            vendor: string;
+            taskType: string;
+            container: components["schemas"]["nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItemContainer"];
+            origin: components["schemas"]["nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItemOrigin"];
+            destination: components["schemas"]["nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItemDestination"];
+            agvCode?: string;
+            agvName?: string;
+            status: string;
+            statusName: string;
+            triggerMode: string;
+            /** Format: date-time */
+            createdTime: string;
+        };
+        nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItemContainer: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItemContainerLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItemContainerLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItemDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLogisticsCancellableTasksQuery_LogisticsTaskPageRecordsItemOrigin: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        ApiResultNariLocationsContainersQuery_LocationContainersResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLocationsContainersQuery_LocationContainersResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLocationsContainersQuery_LocationContainersResponse: {
+            location: components["schemas"]["nariLocationsContainersQuery_LocationContainersResponseLocation"];
+            /** Format: int32 */
+            version: number;
+            occupied: boolean;
+            container?: components["schemas"]["nariLocationsContainersQuery_LocationContainersResponseContainer"];
+            eligibility: components["schemas"]["nariLocationsContainersQuery_LocationContainersResponseEligibility"];
+            relatedTasks: components["schemas"]["nariLocationsContainersQuery_LocationContainersResponseRelatedTasksItem"][];
+            unbindEligibility: components["schemas"]["nariLocationsContainersQuery_LocationContainersResponseUnbindEligibility"];
+        };
+        nariLocationsContainersQuery_LocationContainersResponseContainer: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariLocationsContainersQuery_LocationContainersResponseContainerLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariLocationsContainersQuery_LocationContainersResponseContainerLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLocationsContainersQuery_LocationContainersResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariLocationsContainersQuery_LocationContainersResponseLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLocationsContainersQuery_LocationContainersResponseRelatedTasksItem: {
+            taskId: string;
+            taskNo: string;
+            /** Format: int32 */
+            version: number;
+            status: string;
+            settled: boolean;
+            cancellationEligibility: components["schemas"]["nariLocationsContainersQuery_LocationContainersResponseRelatedTasksItemCancellationEligibility"];
+        };
+        nariLocationsContainersQuery_LocationContainersResponseRelatedTasksItemCancellationEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        nariLocationsContainersQuery_LocationContainersResponseUnbindEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        ApiResultNariLocationsContainerCandidatesQuery_ContainerCandidateResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLocationsContainerCandidatesQuery_ContainerCandidateResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLocationsContainerCandidatesQuery_ContainerCandidateResponse: {
+            container: components["schemas"]["nariLocationsContainerCandidatesQuery_ContainerCandidateResponseContainer"];
+            eligibility: components["schemas"]["nariLocationsContainerCandidatesQuery_ContainerCandidateResponseEligibility"];
+        };
+        nariLocationsContainerCandidatesQuery_ContainerCandidateResponseContainer: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariLocationsContainerCandidatesQuery_ContainerCandidateResponseContainerLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariLocationsContainerCandidatesQuery_ContainerCandidateResponseContainerLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLocationsContainerCandidatesQuery_ContainerCandidateResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        ApiResultNariLoadingBoxesQuery_LoadingBoxResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariLoadingBoxesQuery_LoadingBoxResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariLoadingBoxesQuery_LoadingBoxResponse: {
+            box: components["schemas"]["nariLoadingBoxesQuery_LoadingBoxResponseBox"];
+            loadedVehicleCode?: string;
+            loadedSlotCode?: string;
+            eligibility: components["schemas"]["nariLoadingBoxesQuery_LoadingBoxResponseEligibility"];
+        };
+        nariLoadingBoxesQuery_LoadingBoxResponseBox: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariLoadingBoxesQuery_LoadingBoxResponseBoxLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariLoadingBoxesQuery_LoadingBoxResponseBoxLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariLoadingBoxesQuery_LoadingBoxResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
+        ApiResultNariLineSideInboundPage: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["NariLineSideInboundPage"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        NariLineSideInboundPage: {
+            records?: components["schemas"]["NariLineSideInboundSummary"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariLineSideInboundSummary: {
+            id?: string;
+            /** Format: int32 */
+            version?: number;
+            groupKey?: string;
+            inboundMode?: string;
+            taskId?: string;
+            shippingOperationId?: string;
+            shippingNo?: string;
+            boxCode?: string;
+            locationCode?: string;
+            lineSideCode?: string;
+            /** Format: int32 */
+            totalQuantity?: number;
+            inboundTime?: string;
+            syncStatus?: string;
+            overwriteConfirmed?: boolean;
+            syncedTime?: string;
+            syncReason?: string;
+        };
+        ApiResultListMapStringObject: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: {
+                [key: string]: unknown;
+            }[];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultNariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponse: {
+            destination: components["schemas"]["nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseDestination"];
+            origins: components["schemas"]["nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseOriginsItem"][];
+        };
+        nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseDestination: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseOriginsItem: {
+            origin: components["schemas"]["nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseOriginsItemOrigin"];
+            vehicle: components["schemas"]["nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseOriginsItemVehicle"];
+        };
+        nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseOriginsItemOrigin: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode: string;
+            floorName: string;
+            areaCode: string;
+            areaName: string;
+        };
+        nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseOriginsItemVehicle: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseOriginsItemVehicleLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponseOriginsItemVehicleLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        ApiResultNariBoxesMaterialsQuery_BoxMaterialsResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariBoxesMaterialsQuery_BoxMaterialsResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariBoxesMaterialsQuery_BoxMaterialsResponse: {
+            box: components["schemas"]["nariBoxesMaterialsQuery_BoxMaterialsResponseBox"];
+            sourceSystem: string;
+            materials: components["schemas"]["nariBoxesMaterialsQuery_BoxMaterialsResponseMaterialsItem"][];
+            /** Format: int32 */
+            totalQuantity: number;
+        };
+        nariBoxesMaterialsQuery_BoxMaterialsResponseBox: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariBoxesMaterialsQuery_BoxMaterialsResponseBoxLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariBoxesMaterialsQuery_BoxMaterialsResponseBoxLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariBoxesMaterialsQuery_BoxMaterialsResponseMaterialsItem: {
+            panelCode?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            materialCode: string;
+            materialName?: string;
+            /** Format: int32 */
+            quantity: number;
+            unit?: string;
+            lineType: string;
+            materialBatch?: string;
+        };
+        ApiResultNariBoxesBindingsQuery_BoxBindingsResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["nariBoxesBindingsQuery_BoxBindingsResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        nariBoxesBindingsQuery_BoxBindingsResponse: {
+            box: components["schemas"]["nariBoxesBindingsQuery_BoxBindingsResponseBox"];
+            empty: boolean;
+            /** Format: int32 */
+            totalQuantity: number;
+            bindings: components["schemas"]["nariBoxesBindingsQuery_BoxBindingsResponseBindingsItem"][];
+            eligibility: components["schemas"]["nariBoxesBindingsQuery_BoxBindingsResponseEligibility"];
+            contentState: string;
+            runtimeUsage?: string;
+        };
+        nariBoxesBindingsQuery_BoxBindingsResponseBindingsItem: {
+            id: string;
+            /** Format: int32 */
+            version: number;
+            bindingMode: string;
+            panelCode?: string;
+            orderNo: string;
+            orderLineNo?: string;
+            materialCode: string;
+            materialName?: string;
+            /** Format: int32 */
+            quantity: number;
+            unit?: string;
+            /** Format: date-time */
+            boundTime?: string;
+            materialBatch: string;
+        };
+        nariBoxesBindingsQuery_BoxBindingsResponseBox: {
+            containerType: string;
+            containerCode: string;
+            containerName?: string;
+            /** Format: int32 */
+            version: number;
+            location?: components["schemas"]["nariBoxesBindingsQuery_BoxBindingsResponseBoxLocation"];
+            contentState?: string;
+            runtimeUsage?: string;
+        };
+        nariBoxesBindingsQuery_BoxBindingsResponseBoxLocation: {
+            locationCode: string;
+            locationName: string;
+            locationType?: string;
+            floorCode?: string;
+            floorName?: string;
+            areaCode?: string;
+            areaName?: string;
+        };
+        nariBoxesBindingsQuery_BoxBindingsResponseEligibility: {
+            allowed: boolean;
+            reason?: string;
+        };
         NariLogisticsTaskQuery: {
             /** Format: int64 */
             page?: number;
@@ -9080,6 +11776,100 @@ export interface components {
         };
         PageResultNariLocationContainerModelResponse: {
             records?: components["schemas"]["NariLocationContainerModelResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        NariLineSideInboundRecordQuery: {
+            /** Format: int64 */
+            page?: number;
+            /** Format: int64 */
+            size?: number;
+            keyword?: string;
+            /** @description 单字段排序编码；支持：id、createdTime、updatedTime */
+            sortBy?: string;
+            /**
+             * @description 排序方向；未填写时默认 ASC
+             * @enum {string}
+             */
+            sortOrder?: "ASC" | "DESC";
+            boxCode?: string;
+            /** Format: int64 */
+            boxId?: number;
+            /** Format: int64 */
+            boxSequenceMin?: number;
+            /** Format: int64 */
+            boxSequenceMax?: number;
+            contentHash?: string;
+            externalRequestId?: string;
+            externalResultCode?: string;
+            groupKey?: string;
+            inboundKey?: string;
+            inboundMode?: string;
+            /** Format: date-time */
+            inboundTimeStart?: string;
+            /** Format: date-time */
+            inboundTimeEnd?: string;
+            /** Format: date-time */
+            lastSentTimeStart?: string;
+            /** Format: date-time */
+            lastSentTimeEnd?: string;
+            lineSideCode?: string;
+            locationCode?: string;
+            /** Format: int64 */
+            locationId?: number;
+            /** Format: date-time */
+            nextCheckTimeStart?: string;
+            /** Format: date-time */
+            nextCheckTimeEnd?: string;
+            operatorIdentity?: string;
+            overwriteConfirmed?: boolean;
+            overwriteConfirmedBy?: string;
+            /** Format: date-time */
+            overwriteConfirmedTimeStart?: string;
+            /** Format: date-time */
+            overwriteConfirmedTimeEnd?: string;
+            shippingNo?: string;
+            /** Format: int64 */
+            shippingOperationId?: number;
+            sourceKey?: string;
+            /** Format: int32 */
+            syncAttemptCountMin?: number;
+            /** Format: int32 */
+            syncAttemptCountMax?: number;
+            /** Format: date-time */
+            syncedTimeStart?: string;
+            /** Format: date-time */
+            syncedTimeEnd?: string;
+            syncReason?: string;
+            syncStatus?: string;
+            /** Format: int64 */
+            taskId?: number;
+            /** Format: int32 */
+            totalQuantityMin?: number;
+            /** Format: int32 */
+            totalQuantityMax?: number;
+            /** Format: date-time */
+            startTime?: string;
+            /** Format: date-time */
+            endTime?: string;
+        };
+        ApiResultPageResultNariLineSideInboundRecordResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultNariLineSideInboundRecordResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultNariLineSideInboundRecordResponse: {
+            records?: components["schemas"]["NariLineSideInboundRecordResponse"][];
             /** Format: int64 */
             total?: number;
             /** Format: int64 */
@@ -9510,3295 +12300,6 @@ export interface components {
             menus?: components["schemas"]["SysMenu"][];
             permissions?: string[];
         };
-        /**
-         * ContainerRef
-         * @description 容器业务标识。提交操作时用容器类型与编码共同定位料箱或载具；不包含名称、位置或并发版本，也不是数据库关系主键。
-         */
-        ContainerRef: {
-            /**
-             * @description 容器类型。料车统一为 VEHICLE；料箱为 BOX。
-             *
-             *     枚举值说明：
-             *     VEHICLE：载具（当前业务包含料车）。
-             *     BOX：料箱。
-             * @example VEHICLE
-             * @enum {string}
-             */
-            containerType: "VEHICLE" | "BOX";
-            /**
-             * @description 容器业务编码。
-             * @example CODE-001
-             */
-            containerCode: string;
-        };
-        /**
-         * LocationSummary
-         * @description 业务位置摘要。用于展示对象所在位置或任务起止位置；楼层、区域可缺省，不保证能直接构建三级级联。完整可选位置使用 LocationCandidate。
-         */
-        LocationSummary: {
-            /**
-             * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置编码。
-             * @example CODE-001
-             */
-            locationCode: string;
-            /**
-             * @description 业务位置显示名称。 位置名称。
-             * @example 一层接驳台
-             */
-            locationName: string;
-            /**
-             * @description 固定位置类型，使用物流位置字典：STORAGE_SLOT、DOCK_POSITION、MACHINE_INLET、MACHINE_OUTLET、CARRIER_PARKING。与位置多用途配置不同；未知扩展值按原值展示。
-             * @example DOCK_POSITION
-             */
-            locationType?: string;
-            /**
-             * @description 楼层层级编码，用于级联分组和匹配。 楼层编码。
-             * @example CODE-001
-             */
-            floorCode?: string;
-            /**
-             * @description 楼层显示名称。 楼层名称。
-             * @example 一层
-             */
-            floorName?: string;
-            /**
-             * @description 业务位置所属区域编码，与 floorCode 一同用于级联分组。 区域编码。
-             * @example CODE-001
-             */
-            areaCode?: string;
-            /**
-             * @description 区域显示名称。 区域名称。
-             * @example 库房接驳区
-             */
-            areaName?: string;
-        };
-        /**
-         * ContainerSummary
-         * @description 容器状态摘要。返回料箱或载具的业务身份、查询时位置与聚合版本，供页面展示及后续提交校验；不直接包含内部物料列表。
-         *
-         *     关联字段说明：
-         *     location：业务位置摘要，结构见 LocationSummary。
-         */
-        ContainerSummary: {
-            /**
-             * @description 容器类型。
-             *
-             *     枚举值说明：
-             *     VEHICLE：载具（当前业务包含料车）。
-             *     BOX：料箱。
-             * @example VEHICLE
-             * @enum {string}
-             */
-            containerType: "VEHICLE" | "BOX";
-            /**
-             * @description 容器编码。
-             * @example CODE-001
-             */
-            containerCode: string;
-            /**
-             * @description 容器的显示名称，不用于唯一定位。 容器名称。
-             * @example 料车一号
-             */
-            containerName?: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /** @description 仅返回查询时可信的实际位置；运输中未确认当前位置时省略，不将规划终点或已离开的旧起点当作当前位置。位置缺省不等于任务失败。 */
-            location?: components["schemas"]["LocationSummary"];
-            /**
-             * @description 物流已确认的实际内容状态：UNKNOWN＝未确认，EMPTY＝已确认空载，LOADED＝已确认装有内容。没有板件绑定不等于空箱，治具箱按可信治具业务判断。
-             * @example EMPTY
-             * @enum {string}
-             */
-            contentState?: "UNKNOWN" | "EMPTY" | "LOADED";
-            /**
-             * @description 当前箱用途：MATERIAL＝板件物料，FIXTURE＝治具；不适用或未确认时省略，不以规格或零条板件绑定推定。
-             * @example MATERIAL
-             * @enum {string}
-             */
-            runtimeUsage?: "MATERIAL" | "FIXTURE";
-        };
-        /**
-         * Eligibility
-         * @description 当前业务操作的资格判断。allowed 表示查询时是否可操作，reason 用于解释不可操作原因；不是页面权限列表，也不替代提交时服务端校验。
-         */
-        Eligibility: {
-            /**
-             * @description 是否允许本次操作；仅为查询时状态，提交必须再次校验。
-             * @example true
-             */
-            allowed: boolean;
-            /**
-             * @description 不允许时的可展示原因；allowed=false 时必须返回。
-             * @example 该对象已被其他任务占用
-             */
-            reason?: string;
-        };
-        /**
-         * PanelSummary
-         * @description 单个唯一码板件信息。用于扫码识别及拼板候选，包含订单、物料、当前绑定箱和本次操作资格；panelCode 标识具体板件，materialCode 标识物料品种，两者不能互换。
-         *
-         *     关联字段说明：
-         *     eligibility：当前操作资格判断，结构见 Eligibility。
-         *
-         *     板件信息查询和拼板查询均不接收目标箱码；eligibility 仅表达板件自身资格，不代表某个箱的绑定校验已完成。currentBoxCode 是后端查询到的板件现有绑定信息，不是客户端输入的目标箱。
-         */
-        PanelSummary: {
-            /**
-             * @description 具体板件的唯一码，用于识别同一板件、扫码匹配及去重；不是物料品种编码。 板件唯一码。
-             * @example CODE-001
-             */
-            panelCode: string;
-            /**
-             * @description 物料品种编码；多个不同唯一码板件可属于同一种物料。 物料编码。
-             * @example CODE-001
-             */
-            materialCode: string;
-            /**
-             * @description 可选显示字段；有可靠来源时返回，无来源时省略，不要求必返，也不虚构物料名称或计量单位。
-             * @example 成品板件
-             */
-            materialName?: string;
-            /**
-             * @description 所属生产订单的业务编号，不是数据库记录 ID。 订单号。
-             * @example CODE-001
-             */
-            orderNo: string;
-            /**
-             * @description 所属订单的明细行编号，用于区分同一订单内的不同明细。 订单行号，多物料订单需要此字段。
-             * @example CODE-001
-             */
-            orderLineNo?: string;
-            /**
-             * @description 板件当前已绑定的料箱编码；无绑定时省略。 当前绑定箱码；未绑定时省略。
-             * @example CODE-001
-             */
-            currentBoxCode?: string;
-            eligibility: components["schemas"]["Eligibility"];
-            /**
-             * @description 物料批次，按客户唯一码 substring(12,18) 解析并按文本保留前导零；绑定行保存当时快照，不查询物流物料主数据。数量绑定由代表板件码解析。 当前数据源能提供时返回；外部展示缺少批次时省略，不编造。
-             * @example 000001
-             */
-            materialBatch?: string;
-        };
-        /**
-         * MaterialLine
-         * @description 物料展示明细。供箱内查看、载具内容、缴库及发货展示使用，来源可为 LES 或 WMS；PANEL 表示具体唯一码板件，QUANTITY 表示数量汇总，不携带 LES 解绑关系凭据。
-         *
-         *     已有业务约定：LES/WMS 物料展示明细，不表示 LES 绑定关系，不作为解绑请求的关系凭据。存在真实板件唯一码时返回 panelCode；数量汇总不得虚构唯一码。
-         */
-        MaterialLine: {
-            /**
-             * @description 具体板件的唯一码，用于识别同一板件、扫码匹配及去重；不是物料品种编码。 真实板件唯一码；唯一码明细必须返回，数量汇总明细不得虚构。
-             * @example CODE-001
-             */
-            panelCode?: string;
-            /**
-             * @description 所属生产订单的业务编号，不是数据库记录 ID。 订单号。
-             * @example CODE-001
-             */
-            orderNo: string;
-            /**
-             * @description 所属订单的明细行编号，用于区分同一订单内的不同明细。 订单行号。
-             * @example CODE-001
-             */
-            orderLineNo?: string;
-            /**
-             * @description 物料品种编码；多个不同唯一码板件可属于同一种物料。 物料编码。
-             * @example CODE-001
-             */
-            materialCode: string;
-            /**
-             * @description 可选显示字段；有可靠来源时返回，无来源时省略，不要求必返，也不虚构物料名称或计量单位。
-             * @example 成品板件
-             */
-            materialName?: string;
-            /**
-             * Format: int32
-             * @description 本行整数件数；PANEL 每个实际唯一码固定为 1，QUANTITY 保存正整数汇总数量。
-             * @example 1
-             */
-            quantity: number;
-            /**
-             * @description 可选显示字段；有可靠来源时返回，无来源时省略，不要求必返，也不虚构物料名称或计量单位。 数量计量规则仍待确认。
-             * @example 件
-             */
-            unit?: string;
-            /**
-             * @description PANEL=唯一码明细；QUANTITY=数量汇总明细。
-             *
-             *     枚举值说明：
-             *     PANEL：具体唯一码板件明细（必须返回 panelCode）。
-             *     QUANTITY：按数量汇总的物料明细（不虚构 panelCode）。
-             * @example PANEL
-             * @enum {string}
-             */
-            lineType: "PANEL" | "QUANTITY";
-            /**
-             * @description 物料批次，按客户唯一码 substring(12,18) 解析并按文本保留前导零；绑定行保存当时快照，不查询物流物料主数据。数量绑定由代表板件码解析。 当前数据源能提供时返回；外部展示缺少批次时省略，不编造。
-             * @example 000001
-             */
-            materialBatch?: string;
-        } & ({
-            /**
-             * @description 枚举值说明：
-             *     PANEL：具体唯一码板件明细（必须返回 panelCode）。
-             * @enum {unknown}
-             */
-            lineType?: "PANEL";
-            /**
-             * @description 一个实际板件唯一码固定计 1 件。
-             * @enum {integer}
-             */
-            quantity?: 1;
-        } | {
-            /**
-             * @description 枚举值说明：
-             *     QUANTITY：按数量汇总的物料明细（不虚构 panelCode）。
-             * @enum {unknown}
-             */
-            lineType?: "QUANTITY";
-        });
-        /**
-         * BoxBindingsResponse
-         * @description 料箱绑定查询结果。包含料箱状态、是否为空、全箱数量和完整 LES 绑定关系，用于查看已有板件、扫码勾选及选择解绑；不是单纯的 WMS 库存查询。
-         *
-         *     已有业务约定：指定箱或载具范围全量查询，不接受 page/size 或全量开关，不按 20/200 条截断；空集合返回 []。服务端保证一次响应的容器、装载、物料、版本和汇总属于一致读取结果；无法取得完整一致结果时返回失败，不返回部分成功。前端取得成功结果后才执行本地扫码匹配。写入仍校验最新版本。
-         *
-         *     关联字段说明：
-         *     box：本次查询或操作的料箱，结构见 ContainerSummary。
-         *     eligibility：当前操作资格判断，结构见 Eligibility。 contentState 与 empty 表达实际内容，bindings 与 totalQuantity 仅表达物流板件绑定。四项及箱版本一次一致读取；未知、治具箱和物料箱分别解释。
-         */
-        BoxBindingsResponse: {
-            box: components["schemas"]["ContainerSummary"];
-            /**
-             * @description 是否已确认实际空载，等价于 contentState=EMPTY；UNKNOWN 或 LOADED 均 false。不能仅依据 bindings=[] 或 totalQuantity=0 判空。治具箱无板件绑定也可以 LOADED。
-             * @example true
-             */
-            empty: boolean;
-            /**
-             * Format: int32
-             * @description 有效板件绑定的整数件数合计，不是物理空满或治具数量；治具箱可为 0，但仍非空。UNKNOWN 不可按 0 推定空载。
-             * @example 1
-             */
-            totalQuantity: number;
-            /** @description 箱内完整 LES 绑定关系。 当前对象范围的完整明细，空列表为 []，不分页、不截断。 */
-            bindings: components["schemas"]["BindingLine"][];
-            eligibility: components["schemas"]["Eligibility"];
-            /**
-             * @description 物流已确认的实际内容状态：UNKNOWN＝未确认，EMPTY＝已确认空载，LOADED＝已确认装有内容。没有板件绑定不等于空箱，治具箱按可信治具业务判断。
-             * @example EMPTY
-             * @enum {string}
-             */
-            contentState: "UNKNOWN" | "EMPTY" | "LOADED";
-            /**
-             * @description 当前箱用途：MATERIAL＝板件物料，FIXTURE＝治具；不适用或未确认时省略，不以规格或零条板件绑定推定。
-             * @example MATERIAL
-             * @enum {string}
-             */
-            runtimeUsage?: "MATERIAL" | "FIXTURE";
-        } & ({
-            /** @enum {unknown} */
-            contentState?: "EMPTY";
-            /** @enum {unknown} */
-            empty?: true;
-            bindings?: unknown;
-            /** @enum {unknown} */
-            totalQuantity?: 0;
-        } | {
-            /** @enum {unknown} */
-            contentState?: "UNKNOWN" | "LOADED";
-            /** @enum {unknown} */
-            empty?: false;
-        });
-        /**
-         * BoxMaterialsResponse
-         * @description 箱内物料查询结果。sourceSystem 标明后端按业务用途选取的来源，materials 返回该箱完整明细，totalQuantity 为全箱总件数。
-         *
-         *     已有业务约定：指定箱或载具范围全量查询，不接受 page/size 或全量开关，不按 20/200 条截断；空集合返回 []。服务端保证一次响应的容器、装载、物料、版本和汇总属于一致读取结果；无法取得完整一致结果时返回失败，不返回部分成功。前端取得成功结果后才执行本地扫码匹配。写入仍校验最新版本。
-         *
-         *     关联字段说明：
-         *     box：本次查询或操作的料箱，结构见 ContainerSummary。
-         */
-        BoxMaterialsResponse: {
-            box: components["schemas"]["ContainerSummary"];
-            /**
-             * @description 物料明细来源。
-             *
-             *     枚举值说明：
-             *     LES：LES 业务系统中的物料明细。
-             *     WMS：WMS 仓储系统中的物料明细。
-             * @example LES
-             * @enum {string}
-             */
-            sourceSystem: "LES" | "WMS";
-            /** @description 当前箱内完整物料明细。 当前对象范围的完整明细，空列表为 []，不分页、不截断。 */
-            materials: components["schemas"]["MaterialLine"][];
-            /**
-             * Format: int32
-             * @description 全箱总数量。
-             * @example 1
-             */
-            totalQuantity: number;
-        };
-        /**
-         * JointCandidatesResponse
-         * @description 本次待绑定板件对应的完整真实拼板候选，仅 candidates，无箱信息或箱版本。通过 MES JDBC 按 PANEL_GROUP_ID＋ORDER_NO 关联且排除 -1；名称按完整码匹配 material_id。每个真实成员唯一码计 1 件，不因输入码额外计数。查询不创建绑定，来源失败不返回部分结果。
-         */
-        JointCandidatesResponse: {
-            /** @description 仅根据本次 pendingPanelCodes 得到的完整可加入拼板候选，按 panelCode 升序去重返回；无候选或输入为空时返回 []。 */
-            candidates: components["schemas"]["PanelSummary"][];
-        };
-        /**
-         * VehicleSlotResponse
-         * @description 载具库位查询结果。slotCode 指车上的装箱位，vehicle 为所属载具，box 为已占用该位的料箱；无箱时不应构造箱数据。
-         *
-         *     关联字段说明：
-         *     vehicle：当前载具，结构见 ContainerSummary。
-         *     box：本次查询或操作的料箱，结构见 ContainerSummary。
-         *     eligibility：当前操作资格判断，结构见 Eligibility。
-         *
-         *     2026-10-10 已确认：部分料车有真实装载位、部分没有。有位使用 SLOT 库位装载，无位使用 DIRECT 整车绑定；两种入口与明细分别保留，不虚构空位，也不混用凭据。同箱跨两类关系互斥，关联改变同步更新箱／相关车版本，SLOT 装卸还更新真实装载位版本。
-         */
-        VehicleSlotResponse: {
-            /**
-             * @description 载具内部装箱库位编码，不是仓库楼层/区域下的业务位置编码。 载具上的库位码，不等同固定位置码。
-             * @example CODE-001
-             */
-            slotCode: string;
-            /**
-             * Format: int32
-             * @description 当前库位及其容器占用关系的 LES 版本；库位状态或绑定容器变化递增。提交原样回传，服务端原子校验，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            vehicle: components["schemas"]["ContainerSummary"];
-            box?: components["schemas"]["ContainerSummary"];
-            eligibility: components["schemas"]["Eligibility"];
-        };
-        /**
-         * LoadingBoxResponse
-         * @description 待装车料箱查询结果。用于判断扫码箱是否可装车，loadedVehicleCode/loadedSlotCode 反映已有装载位置；是否允许装载由 eligibility 表达。
-         *
-         *     关联字段说明：
-         *     box：本次查询或操作的料箱，结构见 ContainerSummary。
-         *     eligibility：当前操作资格判断，结构见 Eligibility。
-         */
-        LoadingBoxResponse: {
-            box: components["schemas"]["ContainerSummary"];
-            /**
-             * @description 料箱当前已装载的载具编码；未装车时省略。 已装载料车编码，无则省略。
-             * @example CODE-001
-             */
-            loadedVehicleCode?: string;
-            /**
-             * @description 料箱当前所在的载具内部库位编码；未装车时省略。 已装载库位编码，无则省略。
-             * @example CODE-001
-             */
-            loadedSlotCode?: string;
-            eligibility: components["schemas"]["Eligibility"];
-        };
-        /**
-         * LoadLine
-         * @description 载具上一个装箱库位的明细。slotCode/slotVersion 标识库位状态；id/version 标识实际装载关系；box 和 materials 表达该位料箱与箱内完整物料。
-         *
-         *     已有业务约定：载具库位及装载明细。已装箱行必须有 box、id、version，并返回该箱完整 LES 物料；空库位省略 box/id/version，materials=[]。
-         *
-         *     2026-10-10 已确认：部分料车有真实装载位、部分没有。有位使用 SLOT 库位装载，无位使用 DIRECT 整车绑定；两种入口与明细分别保留，不虚构空位，也不混用凭据。同箱跨两类关系互斥，关联改变同步更新箱／相关车版本，SLOT 装卸还更新真实装载位版本。
-         */
-        LoadLine: {
-            /**
-             * @description 载具与料箱之间的装载关系主键，以字符串传输；不是箱码、板件码或物料编码。
-             * @example 10001
-             */
-            id?: string;
-            /**
-             * Format: int32
-             * @description 该条 LES 装载关系版本；关系变化递增，并同步递增相关箱、载具及载具库位版本。
-             * @example 1
-             */
-            version?: number;
-            /**
-             * @description 载具内部装箱库位编码，不是仓库楼层/区域下的业务位置编码。 载具上的库位码。
-             * @example CODE-001
-             */
-            slotCode: string;
-            /**
-             * Format: int32
-             * @description 载具库位及其占用关系的版本，装箱/卸箱或库位状态变化递增；不是装载行版本。
-             * @example 1
-             */
-            slotVersion: number;
-            /**
-             * ContainerSummary
-             * @description 容器状态摘要。返回料箱或载具的业务身份、查询时位置与聚合版本，供页面展示及后续提交校验；不直接包含内部物料列表。
-             *
-             *     已有业务约定：本次查询或操作的料箱。 候选业务 DTO，字段需双方评审。
-             */
-            box?: {
-                /**
-                 * @description 容器类型。
-                 *
-                 *     枚举值说明：
-                 *     VEHICLE：载具（当前业务包含料车）。
-                 *     BOX：料箱。
-                 * @example VEHICLE
-                 * @enum {string}
-                 */
-                containerType: "VEHICLE" | "BOX";
-                /**
-                 * @description 容器编码。
-                 * @example CODE-001
-                 */
-                containerCode: string;
-                /**
-                 * @description 容器的显示名称，不用于唯一定位。 容器名称。
-                 * @example 料车一号
-                 */
-                containerName?: string;
-                /**
-                 * Format: int32
-                 * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-                 * @example 1
-                 */
-                version: number;
-                /**
-                 * LocationSummary
-                 * @description 业务位置摘要。用于展示对象所在位置或任务起止位置；楼层、区域可缺省，不保证能直接构建三级级联。完整可选位置使用 LocationCandidate。
-                 *
-                 *     已有业务约定：业务位置摘要。 候选业务 DTO，字段需双方评审。 仅返回查询时可信的实际位置；运输中未确认当前位置时省略，不将规划终点或已离开的旧起点当作当前位置。位置缺省不等于任务失败。
-                 */
-                location?: {
-                    /**
-                     * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置编码。
-                     * @example CODE-001
-                     */
-                    locationCode: string;
-                    /**
-                     * @description 业务位置显示名称。 位置名称。
-                     * @example 一层接驳台
-                     */
-                    locationName: string;
-                    /**
-                     * @description 固定位置类型，使用物流位置字典：STORAGE_SLOT、DOCK_POSITION、MACHINE_INLET、MACHINE_OUTLET、CARRIER_PARKING。与位置多用途配置不同；未知扩展值按原值展示。
-                     * @example DOCK_POSITION
-                     */
-                    locationType?: string;
-                    /**
-                     * @description 楼层层级编码，用于级联分组和匹配。 楼层编码。
-                     * @example CODE-001
-                     */
-                    floorCode?: string;
-                    /**
-                     * @description 楼层显示名称。 楼层名称。
-                     * @example 一层
-                     */
-                    floorName?: string;
-                    /**
-                     * @description 业务位置所属区域编码，与 floorCode 一同用于级联分组。 区域编码。
-                     * @example CODE-001
-                     */
-                    areaCode?: string;
-                    /**
-                     * @description 区域显示名称。 区域名称。
-                     * @example 库房接驳区
-                     */
-                    areaName?: string;
-                };
-                /**
-                 * @description 物流已确认的实际内容状态：UNKNOWN＝未确认，EMPTY＝已确认空载，LOADED＝已确认装有内容。没有板件绑定不等于空箱，治具箱按可信治具业务判断。
-                 * @example EMPTY
-                 * @enum {string}
-                 */
-                contentState?: "UNKNOWN" | "EMPTY" | "LOADED";
-                /**
-                 * @description 当前箱用途：MATERIAL＝板件物料，FIXTURE＝治具；不适用或未确认时省略，不以规格或零条板件绑定推定。
-                 * @example MATERIAL
-                 * @enum {string}
-                 */
-                runtimeUsage?: "MATERIAL" | "FIXTURE";
-            };
-            /** @description 当前箱内完整物料明细。 当前对象范围的完整明细，空列表为 []，不分页、不截断。 */
-            materials: components["schemas"]["MaterialLine"][];
-        } & (unknown | {
-            materials?: unknown;
-        });
-        /**
-         * VehicleLoadsResponse
-         * @description 载具完整装载查询结果。loads 包含库位及其装箱情况，用于扫码匹配和卸车；loadedBoxCount 统计已装箱数，不是库位行数，totalMaterialQuantity 为全车总件数。
-         *
-         *     已有业务约定：指定箱或载具范围全量查询，不接受 page/size 或全量开关，不按 20/200 条截断；空集合返回 []。服务端保证一次响应的容器、装载、物料、版本和汇总属于一致读取结果；无法取得完整一致结果时返回失败，不返回部分成功。前端取得成功结果后才执行本地扫码匹配。写入仍校验最新版本。
-         *
-         *     关联字段说明：
-         *     vehicle：当前载具，结构见 ContainerSummary。
-         *
-         *     2026-10-10 已确认：部分料车有真实装载位、部分没有。有位使用 SLOT 库位装载，无位使用 DIRECT 整车绑定；两种入口与明细分别保留，不虚构空位，也不混用凭据。同箱跨两类关系互斥，关联改变同步更新箱／相关车版本，SLOT 装卸还更新真实装载位版本。
-         */
-        VehicleLoadsResponse: {
-            vehicle: components["schemas"]["ContainerSummary"];
-            /**
-             * Format: int32
-             * @description 全载具已装箱数。
-             * @example 1
-             */
-            loadedBoxCount: number;
-            /** @description 当前载具的完整库位装载明细。 当前对象范围的完整明细，空列表为 []，不分页、不截断。 */
-            loads: components["schemas"]["LoadLine"][];
-            /**
-             * Format: int32
-             * @description 全载具所有已装箱的物料总件数，与完整明细一致。
-             * @example 1
-             */
-            totalMaterialQuantity: number;
-        };
-        /**
-         * LocationContainersResponse
-         * @description 业务位置及其容器占用查询结果。与载具内部装箱库位不同；occupied 表示位置是否占用，container 为已绑定容器，version 用于后续位置关系修改。
-         *
-         *     关联字段说明：
-         *     location：业务位置摘要，结构见 LocationSummary。
-         *     container：关联的业务容器，结构见 ContainerSummary。
-         *     eligibility：当前操作资格判断，结构见 Eligibility。 页面用 relatedTasks 提示关联任务，用 unbindEligibility 判断当前是否允许解绑。查询不自动取消或建立任务；无任务也要检查传感器／实物及其他业务保护，不能直接认为可解绑。
-         */
-        LocationContainersResponse: {
-            location: components["schemas"]["LocationSummary"];
-            /**
-             * Format: int32
-             * @description 当前库位及其容器占用关系的 LES 版本；库位状态或绑定容器变化递增。提交原样回传，服务端原子校验，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 位置是否被占用。
-             * @example true
-             */
-            occupied: boolean;
-            container?: components["schemas"]["ContainerSummary"];
-            eligibility: components["schemas"]["Eligibility"];
-            /** @description 当前阻止解绑的全部关联任务；无阻塞返回 []。可见信息限当前位置解绑权限范围；取消仍校验原取消权限，不因查询可见而自动授权。 */
-            relatedTasks: components["schemas"]["RelatedTransportTask"][];
-            unbindEligibility: components["schemas"]["Eligibility"];
-        };
-        /**
-         * ContainerCandidateResponse
-         * @description 位置绑定第二步的扫码容器识别结果。仅根据 scanCode 识别载具或料箱，不要求前端传类型或目标位置。
-         *
-         *     关联字段说明：
-         *     container：后端识别出的容器信息，containerType/containerCode/version 用于最后一步绑定请求，结构见 ContainerSummary。
-         *     eligibility：不依赖目标位置的容器自身可绑定状态，结构见 Eligibility；allowed=true 不代表已验证与某个位置兼容。目标位置是否为空及能否绑定，最后提交时由后端校验。
-         *
-         *     页面流程为先扫位置、再扫容器、最后绑定；查询成功不建立关系。
-         */
-        ContainerCandidateResponse: {
-            container: components["schemas"]["ContainerSummary"];
-            eligibility: components["schemas"]["Eligibility"];
-        };
-        /**
-         * BoxSummary
-         * @description 料箱轻量摘要。以箱码定位料箱，携带箱聚合版本及全箱物料件数；不包含物料明细，完整内容使用 BoxContents。
-         */
-        BoxSummary: {
-            /**
-             * @description 料箱业务编码，通常由扫码取得；不是箱内绑定关系 ID。 箱码。
-             * @example CODE-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * Format: int32
-             * @description 该箱物料数量。
-             * @example 1
-             */
-            materialQuantity: number;
-        };
-        /**
-         * BusinessObjectResponse
-         * @description 缴库申请或成品发货的对象查询结果。保留原始扫描类型/编码，object 为解析出的实际容器，boxes 为全部关联箱及物料；后续提交处理整个解析对象。
-         *
-         *     已有业务约定：指定箱或载具范围全量查询，不接受 page/size 或全量开关，不按 20/200 条截断；空集合返回 []。服务端保证一次响应的容器、装载、物料、版本和汇总属于一致读取结果；无法取得完整一致结果时返回失败，不返回部分成功。前端取得成功结果后才执行本地扫码匹配。写入仍校验最新版本。
-         *
-         *     关联字段说明：
-         *     object：扫描或查询解析出的实际业务容器，结构见 ContainerSummary。
-         *     eligibility：当前操作资格判断，结构见 Eligibility。
-         */
-        BusinessObjectResponse: {
-            /**
-             * @description 扫描码的明确类型，避免不同码制冲突。
-             *
-             *     枚举值说明：
-             *     VEHICLE：载具（当前业务包含料车）。
-             *     BOX：料箱。
-             *     LOCATION：业务位置（可解析其当前关联容器，不是容器本身）。
-             * @example VEHICLE
-             * @enum {string}
-             */
-            scanType: "VEHICLE" | "BOX" | "LOCATION";
-            /**
-             * @description 原始扫描编码。
-             * @example CODE-001
-             */
-            scanCode: string;
-            object: components["schemas"]["ContainerSummary"];
-            /** @description 当前对象关联的完整料箱及箱内物料。 当前对象范围的完整明细，空列表为 []，不分页、不截断。 */
-            boxes: components["schemas"]["BoxContents"][];
-            /**
-             * Format: int32
-             * @description 整个对象所有关联箱物料总件数，与完整明细一致。
-             * @example 1
-             */
-            totalMaterialQuantity: number;
-            eligibility: components["schemas"]["Eligibility"];
-        };
-        /**
-         * ReceivingTask
-         * @description ReceivingTask 是库房送达物流任务的查询投影，不新建接收任务／批次。任务身份与版本来自本次物流运输，接收状态和箱数从固定箱范围及已确认记录派生；object 保留本次扫描对象，BOX 只确认本箱、VEHICLE 确认剩余整批。
-         */
-        ReceivingTask: {
-            /**
-             * @description 本次已可信到达库房的物流运输任务 ID，映射 NariLogisticsTask.id，不是独立接收对象 ID。
-             * @example 10001
-             */
-            taskId: string;
-            /**
-             * @description 本次库房送达物流运输任务号，映射 NariLogisticsTask.taskNo。
-             * @example CODE-001
-             */
-            taskNo: string;
-            /**
-             * Format: int32
-             * @description 对应本次库房送达物流任务的标准 version，接收事实改变待接收范围时在事务中显式递增，影响本次清理资格的变化也须传播；不另建接收任务版本或批次。查询值原样提交，冲突 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * ContainerSummary
-             * @description 容器状态摘要。返回料箱或载具的业务身份、查询时位置与聚合版本，供页面展示及后续提交校验；不直接包含内部物料列表。
-             *
-             *     已有业务约定：扫描或查询解析出的实际业务容器。 候选业务 DTO，字段需双方评审。
-             */
-            object: {
-                /**
-                 * @description 容器类型。
-                 *
-                 *     枚举值说明：
-                 *     VEHICLE：载具（当前业务包含料车）。
-                 *     BOX：料箱。
-                 * @example VEHICLE
-                 * @enum {string}
-                 */
-                containerType: "VEHICLE" | "BOX";
-                /**
-                 * @description 容器编码。
-                 * @example CODE-001
-                 */
-                containerCode: string;
-                /**
-                 * @description 容器的显示名称，不用于唯一定位。 容器名称。
-                 * @example 料车一号
-                 */
-                containerName?: string;
-                /**
-                 * Format: int32
-                 * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-                 * @example 1
-                 */
-                version: number;
-                /**
-                 * LocationSummary
-                 * @description 业务位置摘要。用于展示对象所在位置或任务起止位置；楼层、区域可缺省，不保证能直接构建三级级联。完整可选位置使用 LocationCandidate。
-                 *
-                 *     已有业务约定：业务位置摘要。 候选业务 DTO，字段需双方评审。 仅返回查询时可信的实际位置；运输中未确认当前位置时省略，不将规划终点或已离开的旧起点当作当前位置。位置缺省不等于任务失败。
-                 */
-                location?: {
-                    /**
-                     * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置编码。
-                     * @example CODE-001
-                     */
-                    locationCode: string;
-                    /**
-                     * @description 业务位置显示名称。 位置名称。
-                     * @example 一层接驳台
-                     */
-                    locationName: string;
-                    /**
-                     * @description 固定位置类型，使用物流位置字典：STORAGE_SLOT、DOCK_POSITION、MACHINE_INLET、MACHINE_OUTLET、CARRIER_PARKING。与位置多用途配置不同；未知扩展值按原值展示。
-                     * @example DOCK_POSITION
-                     */
-                    locationType?: string;
-                    /**
-                     * @description 楼层层级编码，用于级联分组和匹配。 楼层编码。
-                     * @example CODE-001
-                     */
-                    floorCode?: string;
-                    /**
-                     * @description 楼层显示名称。 楼层名称。
-                     * @example 一层
-                     */
-                    floorName?: string;
-                    /**
-                     * @description 业务位置所属区域编码，与 floorCode 一同用于级联分组。 区域编码。
-                     * @example CODE-001
-                     */
-                    areaCode?: string;
-                    /**
-                     * @description 区域显示名称。 区域名称。
-                     * @example 库房接驳区
-                     */
-                    areaName?: string;
-                };
-                /**
-                 * @description 物流已确认的实际内容状态：UNKNOWN＝未确认，EMPTY＝已确认空载，LOADED＝已确认装有内容。没有板件绑定不等于空箱，治具箱按可信治具业务判断。
-                 * @example EMPTY
-                 * @enum {string}
-                 */
-                contentState?: "UNKNOWN" | "EMPTY" | "LOADED";
-                /**
-                 * @description 当前箱用途：MATERIAL＝板件物料，FIXTURE＝治具；不适用或未确认时省略，不以规格或零条板件绑定推定。
-                 * @example MATERIAL
-                 * @enum {string}
-                 */
-                runtimeUsage?: "MATERIAL" | "FIXTURE";
-            };
-            /**
-             * LocationSummary
-             * @description 业务位置摘要。用于展示对象所在位置或任务起止位置；楼层、区域可缺省，不保证能直接构建三级级联。完整可选位置使用 LocationCandidate。
-             *
-             *     已有业务约定：业务位置摘要。 候选业务 DTO，字段需双方评审。
-             */
-            location?: {
-                /**
-                 * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置编码。
-                 * @example CODE-001
-                 */
-                locationCode: string;
-                /**
-                 * @description 业务位置显示名称。 位置名称。
-                 * @example 一层接驳台
-                 */
-                locationName: string;
-                /**
-                 * @description 固定位置类型，使用物流位置字典：STORAGE_SLOT、DOCK_POSITION、MACHINE_INLET、MACHINE_OUTLET、CARRIER_PARKING。与位置多用途配置不同；未知扩展值按原值展示。
-                 * @example DOCK_POSITION
-                 */
-                locationType?: string;
-                /**
-                 * @description 楼层层级编码，用于级联分组和匹配。 楼层编码。
-                 * @example CODE-001
-                 */
-                floorCode?: string;
-                /**
-                 * @description 楼层显示名称。 楼层名称。
-                 * @example 一层
-                 */
-                floorName?: string;
-                /**
-                 * @description 业务位置所属区域编码，与 floorCode 一同用于级联分组。 区域编码。
-                 * @example CODE-001
-                 */
-                areaCode?: string;
-                /**
-                 * @description 区域显示名称。 区域名称。
-                 * @example 库房接驳区
-                 */
-                areaName?: string;
-            };
-            /**
-             * @description 查询派生的整次运输接收状态：PENDING＝尚无确认；PARTIAL＝部分箱已确认；RECEIVED＝固定范围全部已确认。不是运输状态，不另存状态主表或字典。单箱资格单独按该箱记录判断。
-             * @example PENDING
-             */
-            status: string;
-            /**
-             * @description 状态名称。
-             * @example 待接收
-             */
-            statusName: string;
-            /**
-             * Format: date-time
-             * @description 该任务在服务端的创建时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            createdTime: string;
-            /**
-             * Eligibility
-             * @description 当前业务操作的资格判断。allowed 表示查询时是否可操作，reason 用于解释不可操作原因；不是页面权限列表，也不替代提交时服务端校验。
-             *
-             *     已有业务约定：当前操作资格判断。 候选业务 DTO，字段需双方评审。
-             */
-            eligibility: {
-                /**
-                 * @description 是否允许本次操作；仅为查询时状态，提交必须再次校验。
-                 * @example true
-                 */
-                allowed: boolean;
-                /**
-                 * @description 不允许时的可展示原因；allowed=false 时必须返回。
-                 * @example 该对象已被其他任务占用
-                 */
-                reason?: string;
-            };
-            /**
-             * @description 本次运输固定范围的箱总数，不因卸车或确认减少。
-             * @example 1
-             */
-            totalBoxCount: number;
-            /**
-             * @description 本次运输已有接收记录的箱数，不超过 totalBoxCount。
-             * @example 0
-             */
-            receivedBoxCount: number;
-        };
-        /**
-         * ReceivingTaskPage
-         * @description 普通待接收任务列表的分页结果。供任务清单浏览；不用于扫描单个容器后的任务匹配，后者使用 ReceivingTaskResponse。
-         */
-        ReceivingTaskPage: {
-            /** @description 本页业务记录。 当前页记录，空页为 []。 */
-            records: components["schemas"]["ReceivingTask"][];
-            /**
-             * Format: int64
-             * @description 符合当前查询条件的总记录数，不是当前页记录数。 总记录数，限制在 JS 安全整数范围。
-             * @example 1
-             */
-            total: number;
-            /**
-             * Format: int32
-             * @description 本页请求或返回的分页大小，仅用于保留分页的普通列表。 每页条数；候选上限 200，属于接口批次限制，不是容器容量。
-             * @default 20
-             * @example 20
-             */
-            size: number;
-            /**
-             * Format: int32
-             * @description 当前页码，从 1 开始。 页码，从 1 开始。
-             * @default 1
-             * @example 1
-             */
-            current: number;
-            /**
-             * Format: int32
-             * @description 总页数，无记录时为 0。 总页数；无记录为 0。
-             * @example 1
-             */
-            pages: number;
-        };
-        /**
-         * LogisticsTask
-         * @description 物流运输任务信息。包含任务标识、品牌、类型、运输容器、起始/目标位置及调度状态；任务创建成功不代表已完成运输。
-         *
-         *     关联字段说明：
-         *     container：关联的业务容器，结构见 ContainerSummary。
-         *     origin：起始业务位置，结构见 LocationSummary。
-         *     destination：目标业务位置，结构见 LocationSummary。
-         */
-        LogisticsTask: {
-            /**
-             * @description 任务持久标识，以字符串传输；用于接口定位任务，不是面向员工的任务编号。 标识以字符串传输，避免 JavaScript 大整数精度损失。
-             * @example 10001
-             */
-            taskId: string;
-            /**
-             * @description 面向员工展示和业务追溯的任务编号。 物流任务编号。
-             * @example CODE-001
-             */
-            taskNo: string;
-            /**
-             * Format: int32
-             * @description 该物流任务的版本，任务状态或任务内容变化递增；取消提交校验此版本，不是容器版本。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description AGV 品牌编码为候选映射，需对照后端实际字典。
-             *
-             *     枚举值说明：
-             *     STANDARD：斯坦德（当前候选品牌编码，正式接入时需与后端实际字典核对）。
-             *     HIKVISION：海康（当前候选品牌编码）。
-             * @example STANDARD
-             * @enum {string}
-             */
-            vendor: "STANDARD" | "HIKVISION";
-            /**
-             * @description taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。
-             * @example GENERAL
-             * @enum {string}
-             */
-            taskType: "GENERAL";
-            container: components["schemas"]["ContainerSummary"];
-            origin: components["schemas"]["LocationSummary"];
-            destination: components["schemas"]["LocationSummary"];
-            /**
-             * @description 执行运输任务的 AGV 编码；尚未分配时可省略。 实际分配的 AGV 编号，无则省略。
-             * @example CODE-001
-             */
-            agvCode?: string;
-            /**
-             * @description 执行运输任务的 AGV 显示名称。 AGV 名称。
-             * @example AGV-01
-             */
-            agvName?: string;
-            /**
-             * @description 本地物流运输状态：QUEUED 待派送；DISPATCHING 已登记发送、受理待确认；ACCEPTED 调度已受理；RUNNING 执行中；COMPLETED 可信运输完成；FAILED 已确认失败；CANCELLED 已确认取消；UNKNOWN 外部结果未知、需核查。发送、受理及取消受理不代表完成；运输终结不自动证明实物已结算或位置已空闲。厂商状态由后端映射，不直接透传。
-             * @example QUEUED
-             * @enum {string}
-             */
-            status: "QUEUED" | "DISPATCHING" | "ACCEPTED" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" | "UNKNOWN";
-            /**
-             * @description 状态中文名称。
-             * @example 已创建
-             */
-            statusName: string;
-            /**
-             * @description 实际发起方式，未冻结完整值域。
-             * @example MANUAL
-             */
-            triggerMode: string;
-            /**
-             * Format: date-time
-             * @description 该任务在服务端的创建时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            createdTime: string;
-        };
-        /**
-         * LogisticsTaskPage
-         * @description 物流任务分页列表。用于浏览或筛选可取消任务；任务不再出现在列表中不能单独证明取消成功。
-         */
-        LogisticsTaskPage: {
-            /** @description 本页业务记录。 当前页记录，空页为 []。 */
-            records: components["schemas"]["LogisticsTask"][];
-            /**
-             * Format: int64
-             * @description 符合当前查询条件的总记录数，不是当前页记录数。 总记录数，限制在 JS 安全整数范围。
-             * @example 1
-             */
-            total: number;
-            /**
-             * Format: int32
-             * @description 本页请求或返回的分页大小，仅用于保留分页的普通列表。 每页条数；候选上限 200，属于接口批次限制，不是容器容量。
-             * @default 20
-             * @example 20
-             */
-            size: number;
-            /**
-             * Format: int32
-             * @description 当前页码，从 1 开始。 页码，从 1 开始。
-             * @default 1
-             * @example 1
-             */
-            current: number;
-            /**
-             * Format: int32
-             * @description 总页数，无记录时为 0。 总页数；无记录为 0。
-             * @example 1
-             */
-            pages: number;
-        };
-        /**
-         * DestinationOption
-         * @description 一个可选目标位置。location 包含完整三级层级，recommended 是该项推荐标记；是否默认选中由具体页面规则决定。
-         *
-         *     已有业务约定：完整候选位置及推荐标记。推荐地点必须属于本次完整候选集合，并与 recommended=true 的记录一致；不得将推荐标记直接解释为所有页面的默认选择。
-         *
-         *     关联字段说明：
-         *     location：业务位置摘要，结构见 LocationCandidate。
-         */
-        DestinationOption: {
-            location: components["schemas"]["LocationCandidate"];
-            /**
-             * @description 是否推荐。
-             * @example true
-             */
-            recommended: boolean;
-        };
-        /**
-         * LogisticsOptionsResponse
-         * @description 普通物流发起查询，扫描码识别运输对象及当前位置，返回完整允许目标和业务确定的品牌／类型。候选按业务基准位置的 SOURCE／TARGET 存储区关联展开其下真实 NariLocation，再按用途、产线、规格、占用／预占及业务资格筛选。回线边库采用 TARGET 和运行用途选择库类别，不使用 BOX_TARGET／FIXTURE_TARGET 或独立点对点关系。 后端按实际搬运对象和业务确定品牌：位置箱作业使用位置唯一 agvVendor，同品牌高／低车由调度选择；当前整车运输使用 STANDARD。停车点上的车与车上箱是不同搬运对象，海康取放箱不得改成斯坦德搬整车。位置配置缺失／无法识别对象或不支持组合时明确失败，不采用默认品牌。 taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。 查询一致读取，提交重新校验；创建不代表实物到达，候选不分页。 位置用途从 NariLocationUsage 启用集合筛选，一个位置可有多个用途，候选按实际位置去重；多用途不绕过物理占用／预占。
-         */
-        LogisticsOptionsResponse: {
-            object: components["schemas"]["ContainerSummary"];
-            origin: components["schemas"]["LocationSummary"];
-            /**
-             * @description 后端按实际搬运对象和业务确定品牌：位置箱作业使用位置唯一 agvVendor，同品牌高／低车由调度选择；当前整车运输使用 STANDARD。停车点上的车与车上箱是不同搬运对象，海康取放箱不得改成斯坦德搬整车。位置配置缺失／无法识别对象或不支持组合时明确失败，不采用默认品牌。
-             * @example STANDARD
-             * @enum {string}
-             */
-            vendor: "STANDARD" | "HIKVISION";
-            /**
-             * @description taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。
-             * @example GENERAL
-             * @enum {string}
-             */
-            taskType: "GENERAL";
-            recommendedDestination?: components["schemas"]["LocationCandidate"];
-            /** @description 当前业务规则允许的完整目标位置候选。 本次查询范围的完整候选数组，不分页、不截断；无候选返回 []。 */
-            destinations: components["schemas"]["DestinationOption"][];
-            eligibility: components["schemas"]["Eligibility"];
-            /** @description 回线边库按钮资格，独立于普通运输eligibility与destinations；综合当前对象、来源位置、线边库目标配置、可信空闲/预占及接力条件。false时置灰并展示reason，true时reason为null。查询不预占，提交仍重新校验。2026-11-16.1本次增量经用户确认冻结。 */
-            returnLineSideEligibility: {
-                /** @description 当前是否允许发起回线边库 */
-                allowed: boolean;
-                /** @description 不可用原因；allowed=true时为null，false时为非空中文提示 */
-                reason: string | null;
-            };
-        };
-        /**
-         * EmptyVehicleOrigin
-         * @description 一个空载具呼叫起点候选。origin 与 vehicle 必须对应同一候选项，切换起点时应一同切换载具展示及提交版本。
-         */
-        EmptyVehicleOrigin: {
-            /**
-             * LocationCandidate
-             * @description 可选业务位置的完整三级层级。楼层、区域、库位编码与名称必须齐全，用于级联选择；不等同于允许缺省层级的 LocationSummary。
-             *
-             *     已有业务约定：起始业务位置。 可选择地点，必须返回完整楼层、区域、库位编码与名称；缺失层级的地点不能作为合法候选。
-             */
-            origin: {
-                /**
-                 * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置编码。
-                 * @example CODE-001
-                 */
-                locationCode: string;
-                /**
-                 * @description 业务位置显示名称。 位置名称。
-                 * @example 一层接驳台
-                 */
-                locationName: string;
-                /**
-                 * @description 位置类型，实际值由后端字典返回，未知值按原值展示。
-                 * @example TRANSFER_STATION
-                 */
-                locationType?: string;
-                /**
-                 * @description 楼层层级编码，用于级联分组和匹配。 楼层编码。
-                 * @example CODE-001
-                 */
-                floorCode: string;
-                /**
-                 * @description 楼层显示名称。 楼层名称。
-                 * @example 一层
-                 */
-                floorName: string;
-                /**
-                 * @description 业务位置所属区域编码，与 floorCode 一同用于级联分组。 区域编码。
-                 * @example CODE-001
-                 */
-                areaCode: string;
-                /**
-                 * @description 区域显示名称。 区域名称。
-                 * @example 库房接驳区
-                 */
-                areaName: string;
-            };
-            /**
-             * ContainerSummary
-             * @description 容器状态摘要。返回料箱或载具的业务身份、查询时位置与聚合版本，供页面展示及后续提交校验；不直接包含内部物料列表。
-             *
-             *     已有业务约定：当前载具。 候选业务 DTO，字段需双方评审。
-             */
-            vehicle: {
-                /**
-                 * @description 容器类型。
-                 *
-                 *     枚举值说明：
-                 *     VEHICLE：载具（当前业务包含料车）。
-                 *     BOX：料箱。
-                 * @example VEHICLE
-                 * @enum {string}
-                 */
-                containerType: "VEHICLE" | "BOX";
-                /**
-                 * @description 容器编码。
-                 * @example CODE-001
-                 */
-                containerCode: string;
-                /**
-                 * @description 容器的显示名称，不用于唯一定位。 容器名称。
-                 * @example 料车一号
-                 */
-                containerName?: string;
-                /**
-                 * Format: int32
-                 * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-                 * @example 1
-                 */
-                version: number;
-                /**
-                 * LocationSummary
-                 * @description 业务位置摘要。用于展示对象所在位置或任务起止位置；楼层、区域可缺省，不保证能直接构建三级级联。完整可选位置使用 LocationCandidate。
-                 *
-                 *     已有业务约定：业务位置摘要。 候选业务 DTO，字段需双方评审。 仅返回查询时可信的实际位置；运输中未确认当前位置时省略，不将规划终点或已离开的旧起点当作当前位置。位置缺省不等于任务失败。
-                 */
-                location?: {
-                    /**
-                     * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置编码。
-                     * @example CODE-001
-                     */
-                    locationCode: string;
-                    /**
-                     * @description 业务位置显示名称。 位置名称。
-                     * @example 一层接驳台
-                     */
-                    locationName: string;
-                    /**
-                     * @description 固定位置类型，使用物流位置字典：STORAGE_SLOT、DOCK_POSITION、MACHINE_INLET、MACHINE_OUTLET、CARRIER_PARKING。与位置多用途配置不同；未知扩展值按原值展示。
-                     * @example DOCK_POSITION
-                     */
-                    locationType?: string;
-                    /**
-                     * @description 楼层层级编码，用于级联分组和匹配。 楼层编码。
-                     * @example CODE-001
-                     */
-                    floorCode?: string;
-                    /**
-                     * @description 楼层显示名称。 楼层名称。
-                     * @example 一层
-                     */
-                    floorName?: string;
-                    /**
-                     * @description 业务位置所属区域编码，与 floorCode 一同用于级联分组。 区域编码。
-                     * @example CODE-001
-                     */
-                    areaCode?: string;
-                    /**
-                     * @description 区域显示名称。 区域名称。
-                     * @example 库房接驳区
-                     */
-                    areaName?: string;
-                };
-                /**
-                 * @description 物流已确认的实际内容状态：UNKNOWN＝未确认，EMPTY＝已确认空载，LOADED＝已确认装有内容。没有板件绑定不等于空箱，治具箱按可信治具业务判断。
-                 * @example EMPTY
-                 * @enum {string}
-                 */
-                contentState?: "UNKNOWN" | "EMPTY" | "LOADED";
-                /**
-                 * @description 当前箱用途：MATERIAL＝板件物料，FIXTURE＝治具；不适用或未确认时省略，不以规格或零条板件绑定推定。
-                 * @example MATERIAL
-                 * @enum {string}
-                 */
-                runtimeUsage?: "MATERIAL" | "FIXTURE";
-            };
-        };
-        /**
-         * EmptyVehicleOptionsResponse
-         * @description 扫描目标位置后的空载具呼叫候选结果。destination 是已扫描目标，origins 是可选起始位置及各自载具的完整列表。
-         *
-         *     已有业务约定：仅返回当前扫描对象、任务类型及业务规则允许的完整候选，不是全库位置列表。候选不分页、不截断，前端用完整数组构建楼层/区域/库位三级级联；服务端按 floorCode、areaCode、locationCode 升序稳定排序，位置编码去重。一次响应内候选层级及关联对象须一致；无法完整取得时返回失败，不以部分列表成功返回。重新扫描或查询条件变化后丢弃旧响应并重置选择。提交时服务端复核位置、载具及资格，不因查询时可选而跳过校验。 origins 非空时默认选中响应数组第一项；切换起始位置时同步替换该项关联 vehicle（编码、版本及展示信息），载具信息在选择框外展示。无候选时不选中、不显示旧载具，禁止提交。
-         *
-         *     关联字段说明：
-         *     destination：目标业务位置，结构见 LocationSummary。
-         */
-        EmptyVehicleOptionsResponse: {
-            destination: components["schemas"]["LocationSummary"];
-            /** @description 当前目标位置对应的完整起点及载具候选。 本次查询范围的完整候选数组，不分页、不截断；无候选返回 []。 */
-            origins: components["schemas"]["EmptyVehicleOrigin"][];
-        };
-        /**
-         * TrafficArea
-         * @description 交管区域当前状态。areaCode 是交管区域编码，不应与位置层级中的区域自动视为同一对象；FREE 显示锁定，OCCUPIED 显示释放，提交仍需服务端校验。 本地查询只显示启用未归档区域；厂商实际进入／离开尚未接通。
-         */
-        TrafficArea: {
-            /**
-             * @description 交管区域业务编码，用于锁定/释放操作定位。 交管区域编码。
-             * @example CODE-001
-             */
-            areaCode: string;
-            /**
-             * @description 区域显示名称。 交管区域名称。
-             * @example 交管区域一
-             */
-            areaName: string;
-            /**
-             * Format: int32
-             * @description 交管区域状态版本，锁定或释放导致状态变化时递增；提交时校验最新状态与版本，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 区域状态候选映射。
-             *
-             *     枚举值说明：
-             *     FREE：空闲（页面显示锁定操作）。
-             *     OCCUPIED：占用（页面显示释放操作）。
-             * @example FREE
-             * @enum {string}
-             */
-            status: "FREE" | "OCCUPIED";
-            /**
-             * @description 最近一次交管操作人的显示名称，由后端返回。 最后操作人，无记录时省略。
-             * @example 张三
-             */
-            lastOperatorName?: string;
-            /**
-             * Format: date-time
-             * @description 最近一次交管操作的服务端记录时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            lastOperationTime?: string;
-        };
-        /**
-         * TrafficAreaPage
-         * @description 交管区域分页查询结果。用于按编码、名称或状态浏览区域及最近操作信息。
-         */
-        TrafficAreaPage: {
-            /** @description 本页业务记录。 当前页记录，空页为 []。 */
-            records: components["schemas"]["TrafficArea"][];
-            /**
-             * Format: int64
-             * @description 符合当前查询条件的总记录数，不是当前页记录数。 总记录数，限制在 JS 安全整数范围。
-             * @example 1
-             */
-            total: number;
-            /**
-             * Format: int32
-             * @description 本页请求或返回的分页大小，仅用于保留分页的普通列表。 每页条数；候选上限 200，属于接口批次限制，不是容器容量。
-             * @default 20
-             * @example 20
-             */
-            size: number;
-            /**
-             * Format: int32
-             * @description 当前页码，从 1 开始。 页码，从 1 开始。
-             * @default 1
-             * @example 1
-             */
-            current: number;
-            /**
-             * Format: int32
-             * @description 总页数，无记录时为 0。 总页数；无记录为 0。
-             * @example 1
-             */
-            pages: number;
-        };
-        /**
-         * OperationReceipt
-         * @description 通用业务操作回执。说明一次操作何时完成、实际影响关系数量；不包含更新后的容器状态，箱内关系操作使用 BoxOperationReceipt。
-         *
-         *     2026-10-20.1：普通回执取消 operationNo，不取业务单据编号；requestId 关联原请求和防重，处理时间、影响数量及原有业务字段保留。历史成功请求按新结构投影，原业务不重做、旧证据不改写。
-         */
-        OperationReceipt: {
-            /**
-             * Format: uuid
-             * @description 对应本次业务提交的请求 UUID，服务端原样回传，供结果关联与追踪。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * Format: int32
-             * @description 实际发生变更的关系条数，不一定等于物料件数。 本次实际变更的关系数量。
-             * @example 1
-             */
-            affectedCount: number;
-            /**
-             * Format: date-time
-             * @description 服务端记录的处理时间；取消结果查询中表示该取消状态最后更新时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            processedTime: string;
-        };
-        /**
-         * WarehouseApplicationResponse
-         * @description 缴库申请成功结果。对应 MES 校验、SAP 申请和 WMS 待上架记录全部完成后的回执；不是最终入库完成证明。
-         */
-        WarehouseApplicationResponse: {
-            /**
-             * Format: uuid
-             * @description 对应本次业务提交的请求 UUID，服务端原样回传，供结果关联与追踪。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 物流生成的缴库业务号，复用nari.numbering.operation-rule；与SAP外部申请单号分开，WMS lCode使用此值。
-             * @example CODE-001
-             */
-            applicationNo: string;
-            /** @description SAP实际返回的全部有效申请单号去重集合，不只保存最后一项；不假设顺序与订单对应。 */
-            sapDocumentNos: string[];
-            /**
-             * @description 是否已完成 WMS 待上架新增；成功响应必须为 true。
-             * @example true
-             */
-            wmsPendingCreated: boolean;
-            /**
-             * Format: date-time
-             * @description 服务端记录的处理时间；取消结果查询中表示该取消状态最后更新时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            processedTime: string;
-        };
-        /**
-         * ShippingResponse
-         * @description 发料全部约定步骤成功回执；shippingNo复用基座操作规则，object为LES重建后的聚合版本。canCreateLogisticsTask仅表示可信停车点的料车可继续独立创建本地运输，不表示已派车。成功原请求回放本次原回执，后续操作仍刷新当前对象。
-         */
-        ShippingResponse: {
-            /**
-             * Format: uuid
-             * @description 对应本次业务提交的请求 UUID，服务端原样回传，供结果关联与追踪。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 本次发料业务编号，复用基座nari.numbering.operation-rule；不是新发货主表主键。
-             * @example CODE-001
-             */
-            shippingNo: string;
-            object: components["schemas"]["ContainerSummary"];
-            /**
-             * @description 仅料车场景按后端规则返回是否可继续创建物流任务。
-             * @example true
-             */
-            canCreateLogisticsTask: boolean;
-            /**
-             * Format: date-time
-             * @description 服务端记录的处理时间；取消结果查询中表示该取消状态最后更新时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            processedTime: string;
-        };
-        /**
-         * TaskCreationResponse
-         * @description 物流任务创建结果。requestId 对应本次创建意图，task 返回已创建任务的编号和当前状态；不表示运输完成。
-         *
-         *     关联字段说明：
-         *     task：当前操作对应的任务，结构见 LogisticsTask。
-         */
-        TaskCreationResponse: {
-            /**
-             * Format: uuid
-             * @description 对应本次业务提交的请求 UUID，服务端原样回传，供结果关联与追踪。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            task: components["schemas"]["LogisticsTask"];
-        };
-        /**
-         * TaskCancellationResponse
-         * @description 提交取消请求的即时回执。ACCEPTED 仅为受理，CANCELLED 才表示最终取消；处理中结果通过取消状态查询继续确认。
-         */
-        TaskCancellationResponse: {
-            /**
-             * Format: uuid
-             * @description 对应本次业务提交的请求 UUID，服务端原样回传，供结果关联与追踪。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 任务持久标识，以字符串传输；用于接口定位任务，不是面向员工的任务编号。 标识以字符串传输，避免 JavaScript 大整数精度损失。
-             * @example 10001
-             */
-            taskId: string;
-            /**
-             * @description 面向员工展示和业务追溯的任务编号。 物流任务号。
-             * @example CODE-001
-             */
-            taskNo: string;
-            /**
-             * @description ACCEPTED＝物流系统已受理取消，尚未取得可信最终结果；CANCELLED＝可信最终取消成功。受理不等于调度设备已经完成取消；用于解绑时仍需位置查询复核实物和全部阻塞。
-             * @example ACCEPTED
-             * @enum {string}
-             */
-            cancelStatus: "ACCEPTED" | "CANCELLED";
-            /**
-             * Format: date-time
-             * @description 服务端记录的处理时间；取消结果查询中表示该取消状态最后更新时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            processedTime: string;
-        };
-        /**
-         * BoxCodesRequest
-         * @description 不增加用途选择或独立混装入口。后端解析本次各板件／代表码，并与箱内有效内容按物料编码、批次、订单三项比较；任一属性存在多个值时为混装。未确认时返回 MIXED_CONTENT 待确认结果，不写入绑定、不计数、不推进版本。人员取消则结束；人员继续则携带服务端确认凭据重新提交，后端复核箱版本及完整输入，才可执行。混装箱仅用于缴库，不参与生产自动配送或按订单叫料；同质尾单不因属于缴库而强制弹窗。原有同周期绑定方式、任务预占及缴库成功内容保护仍适用，混料确认不能绕过这些条件。 逐码模式按每个实际码计 1 件。
-         */
-        BoxCodesRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。 混料提示后的确认继续属于带确认凭据的新提交，客户端生成新 UUID；首次未确认请求不复用成不同内容。网络重发确认提交仍使用同一 UUID、同一凭据和输入。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 料箱业务编码，通常由扫码取得；不是箱内绑定关系 ID。 目标箱码。
-             * @example CODE-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /** @description 本次新增唯一码，不包含已有绑定。 */
-            panelCodes: string[];
-            /**
-             * @description 仅在人员看到本次 MIXED_CONTENT 提示并选择继续后传 true；默认 false，不增加用途选择。true 必须同时提供本次 confirmationToken。
-             * @default false
-             */
-            confirmMixed: boolean;
-            /** @description 服务端签发的不透明确认凭据，绑定当前用户、箱码／版本和本次完整绑定业务内容；不能作为权限或混装申请。由客户端原样回传，不允许自行构造。 */
-            confirmationToken?: string;
-        } & ({
-            /** @enum {unknown} */
-            confirmMixed: true;
-        } | {
-            /** @enum {unknown} */
-            confirmMixed?: false;
-        });
-        /**
-         * BoxAllRequest
-         * @description 整箱解绑请求。按目标箱及其查询版本解除当前箱全部绑定，不需要提交逐条关系，不删除料箱或追溯历史。
-         */
-        BoxAllRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 料箱业务编码，通常由扫码取得；不是箱内绑定关系 ID。 要清空的箱码。
-             * @example CODE-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * BoxOrderRequest
-         * @description 不增加用途选择或独立混装入口。后端解析本次各板件／代表码，并与箱内有效内容按物料编码、批次、订单三项比较；任一属性存在多个值时为混装。未确认时返回 MIXED_CONTENT 待确认结果，不写入绑定、不计数、不推进版本。人员取消则结束；人员继续则携带服务端确认凭据重新提交，后端复核箱版本及完整输入，才可执行。混装箱仅用于缴库，不参与生产自动配送或按订单叫料；同质尾单不因属于缴库而强制弹窗。原有同周期绑定方式、任务预占及缴库成功内容保护仍适用，混料确认不能绕过这些条件。 数量模式通过实际代表码解析，代表码不作为全部板件身份。
-         */
-        BoxOrderRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。 混料提示后的确认继续属于带确认凭据的新提交，客户端生成新 UUID；首次未确认请求不复用成不同内容。网络重发确认提交仍使用同一 UUID、同一凭据和输入。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 料箱业务编码，通常由扫码取得；不是箱内绑定关系 ID。 箱码。
-             * @example CODE-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 从 panelCode 解析并回传的 SAP 订单号，后端必须重新解析一致性；不是员工另选订单或本地订单台账 ID。
-             * @example CODE-001
-             */
-            orderNo: string;
-            /**
-             * Format: int32
-             * @description 本行或本次操作的物料数量，沿用当前候选整数件数约定；不是明细行数。 本次绑定件数。
-             * @example 1
-             */
-            quantity: number;
-            /**
-             * @description 实际扫描的代表板件唯一码，不是箱码、物料码或生产订单号；按客户 substring 规则重新解析三项内容属性。代表码不写成数量行的全部板件身份。
-             * @example 123456789ABC000001ABCDEFG00001234
-             */
-            panelCode: string;
-            /**
-             * @description 仅在人员看到本次 MIXED_CONTENT 提示并选择继续后传 true；默认 false，不增加用途选择。true 必须同时提供本次 confirmationToken。
-             * @default false
-             */
-            confirmMixed: boolean;
-            /** @description 服务端签发的不透明确认凭据，绑定当前用户、箱码／版本和本次完整绑定业务内容；不能作为权限或混装申请。由客户端原样回传，不允许自行构造。 */
-            confirmationToken?: string;
-        } & ({
-            /** @enum {unknown} */
-            confirmMixed: true;
-        } | {
-            /** @enum {unknown} */
-            confirmMixed?: false;
-        });
-        /**
-         * VersionedItem
-         * @description 所选持久关系的标识与版本。箱解绑指 BindingLine，卸车指 LoadLine；id 不是板件码、箱码或订单号。
-         */
-        VersionedItem: {
-            /**
-             * @description 本次所选持久关系主键，具体对应箱绑定关系或装载关系，以字符串传输；不是箱码、板件码或物料编码。
-             * @example 10001
-             */
-            id: string;
-            /**
-             * Format: int32
-             * @description 所选持久关系的查询版本；箱解绑对应 BindingLine，卸车对应 LoadLine。服务端逐项原子校验，不能使用容器聚合版本替代。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * BoxSelectedRequest
-         * @description 解绑所选箱内关系请求。boxCode/version 校验整个箱，items 指定已查询的关系 id/version；当前是整行解绑，不代表数量行部分减量。
-         */
-        BoxSelectedRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 料箱业务编码，通常由扫码取得；不是箱内绑定关系 ID。 箱码。
-             * @example CODE-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /** @description 本次操作指定的关系或配对集合。 已查询绑定关系的 ID 和版本。整行解绑；数量行部分减量待确认。 */
-            items: components["schemas"]["VersionedItem"][];
-        };
-        /**
-         * JointCandidatesRequest
-         * @description 拼板查询条件。仅以 pendingPanelCodes 中本次待绑定板件为查询依据，不传箱码、不读取箱内已绑定板件作为额外查询依据。
-         */
-        JointCandidatesRequest: {
-            /** @description 本次尚未提交绑定的板件唯一码集合；仅针对该集合查找拼板。不要求混入箱内已有板件，空集合返回空候选。 */
-            pendingPanelCodes: string[];
-        };
-        /**
-         * LoadPair
-         * @description 一次装箱到载具库位的配对。箱码与箱版本校验待装箱，库位码与库位版本校验目标装箱位；不是业务仓库位置绑定。
-         *
-         *     2026-10-10 已确认：部分料车有真实装载位、部分没有。有位使用 SLOT 库位装载，无位使用 DIRECT 整车绑定；两种入口与明细分别保留，不虚构空位，也不混用凭据。同箱跨两类关系互斥，关联改变同步更新箱／相关车版本，SLOT 装卸还更新真实装载位版本。
-         */
-        LoadPair: {
-            /**
-             * @description 料箱业务编码，通常由扫码取得；不是箱内绑定关系 ID。 箱码。
-             * @example CODE-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            boxVersion: number;
-            /**
-             * @description 载具内部装箱库位编码，不是仓库楼层/区域下的业务位置编码。 载具库位码。
-             * @example CODE-001
-             */
-            slotCode: string;
-            /**
-             * Format: int32
-             * @description 载具库位及其占用关系的版本，装箱/卸箱或库位状态变化递增；不是装载行版本。
-             * @example 1
-             */
-            slotVersion: number;
-        };
-        /**
-         * BatchLoadRequest
-         * @description 批量装车请求。items 中每项是一对料箱与目标载具库位；后端校验箱、库位、关系与版本后执行。
-         *
-         *     2026-10-10 已确认：部分料车有真实装载位、部分没有。有位使用 SLOT 库位装载，无位使用 DIRECT 整车绑定；两种入口与明细分别保留，不虚构空位，也不混用凭据。同箱跨两类关系互斥，关联改变同步更新箱／相关车版本，SLOT 装卸还更新真实装载位版本。
-         */
-        BatchLoadRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /** @description 本次操作指定的关系或配对集合。 本次箱与载具库位配对；后端整批校验，不可悄悄跳过冲突。 */
-            items: components["schemas"]["LoadPair"][];
-        };
-        /**
-         * UnloadSelectedRequest
-         * @description 卸载所选装载关系请求。vehicleCode/version 校验当前载具，items 使用实际装载关系 id/version，不直接用物料行卸车。
-         */
-        UnloadSelectedRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 料车或载具业务编码，通常由扫码取得。 载具码。
-             * @example CODE-001
-             */
-            vehicleCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /** @description 本次操作指定的关系或配对集合。 装载关系的 ID 与版本。 */
-            items: components["schemas"]["VersionedItem"][];
-        };
-        /**
-         * UnloadAllRequest
-         * @description 载具全部卸箱请求。处理指定载具当前全部装载关系，不删除箱内板件绑定或物料追溯记录。
-         */
-        UnloadAllRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 料车或载具业务编码，通常由扫码取得。 载具码。
-             * @example CODE-001
-             */
-            vehicleCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * BindLocationRequest
-         * @description 将容器绑定到业务位置的请求。locationCode/version 校验目标位置，container/containerVersion 校验所选容器；与车上库位装箱不同。
-         *
-         *     关联字段说明：
-         *     container：关联的业务容器，结构见 ContainerRef。
-         */
-        BindLocationRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置码。
-             * @example CODE-001
-             */
-            locationCode: string;
-            /**
-             * Format: int32
-             * @description 当前库位及其容器占用关系的 LES 版本；库位状态或绑定容器变化递增。提交原样回传，服务端原子校验，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            container: components["schemas"]["ContainerRef"];
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            containerVersion: number;
-        };
-        /**
-         * UnbindLocationRequest
-         * @description 人员先通过既有位置查询获得 relatedTasks 及 unbindEligibility。有关联任务时提示，人员确认后逐项调用已有 taskId/cancel 接口，自动附当前 unbindContext；ACCEPTED 只表示处理中，沿已有 taskId/cancellation 按原取消 requestId 查询。FAILED／UNKNOWN 或未结算时不提交解绑。全部关联任务可信终结且实物核对允许后，重新查询当前位置、容器及最新版本，用新的解绑 requestId 提交原解绑接口。后端再次检查占用对应关系、全体阻塞及业务保护，未满足返回业务失败，版本变化返回 409；没有自动取消副作用。取消成功但尚未解绑时，保留本次对应占用关系的自动任务抑制，不以超时盲目解除；重新绑定后按新关系重新评价。取消接口权限保留，不因位置解绑权限自动获得取消权限。
-         */
-        UnbindLocationRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置码。
-             * @example CODE-001
-             */
-            locationCode: string;
-            /**
-             * Format: int32
-             * @description 当前库位及其容器占用关系的 LES 版本；库位状态或绑定容器变化递增。提交原样回传，服务端原子校验，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            container: components["schemas"]["ContainerRef"];
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            containerVersion: number;
-        };
-        /**
-         * ObjectSubmitRequest
-         * @description 整个业务对象的缴库申请请求。object 指定查询解析出的容器，version 用于检测查询后变化；物料范围由后端按对象取得，不由前端逐行拼装。
-         *
-         *     关联字段说明：
-         *     object：扫描或查询解析出的实际业务容器，结构见 ContainerRef。
-         */
-        ObjectSubmitRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            object: components["schemas"]["ContainerRef"];
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * ShippingRequest
-         * @description 当前实现（2026-10-15.4）：正常提交已实现，UNKNOWN／中断和来源变更的人工核查恢复待补，因此标PARTIAL。复核scanType／scanCode对应对象、最新容器version及完整箱范围，从mes_material_records按箱码读取真实板件与lCode；先完整校验，后在短LES事务关闭所选箱旧有效关系并保留历史，按实际逐码重建、更新摘要及箱／父车聚合版本。板件仍绑定在所选范围之外的箱时拒绝，不自动解绑范围外板件。
-         *
-         *     本地内容与发送依据提交后，独立WMS事务锁定并复核箱码＋lCode＋板件码的完整原始多重集，按DELETE FROM mes_material_records WHERE boxCode=?整批删除，不加status。目标须InnoDB且允许读取引擎元数据。若读取后来源变化，整批不删并保留LES重建结果等待核查。
-         *
-         *     明确清理失败时保留原requestId及完整原请求（包括旧version）重试，仅补做清理，不重新取号、换绑或使用新WMS内容；不可用新requestId重做。SENDING／UNKNOWN阻止重删，人工恢复入口待补。成功同请求回放原回执；本地结果保存失败可停SENDING，也不能自动重删。WMS清理未明确完成期间，相关箱／父车及结构配置受保护。
-         *
-         *     shippingNo复用基座操作编码规则；本接口不创建物流任务。成功后仅有可信斯坦德停车起点的料车canCreateLogisticsTask=true，可带shippingNo走既有物流创建接口；该接口复核发料成功及固定聚合版本，仍只建QUEUED，不代表调度已受理。箱场景后续人工绑车及独立运输继续使用原功能。
-         *
-         *     全部约定步骤成功才200/code=0。503可能已经完成LES重建，不能当成整体回滚；前端保留原请求用于安全重试。运行接口只检查登录；本次未联合冻结／部署或现场联调。
-         */
-        ShippingRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 扫描对象类型。
-             *
-             *     枚举值说明：
-             *     VEHICLE：载具（当前业务包含料车）。
-             *     BOX：料箱。
-             *     LOCATION：业务位置（可解析其当前关联容器，不是容器本身）。
-             * @example VEHICLE
-             * @enum {string}
-             */
-            scanType: "VEHICLE" | "BOX" | "LOCATION";
-            /**
-             * @description 扫描编码。
-             * @example CODE-001
-             */
-            scanCode: string;
-            object: components["schemas"]["ContainerRef"];
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * ReceivingConfirmRequest
-         * @description 确认本次已可信送达库房运输的接收范围：taskId 是物流运输任务 ID，object 为查询识别的 BOX／VEHICLE。扫描箱只确认该箱，扫描车原子确认固定送达范围中全部尚未确认箱，已有接收记录保留。version 原样回传本次运输任务的接收范围版本，不接受容器版本替代。无需独立接收批次或多个任务选择。 接收允许填写可选 remark，存在清点差异可通过备注说明并确认；不修改成功缴库数量。
-         */
-        ReceivingConfirmRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 任务持久标识，以字符串传输；用于接口定位任务，不是面向员工的任务编号。 标识以字符串传输，避免 JavaScript 大整数精度损失。
-             * @example 10001
-             */
-            taskId: string;
-            /**
-             * Format: int32
-             * @description 对应本次库房送达物流任务的标准 version，接收事实改变待接收范围时在事务中显式递增，影响本次清理资格的变化也须传播；不另建接收任务版本或批次。查询值原样提交，冲突 409/40900。
-             * @example 1
-             */
-            version: number;
-            object: components["schemas"]["ContainerRef"];
-            /**
-             * @description 本次接收清点备注，可说明缺件、多件、错料等情况；单箱记录该箱，整车提交应用于本次新确认的箱，不覆盖已有记录。备注不修改缴库数量，不引入差异数量处理流程。
-             * @example 已清点，外包装需整理
-             */
-            remark?: string;
-        };
-        /**
-         * ClearWmsBindingsRequest
-         * @description 固定库房送达taskId、最新version及BOX／VEHICLE范围；无需先接收。远端仅按所选箱码＋status=100清理，不加lCode。保留LES绑定；登记和结果保存推进任务版本，后续先刷新。UNKNOWN／中断禁止自动重删。
-         */
-        ClearWmsBindingsRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 任务持久标识，以字符串传输；用于接口定位任务，不是面向员工的任务编号。 标识以字符串传输，避免 JavaScript 大整数精度损失。
-             * @example 10001
-             */
-            taskId: string;
-            /**
-             * Format: int32
-             * @description 本次库房送达任务最新version；登记清理及结果保存均推进版本。原请求网络重发复用requestId和完整内容；后续新操作须刷新任务版本，冲突409。
-             * @example 1
-             */
-            version: number;
-            object: components["schemas"]["ContainerRef"];
-        };
-        /**
-         * CreateLogisticsRequest
-         * @description 回传扫描查询识别的运输对象、聚合版本、起点、品牌和任务类型；SPECIFIED 提交具体目标，RETURN_LINE_SIDE 不传目标，由后端分配实际位置。候选按业务基准位置的 SOURCE／TARGET 存储区关联展开其下真实 NariLocation，再按用途、产线、规格、占用／预占及业务资格筛选。回线边库采用 TARGET 和运行用途选择库类别，不使用 BOX_TARGET／FIXTURE_TARGET 或独立点对点关系。 后端按实际搬运对象和业务确定品牌：位置箱作业使用位置唯一 agvVendor，同品牌高／低车由调度选择；当前整车运输使用 STANDARD。停车点上的车与车上箱是不同搬运对象，海康取放箱不得改成斯坦德搬整车。位置配置缺失／无法识别对象或不支持组合时明确失败，不采用默认品牌。 taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。 无配置／无空闲兼容目标明确失败，不撤销先前已成功的绑定；人工和自动共用防重与预占。 位置用途从 NariLocationUsage 启用集合筛选，一个位置可有多个用途，候选按实际位置去重；多用途不绕过物理占用／预占。
-         */
-        CreateLogisticsRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            object: components["schemas"]["ContainerRef"];
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 后端按实际搬运对象和业务确定品牌：位置箱作业使用位置唯一 agvVendor，同品牌高／低车由调度选择；当前整车运输使用 STANDARD。停车点上的车与车上箱是不同搬运对象，海康取放箱不得改成斯坦德搬整车。位置配置缺失／无法识别对象或不支持组合时明确失败，不采用默认品牌。
-             * @example STANDARD
-             * @enum {string}
-             */
-            vendor: "STANDARD" | "HIKVISION";
-            /**
-             * @description taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。
-             * @example GENERAL
-             * @enum {string}
-             */
-            taskType: "GENERAL";
-            /**
-             * @description 起始位置码。
-             * @example CODE-001
-             */
-            originLocationCode: string;
-            /**
-             * @description SPECIFIED 或省略 destinationMode 时必填；RETURN_LINE_SIDE 禁止提交，由后端分配。
-             * @example CODE-001
-             */
-            destinationLocationCode?: string;
-            /**
-             * @description 成品发货后创建时返回的发货编号；普通任务省略。
-             * @example CODE-001
-             */
-            shippingNo?: string;
-            /**
-             * @description SPECIFIED＝员工指定目标位置；RETURN_LINE_SIDE＝返回线边库，由后端分配目标库位。省略时按 SPECIFIED，兼容旧请求。
-             * @default SPECIFIED
-             * @example SPECIFIED
-             * @enum {string}
-             */
-            destinationMode: "SPECIFIED" | "RETURN_LINE_SIDE";
-        } & ({
-            /** @enum {unknown} */
-            destinationMode?: "SPECIFIED";
-            /**
-             * @description SPECIFIED 或省略 destinationMode 时必填；RETURN_LINE_SIDE 禁止提交，由后端分配。
-             * @example CODE-001
-             */
-            destinationLocationCode: string;
-        } | {
-            /** @enum {unknown} */
-            destinationMode: "RETURN_LINE_SIDE";
-        });
-        /**
-         * CancelTaskRequest
-         * @description 取消 Path 中 taskId 指定的物流任务。version 是任务版本，requestId 用于识别同一次取消意图，reason 为可选人工取消原因。 从位置解绑页面调用时自动附 unbindContext；普通任务取消省略。后端核对当前占用关系和 taskId，复用操作记录保存该关系的取消目的，保持取消与绑定检查在事务中互斥。已取消的同一占用关系在完成解绑前不被自动监控重新派送；重新绑定形成新关系后重新评价自动业务，不按同码永久禁止。无须新增暂停状态或对象。
-         */
-        CancelTaskRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * Format: int32
-             * @description 该物流任务的版本，任务状态或任务内容变化递增；取消提交校验此版本，不是容器版本。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 员工提交取消时填写的可选原因，用于业务追溯；与取消结果中服务端返回的失败原因不同。
-             * @example 现场作业调整
-             */
-            reason?: string;
-            unbindContext?: components["schemas"]["LocationUnbindContext"];
-        };
-        /**
-         * CallEmptyVehicleRequest
-         * @description 确认呼叫空载具请求。目标位置来自先前扫描，起始位置及载具来自所选候选项；version 必须来自所选载具，不能沿用切换前候选的版本。
-         */
-        CallEmptyVehicleRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 所选空载具来源位置。
-             * @example CODE-001
-             */
-            originLocationCode: string;
-            /**
-             * @description 员工首先扫描的目标空位置；随后查询并选择起始位置与关联空载具，再确认呼叫。
-             * @example CODE-001
-             */
-            destinationLocationCode: string;
-            /**
-             * @description 料车或载具业务编码，通常由扫码取得。 查询返回的空载具码。
-             * @example CODE-001
-             */
-            vehicleCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * TrafficActionRequest
-         * @description 锁定或释放 Path 中 areaCode 指定交管区域的请求。使用区域状态版本防止旧页面操作覆盖新状态，具体动作由接口路径确定。 释放前由前端取得人工确认；无需新增确认字段。重试重放原回执，下一操作应刷新当前版本。
-         */
-        TrafficActionRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * Format: int32
-             * @description 交管区域状态版本，锁定或释放导致状态变化时递增；提交时校验最新状态与版本，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * CreateWarehouseLogisticsRequest
-         * @description 创建缴库运输任务请求。携带扫描值、解析对象和版本以及最终选择的目标位置，后端复核关系及可发起条件；不是再次提交缴库申请。
-         *
-         *     关联字段说明：
-         *     object：扫描或查询解析出的实际业务容器，结构见 ContainerRef。
-         */
-        CreateWarehouseLogisticsRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 扫描对象类型。
-             *
-             *     枚举值说明：
-             *     VEHICLE：载具（当前业务包含料车）。
-             *     LOCATION：业务位置（可解析其当前关联容器，不是容器本身）。
-             * @example VEHICLE
-             * @enum {string}
-             */
-            scanType: "VEHICLE" | "LOCATION";
-            /**
-             * @description 扫描编码。
-             * @example CODE-001
-             */
-            scanCode: string;
-            object: components["schemas"]["ContainerRef"];
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 确认后的库房目标位置。
-             * @example CODE-001
-             */
-            destinationLocationCode: string;
-        };
-        /**
-         * ApiError
-         * @description 统一失败响应。code/message 表达失败类型及可展示原因，data 为 null，traceId 用于排查；HTTP 或网络失败不能证明外部系统从未执行。
-         *
-         *     已有业务约定：基座 ApiResult<T>，只包装一层。
-         */
-        ApiError: {
-            /**
-             * Format: int32
-             * @description 基座业务码，0 表示成功。
-             * @example 0
-             */
-            code: number;
-            /**
-             * @description 可直接展示的处理信息。
-             * @example ok
-             */
-            message: string;
-            /**
-             * @description 失败时 data=null，与基座 ApiResult.fail 一致。
-             *
-             *     枚举值说明：
-             *     null：空值，失败响应不携带业务数据。
-             * @enum {object|null}
-             */
-            data: never | null;
-            /**
-             * Format: date-time
-             * @description 服务端生成响应的时间，按 UTC ISO 8601 传输。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            timestamp: string;
-            /**
-             * @description 服务端请求追踪标识，反馈问题时用于定位日志。 服务端链路标识，供问题定位。
-             * @example trace-example
-             */
-            traceId: string | null;
-        };
-        /**
-         * BindingLine
-         * @description LES 箱内持久绑定关系。BY_CODE 表示唯一码绑定，BY_ORDER 表示订单数量绑定；仅此关系的 id/version 可用于所选板件解绑，不能拿 WMS 展示明细替代。
-         *
-         *     已有业务约定：LES 持久化板件绑定关系；id/version 仅用于关系校验与所选解绑。BY_CODE 必须有 panelCode；BY_ORDER 不得虚构唯一码。数量行不根据物料码推断唯一板件，不参与唯一码匹配和拼板输入；数量行不支持部分减量，调整沿整行解绑后重绑。 每条有效物流绑定均返回 materialBatch，混装按明细逐行展示，不采用箱级第一条属性代替全箱内容。
-         */
-        BindingLine: {
-            /**
-             * @description 箱内 LES 绑定关系主键，以字符串传输；不是箱码、板件码或物料编码。
-             * @example 10001
-             */
-            id: string;
-            /**
-             * Format: int32
-             * @description 该条 LES 绑定关系版本，仅保护该关系；绑定内容变化递增，并同步递增所属箱及所在载具的聚合版本。删除后旧 id/version 不可复用。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 绑定来源。
-             *
-             *     枚举值说明：
-             *     BY_CODE：按板件唯一码绑定（必须返回 panelCode）。
-             *     BY_ORDER：按订单及数量绑定（不虚构板件唯一码）。
-             * @example BY_CODE
-             * @enum {string}
-             */
-            bindingMode: "BY_CODE" | "BY_ORDER";
-            /**
-             * @description 具体板件的唯一码，用于识别同一板件、扫码匹配及去重；不是物料品种编码。 唯一码模式必返；数量模式不得虚构唯一码。
-             * @example CODE-001
-             */
-            panelCode?: string;
-            /**
-             * @description 所属生产订单的业务编号，不是数据库记录 ID。 订单号。
-             * @example CODE-001
-             */
-            orderNo: string;
-            /**
-             * @description 所属订单的明细行编号，用于区分同一订单内的不同明细。 订单行号。
-             * @example CODE-001
-             */
-            orderLineNo?: string;
-            /**
-             * @description 物料品种编码；多个不同唯一码板件可属于同一种物料。 物料编码。
-             * @example CODE-001
-             */
-            materialCode: string;
-            /**
-             * @description 可选显示字段；有可靠来源时返回，无来源时省略，不要求必返，也不虚构物料名称或计量单位。
-             * @example 成品板件
-             */
-            materialName?: string;
-            /**
-             * Format: int32
-             * @description 本行整数件数，BY_CODE 每个实际唯一码固定 1，BY_ORDER 为本次登记的正整数数量；不提供数量行部分减量。
-             * @example 1
-             */
-            quantity: number;
-            /**
-             * @description 可选显示字段；有可靠来源时返回，无来源时省略，不要求必返，也不虚构物料名称或计量单位。 数量计量规则仍待确认。
-             * @example 件
-             */
-            unit?: string;
-            /**
-             * Format: date-time
-             * @description 该 LES 绑定关系的建立时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            boundTime?: string;
-            /**
-             * @description 物料批次，按客户唯一码 substring(12,18) 解析并按文本保留前导零；绑定行保存当时快照，不查询物流物料主数据。数量绑定由代表板件码解析。
-             * @example 000001
-             */
-            materialBatch: string;
-        } & ({
-            /**
-             * @description 枚举值说明：
-             *     BY_CODE：按板件唯一码绑定（必须返回 panelCode）。
-             * @enum {unknown}
-             */
-            bindingMode?: "BY_CODE";
-            /**
-             * @description 一个实际板件唯一码固定计 1 件。
-             * @enum {integer}
-             */
-            quantity?: 1;
-        } | {
-            /**
-             * @description 枚举值说明：
-             *     BY_ORDER：按订单及数量绑定（不虚构板件唯一码）。
-             * @enum {unknown}
-             */
-            bindingMode?: "BY_ORDER";
-        });
-        /**
-         * LocationCandidate
-         * @description 可选业务位置的完整三级层级。楼层、区域、库位编码与名称必须齐全，用于级联选择；不等同于允许缺省层级的 LocationSummary。
-         *
-         *     已有业务约定：可选择地点，必须返回完整楼层、区域、库位编码与名称；缺失层级的地点不能作为合法候选。
-         */
-        LocationCandidate: {
-            /**
-             * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置编码。
-             * @example CODE-001
-             */
-            locationCode: string;
-            /**
-             * @description 业务位置显示名称。 位置名称。
-             * @example 一层接驳台
-             */
-            locationName: string;
-            /**
-             * @description 位置类型，实际值由后端字典返回，未知值按原值展示。
-             * @example TRANSFER_STATION
-             */
-            locationType?: string;
-            /**
-             * @description 楼层层级编码，用于级联分组和匹配。 楼层编码。
-             * @example CODE-001
-             */
-            floorCode: string;
-            /**
-             * @description 楼层显示名称。 楼层名称。
-             * @example 一层
-             */
-            floorName: string;
-            /**
-             * @description 业务位置所属区域编码，与 floorCode 一同用于级联分组。 区域编码。
-             * @example CODE-001
-             */
-            areaCode: string;
-            /**
-             * @description 区域显示名称。 区域名称。
-             * @example 库房接驳区
-             */
-            areaName: string;
-        };
-        /**
-         * WarehouseLogisticsOptionsResponse
-         * @description 缴库发起专用查询结果。返回对象、完整关联箱与物料、全对象总件数、起始位置及完整目标候选；成功结果必须含可默认选中的推荐地点。
-         *
-         *     已有业务约定：缴库发起专用结果。boxes 为对象完整关联料箱及其物料明细（扫描料箱时包含该料箱），箱码用于 boxes/materials 查看物料；totalMaterialQuantity 是整个对象所有关联箱的物料总件数，不是明细行数，沿用现有整数件数候选计量。可发起成功结果必须有推荐地点及完整层级，且属于完整候选集合。不能推荐或不可发起时返回 HTTP 400 / code=40000 及原因，不返回缺省推荐的成功结果。 仅返回当前扫描对象、任务类型及业务规则允许的完整候选，不是全库位置列表。候选不分页、不截断，前端用完整数组构建楼层/区域/库位三级级联；服务端按 floorCode、areaCode、locationCode 升序稳定排序，位置编码去重。一次响应内候选层级及关联对象须一致；无法完整取得时返回失败，不以部分列表成功返回。重新扫描或查询条件变化后丢弃旧响应并重置选择。提交时服务端复核位置、载具及资格，不因查询时可选而跳过校验。 成功时默认选中 recommendedDestination，必须对应 destinations 中唯一 recommended=true 的记录，员工可切换到完整集合内其他位置；无推荐或不可发起仍返回 400/40000。
-         *
-         *     关联字段说明：
-         *     object：扫描或查询解析出的实际业务容器，结构见 ContainerSummary。
-         *     origin：起始业务位置，结构见 LocationSummary。
-         *     recommendedDestination：用于页面推荐的完整目标位置，结构见 LocationCandidate。
-         *     eligibility：当前操作资格判断，结构见 Eligibility。
-         */
-        WarehouseLogisticsOptionsResponse: {
-            object: components["schemas"]["ContainerSummary"];
-            origin: components["schemas"]["LocationSummary"];
-            /**
-             * @description AGV 品牌编码为候选映射，需对照后端实际字典。
-             *
-             *     枚举值说明：
-             *     STANDARD：斯坦德（当前候选品牌编码，正式接入时需与后端实际字典核对）。
-             *     HIKVISION：海康（当前候选品牌编码）。
-             * @example STANDARD
-             * @enum {string}
-             */
-            vendor: "STANDARD" | "HIKVISION";
-            /**
-             * @description taskType 固定 GENERAL，前端仅回传查询结果，服务端校验；已取消工艺路线任务类型，模型不保存单值类型字段。普通与附带空框仍由不同调度接口处理，dispatchMode 独立表达。
-             * @example GENERAL
-             * @enum {string}
-             */
-            taskType: "GENERAL";
-            recommendedDestination: components["schemas"]["LocationCandidate"];
-            /** @description 当前业务规则允许的完整目标位置候选。 本次查询范围的完整候选数组，不分页、不截断；无候选返回 []。 */
-            destinations: components["schemas"]["DestinationOption"][];
-            eligibility: components["schemas"]["Eligibility"];
-            /** @description 当前对象关联的完整料箱及箱内物料。 当前对象范围的完整明细，空列表为 []，不分页、不截断。 */
-            boxes: components["schemas"]["BoxContents"][];
-            /**
-             * Format: int32
-             * @description 整个对象所有关联箱物料总件数，与完整明细一致。
-             * @example 1
-             */
-            totalMaterialQuantity: number;
-        };
-        /**
-         * BoxOperationReceipt
-         * @description 箱内绑定或解绑成功回执。除通用处理信息外，box 返回完成时的箱码、最新聚合版本和物料总数，供页面继续装箱。
-         *
-         *     已有业务约定：箱关系操作完成回执，返回本次提交完成时的箱码、版本与物料数量；前端用返回版本继续装箱，不能自行加一。并发后续变化仍可能导致下次提交冲突。
-         *
-         *     关联字段说明：
-         *     box：本次查询或操作的料箱，结构见 BoxSummary。
-         *
-         *     2026-10-20.1：普通回执取消 operationNo，不取业务单据编号；requestId 关联原请求和防重，处理时间、影响数量及原有业务字段保留。历史成功请求按新结构投影，原业务不重做、旧证据不改写。
-         */
-        BoxOperationReceipt: {
-            /**
-             * Format: uuid
-             * @description 对应本次业务提交的请求 UUID，服务端原样回传，供结果关联与追踪。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * Format: int32
-             * @description 实际发生变更的关系条数，不一定等于物料件数。 本次实际变更的关系数量。
-             * @example 1
-             */
-            affectedCount: number;
-            /**
-             * Format: date-time
-             * @description 服务端记录的处理时间；取消结果查询中表示该取消状态最后更新时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            processedTime: string;
-            box: components["schemas"]["BoxSummary"];
-        };
-        /**
-         * TaskCancellationStatusResponse
-         * @description 按 taskId/requestId 查询一次取消请求的处理结果。区分处理中、最终成功、最终失败和暂不确定；不是可取消任务列表，也不是整个运输任务进度接口。
-         *
-         *     已有业务约定：按 taskId 和取消请求 requestId 查询该次取消结果，即使任务已退出可取消列表仍可查询。processedTime 为本次取消状态最后更新时间；未知请求返回 404。
-         */
-        TaskCancellationStatusResponse: {
-            /**
-             * Format: uuid
-             * @description 对应本次业务提交的请求 UUID，服务端原样回传，供结果关联与追踪。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 任务持久标识，以字符串传输；用于接口定位任务，不是面向员工的任务编号。 标识以字符串传输，避免 JavaScript 大整数精度损失。
-             * @example 10001
-             */
-            taskId: string;
-            /**
-             * @description 面向员工展示和业务追溯的任务编号。 物流任务号。
-             * @example CODE-001
-             */
-            taskNo: string;
-            /**
-             * @description ACCEPTED=处理中；CANCELLED=已确认最终取消；FAILED=已确认取消失败；UNKNOWN=暂无法确认结果，不能展示成功或自动重新取消。
-             *
-             *     枚举值说明：
-             *     ACCEPTED：取消请求已受理、处理中（不能显示为取消成功）。
-             *     CANCELLED：已确认最终取消成功。
-             *     FAILED：已确认取消失败（必须返回非空 reason）。
-             *     UNKNOWN：取消结果暂无法确认（必须返回非空 reason，不得推断成功或自动重新提交）。
-             * @example ACCEPTED
-             * @enum {string}
-             */
-            cancelStatus: "ACCEPTED" | "CANCELLED" | "FAILED" | "UNKNOWN";
-            /**
-             * Format: date-time
-             * @description 服务端记录的处理时间；取消结果查询中表示该取消状态最后更新时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            processedTime: string;
-            /**
-             * @description FAILED 或 UNKNOWN 时必须返回可展示原因。
-             * @example 暂未取得设备最终取消结果
-             */
-            reason?: string;
-        } & ({
-            /**
-             * @description 枚举值说明：
-             *     ACCEPTED：取消请求已受理、处理中（不能显示为取消成功）。
-             *     CANCELLED：已确认最终取消成功。
-             * @enum {unknown}
-             */
-            cancelStatus?: "ACCEPTED" | "CANCELLED";
-        } | {
-            /**
-             * @description 枚举值说明：
-             *     FAILED：已确认取消失败（必须返回非空 reason）。
-             *     UNKNOWN：取消结果暂无法确认（必须返回非空 reason，不得推断成功或自动重新提交）。
-             * @enum {unknown}
-             */
-            cancelStatus?: "FAILED" | "UNKNOWN";
-        });
-        /**
-         * BoxContents
-         * @description 料箱摘要及完整箱内物料。用于车内箱列表、缴库和发货对象详情；materials 为空数组表示该箱无物料，materialQuantity 表示总件数而非明细行数。
-         *
-         *     已有业务约定：箱摘要及完整物料明细，materialQuantity 为箱内总件数；计量沿用当前候选约定。业务上下文由查询接口决定，不由前端指定数据源。
-         *
-         *     用于接收查询时，表示本次接收任务范围中的料箱及物料，不自动等同于 LES 当前装载内容。
-         */
-        BoxContents: {
-            /**
-             * @description 料箱业务编码，通常由扫码取得；不是箱内绑定关系 ID。 箱码。
-             * @example CODE-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * Format: int32
-             * @description 该箱物料数量。
-             * @example 1
-             */
-            materialQuantity: number;
-            /** @description 当前箱内完整物料明细。 当前对象范围的完整明细，空列表为 []，不分页、不截断。 */
-            materials: components["schemas"]["MaterialLine"][];
-        };
-        /**
-         * ReceivingTaskResponse
-         * @description 扫描箱／车按本次已可信送达物流任务的冻结箱范围查询，卸车后仍按原送达范围定位，不能用当前装载代替。箱返回本箱内容；车返回本次完整范围及 PENDING／PARTIAL／RECEIVED、已接收箱数和总数。存在多个未完成交付冲突返回 409，不任取第一条。无范围时省略 task，boxes=[]、总量为 0。可携带已知 taskId 查询已接收范围及清理结果，仍复核 scanCode 对象属于该固定范围；不增加员工多任务选择。对象不存在 404、编码歧义 400。查询完整一致，不分页不截断；确认提交 taskId、version、object。
-         */
-        ReceivingTaskResponse: {
-            object: components["schemas"]["ContainerSummary"];
-            task?: components["schemas"]["ReceivingTask"];
-            /** @description 本次接收任务范围内的完整料箱及箱内物料，不分页、不截断。扫描载具返回任务关联箱；扫描料箱返回该箱。无当前接收任务时返回 []，不以其他来源的当前装载关系伪造接收内容。 */
-            boxes: components["schemas"]["BoxContents"][];
-            /**
-             * Format: int32
-             * @description 本次接收任务范围内所有 boxes 的物料总件数，等于各箱 materialQuantity 之和，不能按明细行数统计；无任务时为 0，计量沿用当前整数件数约定。
-             * @example 1
-             */
-            totalMaterialQuantity: number;
-        };
-        /**
-         * OrderCallBoxCandidate
-         * @description 生产订单匹配箱。箱与订单的关联由后端查询，不能用前端选择替代匹配校验。候选允许互相替代，不默认全选。
-         */
-        OrderCallBoxCandidate: {
-            /**
-             * @description 候选料箱编码。
-             * @example BOX-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 箱当前关联的生产订单号。
-             * @example MO-001
-             */
-            orderNo: string;
-            origin: components["schemas"]["LocationSummary"];
-            /**
-             * Format: int32
-             * @description 该箱物料数量。
-             * @example 1
-             */
-            materialQuantity: number;
-            eligibility: components["schemas"]["Eligibility"];
-        };
-        /**
-         * OrderCallCandidatesResponse
-         * @description 当前订单及目标位置范围的完整候选；只查询、不占用、不创建运输任务。无可用箱时明确展示原因。 人工按订单叫料不要求对应生产计划或查询订单主数据；仍重新校验源范围、目标、箱同质内容、当前状态、版本及预占，只有可用箱可受理。 无匹配箱返回空候选与原因。
-         */
-        OrderCallCandidatesResponse: {
-            /**
-             * @description 查询生产订单。
-             * @example MO-001
-             */
-            orderNo: string;
-            destination: components["schemas"]["LocationCandidate"];
-            /**
-             * Format: int32
-             * @description 目标位置运行状态版本，用于提交时重新校验，不是静态位置资料版本。
-             * @example 1
-             */
-            destinationVersion: number;
-            /** @description 完整候选，按箱码稳定排序；已占用箱可展示为不可选并给出原因。不分页、不截断；无匹配返回 []。 */
-            boxes: components["schemas"]["OrderCallBoxCandidate"][];
-            eligibility: components["schemas"]["Eligibility"];
-        };
-        /**
-         * OrderCallSelectedBox
-         * @description 员工选中的一个订单箱。仅提交箱码和查询版本，无数量和类型字段。
-         */
-        OrderCallSelectedBox: {
-            /**
-             * @description 选择的箱码，后端唯一识别。
-             * @example BOX-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * OrderCallRequest
-         * @description 确认订单叫料。允许同订单多次发起，每次选择当前可用箱；不输入数量。一箱创建一个业务运输任务。 人工按订单叫料不要求对应生产计划或查询订单主数据；仍重新校验源范围、目标、箱同质内容、当前状态、版本及预占，只有可用箱可受理。
-         */
-        OrderCallRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 本次生产订单号。
-             * @example MO-001
-             */
-            orderNo: string;
-            /**
-             * @description 最初扫描的接收位置编码。
-             * @example DEST-001
-             */
-            destinationLocationCode: string;
-            /**
-             * Format: int32
-             * @description 候选查询返回的目标位置运行版本。
-             * @example 1
-             */
-            destinationVersion: number;
-            /** @description 所选箱集合；boxCode 不可重复，由服务端跨元素校验。上限 1000 沿用候选技术批次限制，仍待容量评审；不是位置容量。 */
-            boxes: components["schemas"]["OrderCallSelectedBox"][];
-        };
-        /**
-         * OrderCallTaskItem
-         * @description 一个箱的业务运输任务。QUEUED 是已创建并等待调度，不代表尚未创建；DISPATCHED 也不代表物料到达。
-         */
-        OrderCallTaskItem: {
-            /**
-             * @description 运输的订单箱。
-             * @example BOX-001
-             */
-            boxCode: string;
-            /**
-             * @description 任务持久标识，以字符串传输；用于接口定位任务，不是面向员工的任务编号。 标识以字符串传输，避免 JavaScript 大整数精度损失。
-             * @example 10001
-             */
-            taskId: string;
-            /**
-             * @description 一箱对应的业务运输任务号。
-             * @example TASK-001
-             */
-            taskNo: string;
-            /**
-             * @description 叫料任务对外简化状态：QUEUED 对应本地 QUEUED；DISPATCHED 对应已登记发送／已受理／执行中，不代表到达；COMPLETED 为可信完成；FAILED 为明确失败；CANCELLED 为可信取消；UNKNOWN 为结果未知。FAILED／UNKNOWN 必返 reason，取消受理不得提前返回 CANCELLED。
-             * @example QUEUED
-             * @enum {string}
-             */
-            dispatchState: "QUEUED" | "DISPATCHED" | "FAILED" | "UNKNOWN" | "COMPLETED" | "CANCELLED";
-            /**
-             * @description FAILED/UNKNOWN 时必须返回可展示原因；不可把 UNKNOWN 当成未执行。
-             * @example 等待核实调度受理结果
-             */
-            reason?: string;
-        } & ({
-            /** @enum {unknown} */
-            dispatchState?: "QUEUED" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
-        } | {
-            /** @enum {unknown} */
-            dispatchState?: "FAILED" | "UNKNOWN";
-            /**
-             * @description 失败或未知的说明，不得为空。
-             * @example 调度受理结果待核实
-             */
-            reason: string;
-        });
-        /**
-         * OrderCallResponse
-         * @description 订单叫料提交回执。成功表示本批每箱业务任务已创建，不表示所有调度调用成功或物料到达；前端无需轮询本回执。
-         */
-        OrderCallResponse: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 本次叫料业务编号，区分同订单的多次叫料。
-             * @example CALL-001
-             */
-            callNo: string;
-            /**
-             * @description 生产订单号。
-             * @example MO-001
-             */
-            orderNo: string;
-            destination: components["schemas"]["LocationSummary"];
-            /** @description 每个已选箱恰好对应一个业务运输任务，完整返回，不以当前页代替本批。 */
-            tasks: components["schemas"]["OrderCallTaskItem"][];
-            /**
-             * Format: date-time
-             * @description 该任务在服务端的创建时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            createdTime: string;
-        };
-        /**
-         * DirectBindingVehicleSummary
-         * @description 后端识别的料车摘要；本接口只接受料车，不要求前端传类型。
-         */
-        DirectBindingVehicleSummary: {
-            /**
-             * @description 料车业务编码。
-             * @example VEH-001
-             */
-            vehicleCode: string;
-            /**
-             * @description 可直接展示的名称；无维护名称时由后端回退为料车编号，不返回空字符串。
-             * @example 转运料车一号
-             */
-            displayName: string;
-            /**
-             * Format: int32
-             * @description 料车 LES 聚合版本。直接绑定、库位装载、位置或其他聚合状态变化均递增；操作后返回最新值，提交时原子复核。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * DirectBindingBoxSummary
-         * @description 后端识别的料箱摘要；不包含或虚构车上库位。
-         */
-        DirectBindingBoxSummary: {
-            /**
-             * @description 料箱业务编码。
-             * @example BOX-001
-             */
-            boxCode: string;
-            /**
-             * @description 可直接展示的名称；无维护名称时后端回退为箱码。
-             * @example 周转箱一号
-             */
-            displayName: string;
-            /**
-             * Format: int32
-             * @description 料箱 LES 聚合版本。直接所属料车、库位装载、位置及板件绑定变化均递增；关系解除再建立也递增，防止查询后发生变化未被发现。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * DirectBoxVehicleBindingSnapshot
-         * @description 料箱查询时的直接所属关系快照，用于换绑提交复核。记录关系标识、版本和所属料车；不表示库位装载。
-         */
-        DirectBoxVehicleBindingSnapshot: {
-            /**
-             * @description 直接关系标识，以字符串传输。
-             * @example 10001
-             */
-            bindingId: string;
-            /**
-             * Format: int32
-             * @description 直接关系版本；解除/换绑不可复用原版本。
-             * @example 1
-             */
-            bindingVersion: number;
-            /**
-             * @description 当前直接所属料车编码。
-             * @example VEH-002
-             */
-            vehicleCode: string;
-        };
-        /**
-         * DirectBoxVehicleBindingLine
-         * @description 当前料车直接绑定的一箱。解绑使用直接关系标识和版本，不使用装载关系。
-         */
-        DirectBoxVehicleBindingLine: {
-            /**
-             * @description 直接关系标识。
-             * @example 10001
-             */
-            bindingId: string;
-            /**
-             * Format: int32
-             * @description 直接关系版本。
-             * @example 1
-             */
-            bindingVersion: number;
-            box: components["schemas"]["DirectBindingBoxSummary"];
-        };
-        /**
-         * DirectVehicleBindingsResponse
-         * @description 料车及完整直接绑定列表；全量一致读取，按箱码排序，无关系时 bindings=[]。只统计直接关系，不能混入库位装载。
-         *
-         *     2026-10-10 已确认：部分料车有真实装载位、部分没有。有位使用 SLOT 库位装载，无位使用 DIRECT 整车绑定；两种入口与明细分别保留，不虚构空位，也不混用凭据。同箱跨两类关系互斥，关联改变同步更新箱／相关车版本，SLOT 装卸还更新真实装载位版本。
-         */
-        DirectVehicleBindingsResponse: {
-            vehicle: components["schemas"]["DirectBindingVehicleSummary"];
-            /** @description 完整直接绑定料箱列表，不分页、不截断。 */
-            bindings: components["schemas"]["DirectBoxVehicleBindingLine"][];
-            /**
-             * @description 等于完整 bindings 数组长度。
-             * @example 1
-             */
-            bindingCount: number;
-        };
-        /**
-         * DirectBindingEligibility
-         * @description 直接绑定/换绑资格；false 必须给出可展示原因。
-         */
-        DirectBindingEligibility: {
-            /**
-             * @description 查询时能否加入待绑定列表；提交必须重新校验。
-             * @example true
-             */
-            allowed: boolean;
-            /**
-             * @description 不可操作的可展示原因。
-             * @example 该箱已绑定当前料车，无需再次加入。
-             */
-            reason?: string;
-        } & ({
-            /** @enum {boolean} */
-            allowed?: true;
-        } | {
-            /** @enum {boolean} */
-            allowed?: false;
-            /**
-             * @description 不可操作的可展示原因。
-             * @example 该箱已绑定当前料车，无需再次加入。
-             */
-            reason: string;
-        });
-        /**
-         * DirectBoxBindingCandidateResponse
-         * @description 当前料车与扫描料箱的组合校验结果。已绑其他料车且可换绑时 eligibility.allowed=true、requiresRebindConfirmation=true；已绑当前料车或已库位装载时 allowed=false，不可加入。未绑定时 currentBinding=null。
-         */
-        DirectBoxBindingCandidateResponse: {
-            vehicle: components["schemas"]["DirectBindingVehicleSummary"];
-            box: components["schemas"]["DirectBindingBoxSummary"];
-            /** @description 查询时的直接绑定关系；没有直接所属料车必须返回 null，不省略。非 null 时必须提供完整快照。 */
-            currentBinding: {
-                /**
-                 * @description 直接关系标识，以字符串传输。
-                 * @example 10001
-                 */
-                bindingId: string;
-                /**
-                 * Format: int32
-                 * @description 直接关系版本；解除/换绑不可复用原版本。
-                 * @example 1
-                 */
-                bindingVersion: number;
-                /**
-                 * @description 当前直接所属料车编码。
-                 * @example VEH-002
-                 */
-                vehicleCode: string;
-            } | null;
-            /** @description 当前直接所属料车完整摘要；无关系必须 null，与 currentBinding 一致。 */
-            currentVehicle: {
-                /**
-                 * @description 料车业务编码。
-                 * @example VEH-001
-                 */
-                vehicleCode: string;
-                /**
-                 * @description 可直接展示的名称；无维护名称时由后端回退为料车编号，不返回空字符串。
-                 * @example 转运料车一号
-                 */
-                displayName: string;
-                /**
-                 * Format: int32
-                 * @description 料车 LES 聚合版本。直接绑定、库位装载、位置或其他聚合状态变化均递增；操作后返回最新值，提交时原子复核。
-                 * @example 1
-                 */
-                version: number;
-            } | null;
-            /**
-             * @description 可换绑到另一辆料车时为 true，前端须询问；确认不改变关系。
-             * @example false
-             */
-            requiresRebindConfirmation: boolean;
-            eligibility: components["schemas"]["DirectBindingEligibility"];
-        };
-        /**
-         * DirectBoxBindingSubmitItem
-         * @description 仅本次待绑定的一箱。已绑当前料车不允许再次提交；箱码不重复。expectedBinding 原样提交查询快照，null 明确表示查询时无直接关系。
-         */
-        DirectBoxBindingSubmitItem: {
-            /**
-             * @description 本次待绑定箱码。
-             * @example BOX-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description 料箱 LES 聚合版本。直接所属料车、库位装载、位置及板件绑定变化均递增；关系解除再建立也递增，防止查询后发生变化未被发现。
-             * @example 1
-             */
-            boxVersion: number;
-            /** @description 查询时的直接绑定关系；没有直接所属料车必须返回 null，不省略。非 null 时必须提供完整快照。 */
-            expectedBinding: {
-                /**
-                 * @description 直接关系标识，以字符串传输。
-                 * @example 10001
-                 */
-                bindingId: string;
-                /**
-                 * Format: int32
-                 * @description 直接关系版本；解除/换绑不可复用原版本。
-                 * @example 1
-                 */
-                bindingVersion: number;
-                /**
-                 * @description 当前直接所属料车编码。
-                 * @example VEH-002
-                 */
-                vehicleCode: string;
-            } | null;
-            /**
-             * @description 无旧关系时 false；旧关系在其他料车且员工明确确认换绑时 true。不是跳过后端校验的开关。
-             * @example false
-             */
-            confirmRebind: boolean;
-        } & ({
-            /** @enum {object|null} */
-            expectedBinding?: never | null;
-            /** @enum {boolean} */
-            confirmRebind?: false;
-        } | {
-            expectedBinding?: {
-                /**
-                 * @description 直接关系标识，以字符串传输。
-                 * @example 10001
-                 */
-                bindingId: string;
-                /**
-                 * Format: int32
-                 * @description 直接关系版本；解除/换绑不可复用原版本。
-                 * @example 1
-                 */
-                bindingVersion: number;
-                /**
-                 * @description 当前直接所属料车编码。
-                 * @example VEH-002
-                 */
-                vehicleCode: string;
-            };
-            /** @enum {boolean} */
-            confirmRebind?: true;
-        });
-        /**
-         * DirectBoxBatchBindRequest
-         * @description 批量建立直接关系或换绑。原子复核目标料车、各箱及旧关系快照；一项不通过整批不写。
-         *
-         *     2026-10-10 已确认：部分料车有真实装载位、部分没有。有位使用 SLOT 库位装载，无位使用 DIRECT 整车绑定；两种入口与明细分别保留，不虚构空位，也不混用凭据。同箱跨两类关系互斥，关联改变同步更新箱／相关车版本，SLOT 装卸还更新真实装载位版本。
-         */
-        DirectBoxBatchBindRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 目标料车编码。
-             * @example VEH-001
-             */
-            vehicleCode: string;
-            /**
-             * Format: int32
-             * @description 料车 LES 聚合版本。直接绑定、库位装载、位置或其他聚合状态变化均递增；操作后返回最新值，提交时原子复核。
-             * @example 1
-             */
-            vehicleVersion: number;
-            /** @description 仅本次新增/确认换绑项，不提交已展示的现有绑定项。后端按 boxCode 检查重复；批次上限 1000 为待评审技术限制，非料车容量。 */
-            items: components["schemas"]["DirectBoxBindingSubmitItem"][];
-        };
-        /**
-         * DirectBoxUnbindSelectedItem
-         * @description 所选直接关系及查询时的箱版本，后端复核关系仍属于本料车。
-         */
-        DirectBoxUnbindSelectedItem: {
-            /**
-             * @description 所选直接绑定关系标识。
-             * @example 10001
-             */
-            bindingId: string;
-            /**
-             * Format: int32
-             * @description 查询返回的直接关系版本。
-             * @example 1
-             */
-            bindingVersion: number;
-            /**
-             * @description 该关系对应箱码，用于复核及展示失败原因。
-             * @example BOX-001
-             */
-            boxCode: string;
-            /**
-             * Format: int32
-             * @description 料箱 LES 聚合版本。直接所属料车、库位装载、位置及板件绑定变化均递增；关系解除再建立也递增，防止查询后发生变化未被发现。
-             * @example 1
-             */
-            boxVersion: number;
-        };
-        /**
-         * DirectBoxUnbindSelectedRequest
-         * @description 解绑勾选料箱；车、箱或选中关系变化时整批拒绝，不清理其他关系。
-         */
-        DirectBoxUnbindSelectedRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 当前料车编码。
-             * @example VEH-001
-             */
-            vehicleCode: string;
-            /**
-             * Format: int32
-             * @description 料车 LES 聚合版本。直接绑定、库位装载、位置或其他聚合状态变化均递增；操作后返回最新值，提交时原子复核。
-             * @example 1
-             */
-            vehicleVersion: number;
-            /** @description 选中的直接关系；关系标识和箱码均不得重复。 */
-            items: components["schemas"]["DirectBoxUnbindSelectedItem"][];
-        };
-        /**
-         * DirectBoxUnbindAllRequest
-         * @description 解除当前料车全部直接关系，不受勾选影响。vehicleVersion 对应查询时整个料车聚合，关系集合变化必须拒绝；不存在直接关系且版本有效时成功返回空列表。
-         */
-        DirectBoxUnbindAllRequest: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * @description 当前料车编码。
-             * @example VEH-001
-             */
-            vehicleCode: string;
-            /**
-             * Format: int32
-             * @description 料车 LES 聚合版本。直接绑定、库位装载、位置或其他聚合状态变化均递增；操作后返回最新值，提交时原子复核。
-             * @example 1
-             */
-            vehicleVersion: number;
-        };
-        /**
-         * DirectBindingMutationResponse
-         * @description 操作成功后的完整当前料车快照，包含最新版本及全部直接绑定箱。继续绑箱使用此版本；换绑同步更新旧料车和箱版本，不删除历史。bindings 不包含装载关系。
-         */
-        DirectBindingMutationResponse: {
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            vehicle: components["schemas"]["DirectBindingVehicleSummary"];
-            /** @description 操作后的完整直接绑定列表；解绑全部后为 []。 */
-            bindings: components["schemas"]["DirectBoxVehicleBindingLine"][];
-            /**
-             * @description 操作后直接关系数量，与完整列表长度一致。
-             * @example 0
-             */
-            bindingCount: number;
-        };
-        /**
-         * ReceivingOperationReceipt
-         * @description 本次接收成功回执，包含作用对象、本次物流任务身份和确认后最新 version。affectedCount 是此次新增接收记录数，整车确认不覆盖先前单箱确认；无需接收批次。
-         *
-         *     2026-10-20.1：普通回执取消 operationNo，不取业务单据编号；requestId 关联原请求和防重，处理时间、影响数量及原有业务字段保留。历史成功请求按新结构投影，原业务不重做、旧证据不改写。
-         */
-        ReceivingOperationReceipt: {
-            /**
-             * Format: uuid
-             * @description 对应本次业务提交的请求 UUID，服务端原样回传，供结果关联与追踪。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /**
-             * Format: int32
-             * @description 实际发生变更的关系条数，不一定等于物料件数。 本次实际变更的关系数量。
-             * @example 1
-             */
-            affectedCount: number;
-            /**
-             * Format: date-time
-             * @description 服务端记录的处理时间；取消结果查询中表示该取消状态最后更新时间。 ISO 8601 UTC 时间；客户端按本地时区展示。
-             * @example 2026-09-14T02:00:00Z
-             */
-            processedTime: string;
-            /**
-             * @description 本次已可信到达库房的物流运输任务 ID，映射 NariLogisticsTask.id，不是独立接收对象 ID。
-             * @example 10001
-             */
-            taskId: string;
-            object: components["schemas"]["ContainerRef"];
-            /**
-             * Format: int32
-             * @description 对应本次库房送达物流任务的标准 version，接收事实改变待接收范围时在事务中显式递增，影响本次清理资格的变化也须传播；不另建接收任务版本或批次。查询值原样提交，冲突 409/40900。
-             * @example 1
-             */
-            version: number;
-        };
-        /**
-         * BoxBindingConfirmation
-         * @description 绑箱提交的待确认结果，不是绑箱成功。无关系写入、数量变化或箱版本推进，不返回操作完成编号。客户端只能展示提示，人员明确继续后再提交；不是异步任务或新增业务对象。
-         */
-        BoxBindingConfirmation: {
-            /** @enum {string} */
-            resultType: "CONFIRMATION_REQUIRED";
-            /**
-             * Format: uuid
-             * @description 前端为一次业务提交生成的 UUID；同一次网络重发复用同一值及内容，用于防重与结果关联，不是登录令牌。 原样返回本次业务请求标识。
-             * @example 47ab7945-b324-4ed4-a10a-af734b83de07
-             */
-            requestId: string;
-            /** @enum {string} */
-            confirmationType: "MIXED_CONTENT";
-            /** @description 服务端混料提醒，必须提示混装仅用于缴库、不参与生产配送。 */
-            message: string;
-            box: components["schemas"]["ContainerSummary"];
-            /** @description 服务端签发的不透明确认凭据，绑定当前用户、箱码／版本和本次完整绑定业务内容；不能作为权限或混装申请。由客户端原样回传，不允许自行构造。 */
-            confirmationToken: string;
-        };
-        /**
-         * RelatedTransportTask
-         * @description 当前阻止位置解绑的未结算运输摘要；不是 AGV 台账或额外任务对象。列出与当前位置／容器及父车／随车箱有关的全部阻塞任务，完整返回、按任务 ID 去重；已结算历史不混入。
-         */
-        RelatedTransportTask: {
-            /**
-             * @description 任务持久标识，以字符串传输；用于接口定位任务，不是面向员工的任务编号。 标识以字符串传输，避免 JavaScript 大整数精度损失。
-             * @example 10001
-             */
-            taskId: string;
-            /** @description 物流系统任务号，不是调度号。 */
-            taskNo: string;
-            /**
-             * Format: int32
-             * @description 该物流任务的版本，任务状态或任务内容变化递增；取消提交校验此版本，不是容器版本。
-             * @example 1
-             */
-            version: number;
-            /**
-             * @description 本地物流运输状态：QUEUED 待派送；DISPATCHING 已登记发送、受理待确认；ACCEPTED 调度已受理；RUNNING 执行中；COMPLETED 可信运输完成；FAILED 已确认失败；CANCELLED 已确认取消；UNKNOWN 外部结果未知、需核查。发送、受理及取消受理不代表完成；运输终结不自动证明实物已结算或位置已空闲。厂商状态由后端映射，不直接透传。
-             * @example QUEUED
-             * @enum {string}
-             */
-            status: "QUEUED" | "DISPATCHING" | "ACCEPTED" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" | "UNKNOWN";
-            /** @description 任务的可信实物交接及资源处置是否完成；CANCELLED 不必然 settled=true。 */
-            settled: boolean;
-            cancellationEligibility: components["schemas"]["Eligibility"];
-        };
-        /**
-         * LocationUnbindContext
-         * @description 人员从位置解绑提示发起取消时，由页面当前查询自动提供的上下文，不要求人员额外选择。后端校验当前绑定和任务作用关系；用于让监控知道本次取消旨在解除此关系，避免关系尚未解除时立即重建自动任务。
-         */
-        LocationUnbindContext: {
-            /**
-             * @description 业务位置编码，用于仓库位置或物流起止位置；与载具上的 slotCode 不同。 位置码。
-             * @example CODE-001
-             */
-            locationCode: string;
-            /**
-             * Format: int32
-             * @description 当前库位及其容器占用关系的 LES 版本；库位状态或绑定容器变化递增。提交原样回传，服务端原子校验，冲突返回 409/40900。
-             * @example 1
-             */
-            version: number;
-            container: components["schemas"]["ContainerRef"];
-            /**
-             * Format: int32
-             * @description LES 容器业务聚合版本：容器主数据、业务位置、装载关系及箱内板件绑定变化均递增。BOX 覆盖本箱绑定；VEHICLE 覆盖载具装载及所装箱的板件关系，所属箱变化须同步递增载具版本。服务端原子校验与更新相关聚合，不覆盖 WMS 外部状态；提交涉及外部数据时必须另行复核。查询版本原样回传，冲突返回 409/40900。
-             * @example 1
-             */
-            containerVersion: number;
-        };
-        PlatformLongTokenScope: {
-            scopeCode: string;
-            name: string;
-            description: string;
-        };
-        PlatformLongTokenMetadata: {
-            /** @description 接入范围内唯一的凭据编号，按字符串传输 */
-            tokenId?: string;
-            name?: string;
-            scopeCode?: string;
-            scopeName?: string;
-            enabled?: boolean;
-            version?: number;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            revokedTime?: string | null;
-            /** @description 实际授权接口代码；空数组表示无接口权限。声明移除后不再放行 */
-            apiCodes?: string[];
-            /** @description 授权配置版本；旧凭据未配置时为0，与凭据version独立 */
-            authorizationVersion?: number;
-        };
-        PlatformLongTokenCreated: {
-            metadata: components["schemas"]["PlatformLongTokenMetadata"];
-            /** @description 仅本次创建响应包含明文，关闭后不可找回，不得写入浏览器持久存储 */
-            token: string;
-        };
-        PlatformLongTokenCreateRequest: {
-            scopeCode: string;
-            name: string;
-            /** @description 显式授权；空数组无权限；未提供时仅兼容原设备上报两接口，不自动包含未来新增接口 */
-            apiCodes?: string[];
-        };
-        PlatformLongTokenRevokeRequest: {
-            version: number;
-        };
-        PlatformLongTokenPage: {
-            records?: components["schemas"]["PlatformLongTokenMetadata"][];
-            total?: number;
-            size?: number;
-            current?: number;
-            pages?: number;
-        };
-        PlatformLongTokenApi: {
-            apiCode: string;
-            /** @description 接口所属分组；区别于凭据提供者scopeCode，不限制管理员显式跨分组授权 */
-            scopeCode: string;
-            name: string;
-            method: string;
-            path: string;
-        };
-        PlatformLongTokenAuthorizationRequest: {
-            /** @description 显式授权；空数组无权限；未提供时仅兼容原设备上报两接口，不自动包含未来新增接口 */
-            apiCodes: string[];
-            authorizationVersion: number;
-            /** @description 凭据版本，防止与停用并发冲突 */
-            version: number;
-        };
-        ExtScanRequest: {
-            boxCode: string;
-            /** @description 实际板件码数组。非字符串、坏码、重复或已绑定码逐项过滤留痕；合法混料整批拒绝并报警。 */
-            panelCodes: unknown[];
-        };
-        ExtVariableValue: {
-            variableCode: string;
-            /** @enum {integer} */
-            value: 0 | 1;
-        };
-        ExtVariableRequest: {
-            items: components["schemas"]["ExtVariableValue"][];
-        };
-        ExtTokenName: {
-            name: string;
-        };
-        ExtVersion: {
-            version: number;
-        };
-        ExtMappingRequest: {
-            /** Format: int64 */
-            tokenId: number;
-            variableCode: string;
-            /** @enum {string} */
-            kind: "LOCATION" | "LINE_HEAD" | "LINE_TAIL";
-            targetCode: string;
-            enabled: boolean;
-            /** @description 修改时必填；新增不传 */
-            version?: number;
-        };
-        ExtScanResult: {
-            /** @enum {string} */
-            status?: "SUCCEEDED" | "PARTIAL" | "NO_CHANGE" | "REJECTED";
-            /** Format: int64 */
-            eventId?: number;
-            boxCode?: string;
-            bound?: string[];
-            filtered?: {
-                index?: number;
-                panelCode?: unknown;
-                reason?: string;
-            }[];
-            rejected?: string[];
-            alarm?: string;
-            reason?: string;
-            version?: number;
-        };
-        ExtVariableResult: {
-            status?: string;
-            /** Format: int64 */
-            eventId?: number;
-            items?: {
-                variableCode?: string;
-                /** @enum {string} */
-                status?: "APPLIED" | "UNMAPPED";
-                value?: number;
-                kind?: string;
-            }[];
-        };
-        ExtTokenCreated: {
-            /** Format: int64 */
-            id?: number;
-            /** @description 仅创建响应显示一次；不自动过期，停用后立即失效，绝不写入示例值 */
-            token?: string;
-            version?: number;
-            enabled?: boolean;
-        };
-        ExtTokenMetadata: {
-            /** Format: int64 */
-            id?: number;
-            token_name?: string;
-            enabled?: boolean;
-            version?: number;
-            created_time?: string;
-            revoked_time?: string | null;
-        };
-        ExtMapping: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            token_id?: number;
-            variable_code?: string;
-            mapping_kind?: string;
-            /** Format: int64 */
-            target_id?: number;
-            target_key?: string;
-            enabled?: boolean;
-            reported_value?: number | null;
-            received_time?: string | null;
-            version?: number;
-        };
-        ExtEvent: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            token_id?: number | null;
-            event_type?: string;
-            event_status?: string;
-            input_json?: string;
-            result_json?: string;
-            received_time?: string;
-        };
-        RuntimeConnectionStatus: {
-            id: string;
-            name: string;
-            /** @enum {string} */
-            group: "FOUNDATION" | "INTEGRATION";
-            /** @enum {string} */
-            kind: "DATABASE" | "HTTP" | "MQTT" | "STORAGE" | "CUSTOM";
-            /** @enum {string} */
-            status: "UP" | "WARN" | "DOWN" | "UNKNOWN" | "UNCONFIGURED" | "DISABLED";
-            message: string;
-            staleAfterSeconds: number;
-            /** Format: int64 */
-            durationMillis: number | null;
-            consecutiveFailures: number;
-            /** @enum {string|null} */
-            lastCommunicationStatus: "SUCCESS" | "FAILURE" | null;
-            /** Format: date-time */
-            checkedAt: string | null;
-            /** Format: date-time */
-            lastSuccessAt: string | null;
-            /** Format: date-time */
-            lastCommunicationAt: string | null;
-        };
-        RuntimeConnectionsOverview: {
-            /** Format: date-time */
-            generatedAt: string;
-            /** @example 15 */
-            refreshAfterSeconds: number;
-            items: components["schemas"]["RuntimeConnectionStatus"][];
-        };
-        RuntimeConnectionsResult: {
-            code: number;
-            message: string;
-            data: components["schemas"]["RuntimeConnectionsOverview"];
-            /** Format: date-time */
-            timestamp: string;
-            traceId: string | null;
-        };
-        NariAgvHikReply: {
-            reqCode?: string;
-            /** @description 0受理；非0待核查，不推断未产生远端效果 */
-            code?: string;
-            message?: string;
-            data?: unknown;
-        };
-        NariAgvStandardFlow: {
-            /** @description DFPServer BillNumber；流程号来自CustomBusinessId并放URL flowCode。请求不传起终点，按远端模板执行；本轮不确认生产流程11。 */
-            upperId: string;
-            /**
-             * @description 整数。DFPServer int.Parse(PriorityLevel ?? "0")，不是固定枚举0；当前后端准备逻辑默认整数0。现场范围待厂商确认。
-             * @example 0
-             */
-            priority: number;
-        };
-        NariAgvHikCancel: {
-            /** @description DFPServer BillNumber；当前对应物流task_no。大小写为taskCode，不是taskcode；取消必须使用本次创建的同一任务号。 */
-            taskCode: string;
-            /** @description DFPServer Guid.NewGuid().ToString().Replace("-","")，32位无短横线UUID；每次独立请求唯一，生产未知结果不自动重发。 */
-            reqCode: string;
-            /** @description DFPServer当前时间yyyy-MM-dd HH:mm:ss；当前后端按Asia/Shanghai生成。 */
-            reqTime: string;
-            /**
-             * @description DFPServer DTO默认SyncService；当前后端相同。
-             * @enum {string}
-             */
-            clientCode: "SyncService";
-            /** @enum {string} */
-            forceCancel: "0";
-        };
-        NariAgvStandardCancel: {
-            /** @description 填本次BY_STATION创建的orderCode，旧代码使用同一BillNumber；不改为tid，也不据此认定FLOW可取消。 */
-            upperIdList: string[];
-            /** @enum {string} */
-            val: "CANCEL_ORDER";
-        };
-        NariAgvStandardCreate: {
-            /** @description DFPServer BillNumber；本系统task_no。取消时把同一值放upperIdList，不使用响应tid。 */
-            orderCode: string;
-            /** @description DFPServer StartLocation.LocationCode；不使用ExternalCode，不追加海康${05}后缀。例中1F010102仅沿用用户位置码模拟，须确认斯坦德站点实际存在。 */
-            startCode: string;
-            /** @description DFPServer EndLocation.LocationCode；不追加海康${05}后缀。例中1F020101仅作模拟站点。 */
-            endCode: string;
-            /**
-             * @description 整数。DFPServer int.Parse(PriorityLevel ?? "0")，不是固定枚举0；当前后端准备逻辑默认整数0。现场范围待厂商确认。
-             * @example 0
-             */
-            priority: number;
-        };
-        NariAgvStandardReply: {
-            code?: string;
-            message?: string;
-            msgDetail?: string;
-            /** @description 跟踪标识保存于业务回执，不推定等于调度订单号 */
-            tid?: string;
-        };
         NariAgvHikCreate: {
             /**
              * @description DFPServer TaskTyp固定S01；当前后端从nari.agv.hikvision.taskType读取，默认S01。字段大小写为taskTyp，不是tasktyp。空框上车任务类型仍单独配置。
@@ -12839,6 +12340,63 @@ export interface components {
              * @enum {string}
              */
             type: "00";
+        };
+        NariAgvHikReply: {
+            reqCode?: string;
+            /** @description 0受理；非0待核查，不推断未产生远端效果 */
+            code?: string;
+            message?: string;
+            data?: unknown;
+        };
+        NariAgvHikCancel: {
+            /** @description DFPServer BillNumber；当前对应物流task_no。大小写为taskCode，不是taskcode；取消必须使用本次创建的同一任务号。 */
+            taskCode: string;
+            /** @description DFPServer Guid.NewGuid().ToString().Replace("-","")，32位无短横线UUID；每次独立请求唯一，生产未知结果不自动重发。 */
+            reqCode: string;
+            /** @description DFPServer当前时间yyyy-MM-dd HH:mm:ss；当前后端按Asia/Shanghai生成。 */
+            reqTime: string;
+            /**
+             * @description DFPServer DTO默认SyncService；当前后端相同。
+             * @enum {string}
+             */
+            clientCode: "SyncService";
+            /** @enum {string} */
+            forceCancel: "0";
+        };
+        NariAgvStandardCreate: {
+            /** @description DFPServer BillNumber；本系统task_no。取消时把同一值放upperIdList，不使用响应tid。 */
+            orderCode: string;
+            /** @description DFPServer StartLocation.LocationCode；不使用ExternalCode，不追加海康${05}后缀。例中1F010102仅沿用用户位置码模拟，须确认斯坦德站点实际存在。 */
+            startCode: string;
+            /** @description DFPServer EndLocation.LocationCode；不追加海康${05}后缀。例中1F020101仅作模拟站点。 */
+            endCode: string;
+            /**
+             * @description 整数。DFPServer int.Parse(PriorityLevel ?? "0")，不是固定枚举0；当前后端准备逻辑默认整数0。现场范围待厂商确认。
+             * @example 0
+             */
+            priority: number;
+        };
+        NariAgvStandardReply: {
+            code?: string;
+            message?: string;
+            msgDetail?: string;
+            /** @description 跟踪标识保存于业务回执，不推定等于调度订单号 */
+            tid?: string;
+        };
+        NariAgvStandardFlow: {
+            /** @description DFPServer BillNumber；流程号来自CustomBusinessId并放URL flowCode。请求不传起终点，按远端模板执行；本轮不确认生产流程11。 */
+            upperId: string;
+            /**
+             * @description 整数。DFPServer int.Parse(PriorityLevel ?? "0")，不是固定枚举0；当前后端准备逻辑默认整数0。现场范围待厂商确认。
+             * @example 0
+             */
+            priority: number;
+        };
+        NariAgvStandardCancel: {
+            /** @description 填本次BY_STATION创建的orderCode，旧代码使用同一BillNumber；不改为tid，也不据此认定FLOW可取消。 */
+            upperIdList: string[];
+            /** @enum {string} */
+            val: "CANCEL_ORDER";
         };
     };
     responses: never;
@@ -13583,52 +13141,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlatformLongTokenAuthorizationRequest"];
+                "application/json": components["schemas"]["Authorization"];
             };
         };
         responses: {
-            /** @description 成功 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenMetadata"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultMetadata"];
                 };
             };
-            /** @description 范围/参数无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 未登录 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 接入Token无后台访问权限 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -16651,25 +16211,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "profile": "MES",
-                     *         "configured": true,
-                     *         "enabled": true,
-                     *         "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
-                     *         "username": "database_user",
-                     *         "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
-                     *         "passwordSet": true,
-                     *         "version": 1
-                     *       },
-                     *       "timestamp": "2026-10-29T04:00:00Z",
-                     *       "traceId": "example-only"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiResultNariJdbcConfig"];
+                    "*/*": components["schemas"]["ApiResultNariJdbcConfig"];
                 };
             };
             /** @description Bad Request */
@@ -16678,7 +16220,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
             /** @description Unauthorized */
@@ -16687,7 +16229,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
             /** @description Forbidden */
@@ -16696,7 +16238,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
             /** @description Internal Server Error */
@@ -16705,16 +16247,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description 现有配置无效，或运行密钥／密文校验失败；不连接远端 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -16730,15 +16263,6 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "enabled": true,
-                 *       "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
-                 *       "username": "database_user",
-                 *       "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
-                 *       "version": 1
-                 *     }
-                 */
                 "application/json": components["schemas"]["NariJdbcConfigSave"];
             };
         };
@@ -16749,25 +16273,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "profile": "MES",
-                     *         "configured": true,
-                     *         "enabled": true,
-                     *         "jdbcUrl": "jdbc:nds://host:18600/database?appname=application",
-                     *         "username": "database_user",
-                     *         "driverClassName": "sgcc.nds.jdbc.driver.NdsDriver",
-                     *         "passwordSet": true,
-                     *         "version": 1
-                     *       },
-                     *       "timestamp": "2026-10-29T04:00:00Z",
-                     *       "traceId": "example-only"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiResultNariJdbcConfig"];
+                    "*/*": components["schemas"]["ApiResultNariJdbcConfig"];
                 };
             };
             /** @description Bad Request */
@@ -16776,7 +16282,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
             /** @description Unauthorized */
@@ -16785,7 +16291,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
             /** @description Forbidden */
@@ -16794,16 +16300,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description 版本冲突或并发创建冲突，请重新查询 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
             /** @description Internal Server Error */
@@ -16812,16 +16309,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
-                };
-            };
-            /** @description 现有配置无效，或运行密钥／密文校验失败；不连接远端 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResultVoid"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -16837,52 +16325,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExtMappingRequest"];
+                "application/json": components["schemas"]["Mapping"];
             };
         };
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtMapping"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultMapStringObject"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -18087,6 +17577,186 @@ export interface operations {
         };
     };
     delete_24: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_record_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLineSideInboundRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_record_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariLineSideInboundRecordUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLineSideInboundRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_record_delete: {
         parameters: {
             query: {
                 version: number;
@@ -20383,48 +20053,50 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 成功 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenPage"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultPageResultMetadata"];
                 };
             };
-            /** @description 范围/参数无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 未登录 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 接入Token无后台访问权限 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -20437,52 +20109,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlatformLongTokenCreateRequest"];
+                "application/json": components["schemas"]["Create"];
             };
         };
         responses: {
-            /** @description 成功 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenCreated"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultCreated"];
                 };
             };
-            /** @description 范围/参数无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 未登录 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 接入Token无后台访问权限 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -20498,52 +20172,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlatformLongTokenRevokeRequest"];
+                "application/json": components["schemas"]["Revoke"];
             };
         };
         responses: {
-            /** @description 成功 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: unknown;
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 范围/参数无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 未登录 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 接入Token无后台访问权限 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -24739,197 +24415,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "scanType": "VEHICLE",
-                 *       "scanCode": "CODE-001",
-                 *       "object": {
-                 *         "containerType": "VEHICLE",
-                 *         "containerCode": "CODE-001"
-                 *       },
-                 *       "version": 1,
-                 *       "destinationLocationCode": "CODE-001"
-                 *     }
-                 */
-                "application/json": components["schemas"]["CreateWarehouseLogisticsRequest"];
+                "application/json": components["schemas"]["nariWarehouseLogisticsTasksCreate_CreateWarehouseLogisticsRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "task": {
-                     *           "taskId": "10001",
-                     *           "taskNo": "CODE-001",
-                     *           "version": 1,
-                     *           "vendor": "STANDARD",
-                     *           "taskType": "GENERAL",
-                     *           "container": {
-                     *             "containerType": "VEHICLE",
-                     *             "containerCode": "CODE-001",
-                     *             "version": 1
-                     *           },
-                     *           "origin": {
-                     *             "locationCode": "CODE-001",
-                     *             "locationName": "一层接驳台"
-                     *           },
-                     *           "destination": {
-                     *             "locationCode": "CODE-001",
-                     *             "locationName": "一层接驳台"
-                     *           },
-                     *           "status": "QUEUED",
-                     *           "statusName": "已创建",
-                     *           "triggerMode": "MANUAL",
-                     *           "createdTime": "2026-09-14T02:00:00Z"
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["TaskCreationResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariWarehouseLogisticsTasksCreate_TaskCreationResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -24943,194 +24475,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "object": {
-                 *         "containerType": "VEHICLE",
-                 *         "containerCode": "CODE-001"
-                 *       },
-                 *       "version": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["ObjectSubmitRequest"];
+                "application/json": components["schemas"]["nariWarehouseApplicationsSubmit_ObjectSubmitRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "applicationNo": "CODE-001",
-                     *         "sapDocumentNos": [
-                     *           "CODE-001"
-                     *         ],
-                     *         "wmsPendingCreated": true,
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["WarehouseApplicationResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariWarehouseApplicationsSubmit_WarehouseApplicationResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 版本／对象范围或资格冲突，MES板件未完成、SAP明确拒绝、重复成功内容，或原请求正在处理／部分成功／未知时拒绝重发；展示message，不能自行清除保护。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description HTTP503，统一code=500、data=null；未发送、明确失败和远端已产生效果／未知结果可能共用此响应，不能据此换UUID。分支边界见本操作description；稳定业务标识与恢复状态查询尚未补齐。 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "外部协议待接入；具体原因以服务端返回为准。",
-                     *       "data": null,
-                     *       "timestamp": "2026-10-15T06:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -25144,182 +24535,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "vehicleCode": "VEH-001",
-                 *       "vehicleVersion": 1,
-                 *       "items": [
-                 *         {
-                 *           "bindingId": "10001",
-                 *           "bindingVersion": 1,
-                 *           "boxCode": "BOX-001",
-                 *           "boxVersion": 1
-                 *         }
-                 *       ]
-                 *     }
-                 */
-                "application/json": components["schemas"]["DirectBoxUnbindSelectedRequest"];
+                "application/json": components["schemas"]["nariVehicleDirectBindingsUnbindSelected_DirectBoxUnbindSelectedRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "vehicle": {
-                     *           "vehicleCode": "VEH-001",
-                     *           "displayName": "转运料车一号",
-                     *           "version": 2
-                     *         },
-                     *         "bindings": [],
-                     *         "bindingCount": 0
-                     *       },
-                     *       "timestamp": "2026-10-10T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["DirectBindingMutationResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariVehicleDirectBindingsUnbindSelected_DirectBindingMutationResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "料箱 BOX-001 的状态或所属关系已变化，本次未修改任何关系，请刷新后重新选择。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -25333,174 +24595,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "vehicleCode": "VEH-001",
-                 *       "vehicleVersion": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["DirectBoxUnbindAllRequest"];
+                "application/json": components["schemas"]["nariVehicleDirectBindingsUnbindAll_DirectBoxUnbindAllRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "vehicle": {
-                     *           "vehicleCode": "VEH-001",
-                     *           "displayName": "转运料车一号",
-                     *           "version": 2
-                     *         },
-                     *         "bindings": [],
-                     *         "bindingCount": 0
-                     *       },
-                     *       "timestamp": "2026-10-10T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["DirectBindingMutationResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariVehicleDirectBindingsUnbindAll_DirectBindingMutationResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "料箱 BOX-001 的状态或所属关系已变化，本次未修改任何关系，请刷新后重新选择。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -25514,177 +24655,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DirectBoxBatchBindRequest"];
+                "application/json": components["schemas"]["nariVehicleDirectBindingsBind_DirectBoxBatchBindRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "vehicle": {
-                     *           "vehicleCode": "VEH-001",
-                     *           "displayName": "转运料车一号",
-                     *           "version": 2
-                     *         },
-                     *         "bindings": [
-                     *           {
-                     *             "bindingId": "10001",
-                     *             "bindingVersion": 1,
-                     *             "box": {
-                     *               "boxCode": "BOX-001",
-                     *               "displayName": "周转箱一号",
-                     *               "version": 2
-                     *             }
-                     *           }
-                     *         ],
-                     *         "bindingCount": 1
-                     *       },
-                     *       "timestamp": "2026-10-10T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["DirectBindingMutationResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariVehicleDirectBindingsBind_DirectBindingMutationResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "料箱 BOX-001 的状态或所属关系已变化，本次未修改任何关系，请刷新后重新选择。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -25694,176 +24711,59 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description 交管区域编码，按 URL 路径段编码。 */
                 areaCode: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "version": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["TrafficActionRequest"];
+                "application/json": components["schemas"]["nariTrafficAreasRelease_TrafficActionRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "areaCode": "CODE-001",
-                     *         "areaName": "交管区域一",
-                     *         "version": 1,
-                     *         "status": "FREE"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["TrafficArea"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariTrafficAreasRelease_TrafficArea"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -25873,176 +24773,59 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description 交管区域编码，按 URL 路径段编码。 */
                 areaCode: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "version": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["TrafficActionRequest"];
+                "application/json": components["schemas"]["nariTrafficAreasLock_TrafficActionRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "areaCode": "CODE-001",
-                     *         "areaName": "交管区域一",
-                     *         "version": 1,
-                     *         "status": "FREE"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["TrafficArea"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariTrafficAreasLock_TrafficArea"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -26056,198 +24839,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "scanType": "VEHICLE",
-                 *       "scanCode": "CODE-001",
-                 *       "object": {
-                 *         "containerType": "VEHICLE",
-                 *         "containerCode": "CODE-001"
-                 *       },
-                 *       "version": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["ShippingRequest"];
+                "application/json": components["schemas"]["nariShippingSubmit_ShippingRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "shippingNo": "CODE-001",
-                     *         "object": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "canCreateLogisticsTask": true,
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["ShippingResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariShippingSubmit_ShippingResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description HTTP503，统一code=500、data=null；未发送、明确失败和远端已产生效果／未知结果可能共用此响应，不能据此换UUID。分支边界见本操作description；稳定业务标识与恢复状态查询尚未补齐。 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "外部协议待接入；具体原因以服务端返回为准。",
-                     *       "data": null,
-                     *       "timestamp": "2026-10-15T06:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -26261,179 +24899,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "taskId": "10001",
-                 *       "version": 1,
-                 *       "object": {
-                 *         "containerType": "BOX",
-                 *         "containerCode": "BOX-001"
-                 *       }
-                 *     }
-                 */
-                "application/json": components["schemas"]["ReceivingConfirmRequest"];
+                "application/json": components["schemas"]["nariReceivingConfirm_ReceivingConfirmRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z",
-                     *         "taskId": "10001",
-                     *         "object": {
-                     *           "containerType": "BOX",
-                     *           "containerCode": "BOX-001"
-                     *         },
-                     *         "version": 2
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["ReceivingOperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariReceivingConfirm_ReceivingOperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -26447,191 +24959,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "taskId": "10001",
-                 *       "version": 1,
-                 *       "object": {
-                 *         "containerType": "VEHICLE",
-                 *         "containerCode": "CODE-001"
-                 *       }
-                 *     }
-                 */
-                "application/json": components["schemas"]["ClearWmsBindingsRequest"];
+                "application/json": components["schemas"]["nariReceivingClearWmsBindings_ClearWmsBindingsRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["OperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariReceivingClearWmsBindings_OperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description HTTP503，统一code=500、data=null；未发送、明确失败和远端已产生效果／未知结果可能共用此响应，不能据此换UUID。分支边界见本操作description；稳定业务标识与恢复状态查询尚未补齐。 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "WMS事务提交结果不明，请核查；禁止自动重复清理",
-                     *       "data": null,
-                     *       "timestamp": "2026-10-15T06:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -26645,195 +25019,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "pendingPanelCodes": [
-                 *         "CODE-001"
-                 *       ]
-                 *     }
-                 */
-                "application/json": components["schemas"]["JointCandidatesRequest"];
+                "application/json": components["schemas"]["nariPanelsJointCandidatesQuery_JointCandidatesRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "candidates": [
-                     *           {
-                     *             "panelCode": "CODE-001",
-                     *             "materialCode": "CODE-001",
-                     *             "materialName": "成品板件",
-                     *             "orderNo": "CODE-001",
-                     *             "eligibility": {
-                     *               "allowed": true
-                     *             }
-                     *           }
-                     *         ]
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["JointCandidatesResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariPanelsJointCandidatesQuery_JointCandidatesResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description MES 未启用、连接配置／驱动不可用、来源查询失败或成员数据不完整时整体失败。HTTP 503，统一失败体 code=500、data=null；不返回部分候选或原始连接凭据。 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "外部JDBC未启用或配置无效，请检查业务系统参数、密码密文和运行密钥",
-                     *       "data": null,
-                     *       "timestamp": "2026-10-15T06:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -26847,199 +25079,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "orderNo": "MO-001",
-                 *       "destinationLocationCode": "DEST-001",
-                 *       "destinationVersion": 1,
-                 *       "boxes": [
-                 *         {
-                 *           "boxCode": "BOX-001",
-                 *           "version": 1
-                 *         },
-                 *         {
-                 *           "boxCode": "BOX-002",
-                 *           "version": 1
-                 *         }
-                 *       ]
-                 *     }
-                 */
-                "application/json": components["schemas"]["OrderCallRequest"];
+                "application/json": components["schemas"]["nariOrderCallsSubmit_OrderCallRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "callNo": "CALL-001",
-                     *         "orderNo": "MO-001",
-                     *         "destination": {
-                     *           "locationCode": "DEST-001",
-                     *           "locationName": "产线接驳位置"
-                     *         },
-                     *         "tasks": [
-                     *           {
-                     *             "boxCode": "BOX-001",
-                     *             "taskId": "10001",
-                     *             "taskNo": "TASK-001",
-                     *             "dispatchState": "QUEUED"
-                     *           },
-                     *           {
-                     *             "boxCode": "BOX-002",
-                     *             "taskId": "10002",
-                     *             "taskNo": "TASK-002",
-                     *             "dispatchState": "QUEUED"
-                     *           }
-                     *         ],
-                     *         "createdTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["OrderCallResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariOrderCallsSubmit_OrderCallResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "料箱 BOX-002 已被其他任务分配，本次叫料未创建任务，请刷新候选后重新选择。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -27053,202 +25139,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateLogisticsRequest"];
+                "application/json": components["schemas"]["nariLogisticsTasksCreate_CreateLogisticsRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "task": {
-                     *           "taskId": "10001",
-                     *           "taskNo": "CODE-001",
-                     *           "version": 1,
-                     *           "vendor": "STANDARD",
-                     *           "taskType": "GENERAL",
-                     *           "container": {
-                     *             "containerType": "VEHICLE",
-                     *             "containerCode": "CODE-001",
-                     *             "version": 1
-                     *           },
-                     *           "origin": {
-                     *             "locationCode": "CODE-001",
-                     *             "locationName": "一层接驳台"
-                     *           },
-                     *           "destination": {
-                     *             "locationCode": "CODE-001",
-                     *             "locationName": "一层接驳台"
-                     *           },
-                     *           "status": "QUEUED",
-                     *           "statusName": "已创建",
-                     *           "triggerMode": "MANUAL",
-                     *           "createdTime": "2026-09-14T02:00:00Z"
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["TaskCreationResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLogisticsTasksCreate_TaskCreationResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 当前外部协议分支未接入，返回 HTTP 503；统一失败体 code=500，data=null，不表示业务成功。原因见 message。 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "外部协议待接入；具体原因以服务端返回为准。",
-                     *       "data": null,
-                     *       "timestamp": "2026-10-15T06:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -27258,189 +25195,59 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description 待取消任务标识。 */
                 taskId: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CancelTaskRequest"];
+                "application/json": components["schemas"]["nariLogisticsTasksCancel_CancelTaskRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "taskId": "10001",
-                     *         "taskNo": "CODE-001",
-                     *         "cancelStatus": "ACCEPTED",
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["TaskCancellationResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLogisticsTasksCancel_TaskCancellationResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description HTTP503，统一code=500、data=null；未发送、明确失败和远端已产生效果／未知结果可能共用此响应，不能据此换UUID。分支边界见本操作description；稳定业务标识与恢复状态查询尚未补齐。 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "外部协议待接入；具体原因以服务端返回为准。",
-                     *       "data": null,
-                     *       "timestamp": "2026-10-15T06:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -27454,174 +25261,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "locationCode": "CODE-001",
-                 *       "version": 1,
-                 *       "container": {
-                 *         "containerType": "VEHICLE",
-                 *         "containerCode": "CODE-001"
-                 *       },
-                 *       "containerVersion": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["UnbindLocationRequest"];
+                "application/json": components["schemas"]["nariLocationsUnbindContainer_UnbindLocationRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["OperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLocationsUnbindContainer_OperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -27635,174 +25321,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "locationCode": "CODE-001",
-                 *       "version": 1,
-                 *       "container": {
-                 *         "containerType": "VEHICLE",
-                 *         "containerCode": "CODE-001"
-                 *       },
-                 *       "containerVersion": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["BindLocationRequest"];
+                "application/json": components["schemas"]["nariLocationsBindContainer_BindLocationRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["OperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLocationsBindContainer_OperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -27816,175 +25381,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "vehicleCode": "CODE-001",
-                 *       "version": 1,
-                 *       "items": [
-                 *         {
-                 *           "id": "10001",
-                 *           "version": 1
-                 *         }
-                 *       ]
-                 *     }
-                 */
-                "application/json": components["schemas"]["UnloadSelectedRequest"];
+                "application/json": components["schemas"]["nariLoadingUnloadSelected_UnloadSelectedRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["OperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLoadingUnloadSelected_OperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -27998,169 +25441,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "vehicleCode": "CODE-001",
-                 *       "version": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["UnloadAllRequest"];
+                "application/json": components["schemas"]["nariLoadingUnloadAll_UnloadAllRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["OperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLoadingUnloadAll_OperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -28174,175 +25501,237 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "items": [
-                 *         {
-                 *           "boxCode": "CODE-001",
-                 *           "boxVersion": 1,
-                 *           "slotCode": "CODE-001",
-                 *           "slotVersion": 1
-                 *         }
-                 *       ]
-                 *     }
-                 */
-                "application/json": components["schemas"]["BatchLoadRequest"];
+                "application/json": components["schemas"]["nariLoadingBatchLoad_BatchLoadRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["OperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLoadingBatchLoad_OperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                boxCode?: string;
+                inboundMode?: string;
+                syncStatus?: string;
+                inboundFrom?: string;
+                inboundTo?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLineSideInboundPage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariLineSideManualRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLineSideInboundDetail"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariLineSidePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLineSidePreview"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -28356,52 +25745,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExtVariableRequest"];
+                "application/json": components["schemas"]["Values"];
             };
         };
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtVariableResult"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultMapStringObject"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -28414,52 +25805,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExtScanRequest"];
+                "application/json": components["schemas"]["Scan"];
             };
         };
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtScanResult"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultMapStringObject"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -28475,48 +25868,50 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtTokenMetadata"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultListMapStringObject"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -28529,52 +25924,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExtTokenName"];
+                "application/json": components["schemas"]["TokenName"];
             };
         };
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtTokenCreated"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultMapStringObject"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -28589,52 +25986,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExtVersion"];
+                "application/json": components["schemas"]["Version"];
             };
         };
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: unknown;
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -28650,48 +26049,50 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtMapping"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultListMapStringObject"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -28704,52 +26105,54 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExtMappingRequest"];
+                "application/json": components["schemas"]["Mapping"];
             };
         };
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtMapping"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultMapStringObject"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -28762,193 +26165,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "originLocationCode": "CODE-001",
-                 *       "destinationLocationCode": "CODE-001",
-                 *       "vehicleCode": "CODE-001",
-                 *       "version": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["CallEmptyVehicleRequest"];
+                "application/json": components["schemas"]["nariEmptyVehiclesCall_CallEmptyVehicleRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "task": {
-                     *           "taskId": "10001",
-                     *           "taskNo": "CODE-001",
-                     *           "version": 1,
-                     *           "vendor": "STANDARD",
-                     *           "taskType": "GENERAL",
-                     *           "container": {
-                     *             "containerType": "VEHICLE",
-                     *             "containerCode": "CODE-001",
-                     *             "version": 1
-                     *           },
-                     *           "origin": {
-                     *             "locationCode": "CODE-001",
-                     *             "locationName": "一层接驳台"
-                     *           },
-                     *           "destination": {
-                     *             "locationCode": "CODE-001",
-                     *             "locationName": "一层接驳台"
-                     *           },
-                     *           "status": "QUEUED",
-                     *           "statusName": "已创建",
-                     *           "triggerMode": "MANUAL",
-                     *           "createdTime": "2026-09-14T02:00:00Z"
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["TaskCreationResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariEmptyVehiclesCall_TaskCreationResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -28962,180 +26225,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "boxCode": "CODE-001",
-                 *       "version": 1,
-                 *       "items": [
-                 *         {
-                 *           "id": "10001",
-                 *           "version": 1
-                 *         }
-                 *       ]
-                 *     }
-                 */
-                "application/json": components["schemas"]["BoxSelectedRequest"];
+                "application/json": components["schemas"]["nariBoxesBindingsUnbindSelected_BoxSelectedRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z",
-                     *         "box": {
-                     *           "boxCode": "CODE-001",
-                     *           "version": 2,
-                     *           "materialQuantity": 1
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["BoxOperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariBoxesBindingsUnbindSelected_BoxOperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -29149,174 +26285,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                 *       "boxCode": "CODE-001",
-                 *       "version": 1
-                 *     }
-                 */
-                "application/json": components["schemas"]["BoxAllRequest"];
+                "application/json": components["schemas"]["nariBoxesBindingsUnbindAll_BoxAllRequest"];
             };
         };
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "affectedCount": 1,
-                     *         "processedTime": "2026-09-14T02:00:00Z",
-                     *         "box": {
-                     *           "boxCode": "CODE-001",
-                     *           "version": 2,
-                     *           "materialQuantity": 0
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["BoxOperationReceipt"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariBoxesBindingsUnbindAll_BoxOperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -29330,149 +26345,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BoxOrderRequest"];
+                "application/json": components["schemas"]["nariBoxesBindingsBindByOrder_BoxOrderRequest"];
             };
         };
         responses: {
-            /** @description 请求正常处理：可能是未写入的混料待确认提示，或已完成的绑箱回执；按 data 结构区分。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["BoxOperationReceipt"] | components["schemas"]["BoxBindingConfirmation"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariBoxesBindingsBindByOrder_BoxOperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -29486,149 +26405,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BoxCodesRequest"];
+                "application/json": components["schemas"]["nariBoxesBindingsBindByCodes_BoxCodesRequest"];
             };
         };
         responses: {
-            /** @description 请求正常处理：可能是未写入的混料待确认提示，或已完成的绑箱回执；按 data 结构区分。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["BoxOperationReceipt"] | components["schemas"]["BoxBindingConfirmation"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariBoxesBindingsBindByCodes_BoxOperationReceipt"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -30976,6 +27799,184 @@ export interface operations {
         };
     };
     batchDelete_25: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchVersionedIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_record_page: {
+        parameters: {
+            query: {
+                query: components["schemas"]["NariLineSideInboundRecordQuery"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultPageResultNariLineSideInboundRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_record_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NariLineSideInboundRecordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLineSideInboundRecordResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_record_batch_delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -32940,48 +29941,50 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 成功 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenScope"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultListScope"];
                 };
             };
-            /** @description 范围/参数无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 未登录 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 接入Token无后台访问权限 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -32994,48 +29997,50 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 成功 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenApi"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultListApi"];
                 };
             };
-            /** @description 范围/参数无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 未登录 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 接入Token无后台访问权限 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
@@ -33350,7 +30355,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
                 };
             };
             /** @description Bad Request */
@@ -33506,13 +30510,6 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
                 };
-            };
-            /** @description 任务不存在或无结果文件；治具初始化SUCCESS且resultFileId=null时也返回404，不等于导入失败。先查询任务状态及resultFileId。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Internal Server Error */
             500: {
@@ -34593,44 +31590,56 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 状态缓存；Cache-Control: no-store */
+            /** @description OK */
             200: {
                 headers: {
-                    /** @example no-store */
-                    "Cache-Control"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RuntimeConnectionsResult"];
+                    "*/*": components["schemas"]["ApiResultRuntimeConnectionsOverview"];
                 };
             };
-            /** @description 认证失效；由统一登录流程处理 */
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 沿用既有匿名/拒绝访问行为；显示访问被拒绝及其他连接未知 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 状态服务异常；保留旧数据并标记未知 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
     nari_warehouse_logistics_options_query: {
         parameters: {
             query: {
-                /** @description 扫描的业务编码；后端在载具、位置范围内识别对象，前端无需提交 scanType。 */
                 scanCode: string;
             };
             header?: never;
@@ -34639,199 +31648,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "object": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "origin": {
-                     *           "locationCode": "CODE-001",
-                     *           "locationName": "一层接驳台"
-                     *         },
-                     *         "vendor": "STANDARD",
-                     *         "taskType": "GENERAL",
-                     *         "recommendedDestination": {
-                     *           "locationCode": "CODE-001",
-                     *           "locationName": "一层接驳台",
-                     *           "floorCode": "CODE-001",
-                     *           "floorName": "一层",
-                     *           "areaCode": "CODE-001",
-                     *           "areaName": "库房接驳区"
-                     *         },
-                     *         "destinations": [
-                     *           {
-                     *             "location": {
-                     *               "locationCode": "CODE-001",
-                     *               "locationName": "一层接驳台",
-                     *               "floorCode": "CODE-001",
-                     *               "floorName": "一层",
-                     *               "areaCode": "CODE-001",
-                     *               "areaName": "库房接驳区"
-                     *             },
-                     *             "recommended": true
-                     *           }
-                     *         ],
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         },
-                     *         "boxes": [
-                     *           {
-                     *             "boxCode": "CODE-001",
-                     *             "version": 1,
-                     *             "materialQuantity": 0,
-                     *             "materials": []
-                     *           }
-                     *         ],
-                     *         "totalMaterialQuantity": 0
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["WarehouseLogisticsOptionsResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariWarehouseLogisticsOptionsQuery_WarehouseLogisticsOptionsResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -34839,7 +31698,6 @@ export interface operations {
     nari_warehouse_applications_objects_query: {
         parameters: {
             query: {
-                /** @description 本次扫描的载具或料箱编码；后端按编码识别类型，前端无需提供 scanType。 */
                 scanCode: string;
             };
             header?: never;
@@ -34848,174 +31706,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "scanType": "VEHICLE",
-                     *         "scanCode": "CODE-001",
-                     *         "object": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "boxes": [
-                     *           {
-                     *             "boxCode": "CODE-001",
-                     *             "version": 1,
-                     *             "materialQuantity": 0,
-                     *             "materials": []
-                     *           }
-                     *         ],
-                     *         "totalMaterialQuantity": 0,
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["BusinessObjectResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariWarehouseApplicationsObjectsQuery_BusinessObjectResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -35023,7 +31756,6 @@ export interface operations {
     nari_vehicles_loads_query: {
         parameters: {
             query: {
-                /** @description 载具码。 */
                 vehicleCode: string;
             };
             header?: never;
@@ -35032,169 +31764,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "vehicle": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "loadedBoxCount": 1,
-                     *         "loads": [
-                     *           {
-                     *             "slotCode": "CODE-001",
-                     *             "slotVersion": 1,
-                     *             "materials": []
-                     *           }
-                     *         ],
-                     *         "totalMaterialQuantity": 0
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["VehicleLoadsResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariVehiclesLoadsQuery_VehicleLoadsResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -35202,10 +31814,6 @@ export interface operations {
     nari_vehicle_direct_bindings_query: {
         parameters: {
             query: {
-                /**
-                 * @description 扫描主容器码，必须由后端识别为料车。
-                 * @example VEH-001
-                 */
                 scanCode: string;
             };
             header?: never;
@@ -35214,172 +31822,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "vehicle": {
-                     *           "vehicleCode": "VEH-001",
-                     *           "displayName": "转运料车一号",
-                     *           "version": 1
-                     *         },
-                     *         "bindings": [
-                     *           {
-                     *             "bindingId": "10001",
-                     *             "bindingVersion": 1,
-                     *             "box": {
-                     *               "boxCode": "BOX-001",
-                     *               "displayName": "周转箱一号",
-                     *               "version": 1
-                     *             }
-                     *           }
-                     *         ],
-                     *         "bindingCount": 1
-                     *       },
-                     *       "timestamp": "2026-10-10T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["DirectVehicleBindingsResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariVehicleDirectBindingsQuery_DirectVehicleBindingsResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -35387,15 +31872,7 @@ export interface operations {
     nari_vehicle_direct_binding_box_candidate: {
         parameters: {
             query: {
-                /**
-                 * @description 当前目标料车编码，用于校验组合。
-                 * @example VEH-001
-                 */
                 vehicleCode: string;
-                /**
-                 * @description 待绑定料箱扫描码，后端识别为料箱。
-                 * @example BOX-001
-                 */
                 scanCode: string;
             };
             header?: never;
@@ -35404,145 +31881,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["DirectBoxBindingCandidateResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariVehicleDirectBindingBoxCandidate_DirectBoxBindingCandidateResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -35550,7 +31931,6 @@ export interface operations {
     nari_vehicle_slots_query: {
         parameters: {
             query: {
-                /** @description 载具上的库位编码。 */
                 slotCode: string;
             };
             header?: never;
@@ -35559,165 +31939,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "slotCode": "CODE-001",
-                     *         "version": 1,
-                     *         "vehicle": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["VehicleSlotResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariVehicleSlotsQuery_VehicleSlotResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -35725,19 +31989,9 @@ export interface operations {
     nari_traffic_areas_query: {
         parameters: {
             query?: {
-                /** @description 区域编号或名称模糊搜索。 */
                 keyword?: string;
-                /**
-                 * @description 区域状态筛选。
-                 *
-                 *     枚举值说明：
-                 *     FREE：空闲（页面显示锁定操作）。
-                 *     OCCUPIED：占用（页面显示释放操作）。
-                 */
-                status?: "FREE" | "OCCUPIED";
-                /** @description 页码，从 1 开始。 */
+                status?: string;
                 page?: number;
-                /** @description 每页条数；候选上限 200，属于接口批次限制，不是容器容量。 */
                 size?: number;
             };
             header?: never;
@@ -35746,167 +32000,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "records": [
-                     *           {
-                     *             "areaCode": "CODE-001",
-                     *             "areaName": "交管区域一",
-                     *             "version": 1,
-                     *             "status": "FREE"
-                     *           }
-                     *         ],
-                     *         "total": 1,
-                     *         "size": 20,
-                     *         "current": 1,
-                     *         "pages": 1
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["TrafficAreaPage"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariTrafficAreasQuery_TrafficAreaPage"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -35914,7 +32050,6 @@ export interface operations {
     nari_shipping_objects_query: {
         parameters: {
             query: {
-                /** @description 扫描的业务编码；后端在载具、料箱、位置范围内识别对象，前端无需提交 scanType。 */
                 scanCode: string;
             };
             header?: never;
@@ -35923,192 +32058,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "scanType": "VEHICLE",
-                     *         "scanCode": "CODE-001",
-                     *         "object": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "boxes": [
-                     *           {
-                     *             "boxCode": "CODE-001",
-                     *             "version": 1,
-                     *             "materialQuantity": 0,
-                     *             "materials": []
-                     *           }
-                     *         ],
-                     *         "totalMaterialQuantity": 0,
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["BusinessObjectResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariShippingObjectsQuery_BusinessObjectResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 当前外部协议分支未接入，返回 HTTP 503；统一失败体 code=500，data=null，不表示业务成功。原因见 message。 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "外部协议待接入；具体原因以服务端返回为准。",
-                     *       "data": null,
-                     *       "timestamp": "2026-10-15T06:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -36116,9 +32108,7 @@ export interface operations {
     nari_receiving_tasks_query: {
         parameters: {
             query: {
-                /** @description 扫描的载具或料箱编码；后端按编码识别对象类型，前端无需提交 scanType。 */
                 scanCode: string;
-                /** @description 可选，已知本次物流运输 ID；用于确认后重新查询原范围和清理，不用于任意选任务或更换对象。 */
                 taskId?: string;
             };
             header?: never;
@@ -36127,197 +32117,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "object": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "task": {
-                     *           "taskId": "10001",
-                     *           "taskNo": "CODE-001",
-                     *           "version": 1,
-                     *           "object": {
-                     *             "containerType": "VEHICLE",
-                     *             "containerCode": "CODE-001",
-                     *             "version": 1
-                     *           },
-                     *           "status": "PENDING",
-                     *           "statusName": "待接收",
-                     *           "createdTime": "2026-09-14T02:00:00Z",
-                     *           "eligibility": {
-                     *             "allowed": true
-                     *           },
-                     *           "totalBoxCount": 1,
-                     *           "receivedBoxCount": 0
-                     *         },
-                     *         "boxes": [
-                     *           {
-                     *             "boxCode": "BOX-001",
-                     *             "version": 1,
-                     *             "materialQuantity": 1,
-                     *             "materials": [
-                     *               {
-                     *                 "lineType": "PANEL",
-                     *                 "panelCode": "PANEL-001",
-                     *                 "orderNo": "ORDER-001",
-                     *                 "materialCode": "MATERIAL-001",
-                     *                 "materialName": "成品板件",
-                     *                 "quantity": 1,
-                     *                 "unit": "件"
-                     *               }
-                     *             ]
-                     *           }
-                     *         ],
-                     *         "totalMaterialQuantity": 1
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["ReceivingTaskResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariReceivingTasksQuery_ReceivingTaskResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -36325,13 +32167,9 @@ export interface operations {
     nari_receiving_pending_tasks_query: {
         parameters: {
             query?: {
-                /** @description 载具号精确筛选。 */
                 vehicleCode?: string;
-                /** @description 位置码精确筛选。 */
                 locationCode?: string;
-                /** @description 页码，从 1 开始。 */
                 page?: number;
-                /** @description 每页条数；候选上限 200，属于接口批次限制，不是容器容量。 */
                 size?: number;
             };
             header?: never;
@@ -36340,179 +32178,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "records": [
-                     *           {
-                     *             "taskId": "10001",
-                     *             "taskNo": "CODE-001",
-                     *             "version": 1,
-                     *             "object": {
-                     *               "containerType": "VEHICLE",
-                     *               "containerCode": "CODE-001",
-                     *               "version": 1
-                     *             },
-                     *             "status": "PENDING",
-                     *             "statusName": "待接收",
-                     *             "createdTime": "2026-09-14T02:00:00Z",
-                     *             "eligibility": {
-                     *               "allowed": true
-                     *             },
-                     *             "totalBoxCount": 1,
-                     *             "receivedBoxCount": 0
-                     *           }
-                     *         ],
-                     *         "total": 1,
-                     *         "size": 20,
-                     *         "current": 1,
-                     *         "pages": 1
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["ReceivingTaskPage"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariReceivingPendingTasksQuery_ReceivingTaskPage"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -36520,7 +32228,6 @@ export interface operations {
     nari_panels_query: {
         parameters: {
             query: {
-                /** @description 板件唯一码。 */
                 panelCode: string;
             };
             header?: never;
@@ -36529,162 +32236,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "panelCode": "CODE-001",
-                     *         "materialCode": "CODE-001",
-                     *         "materialName": "成品板件",
-                     *         "orderNo": "CODE-001",
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["PanelSummary"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariPanelsQuery_PanelSummary"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -36692,9 +32286,7 @@ export interface operations {
     nari_order_calls_candidates_query: {
         parameters: {
             query: {
-                /** @description 员工扫描的目标库位码。 */
                 destinationLocationCode: string;
-                /** @description 员工输入的生产订单号。 */
                 orderNo: string;
             };
             header?: never;
@@ -36703,196 +32295,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "orderNo": "MO-001",
-                     *         "destination": {
-                     *           "locationCode": "DEST-001",
-                     *           "locationName": "产线接驳位置",
-                     *           "floorCode": "2F",
-                     *           "floorName": "二楼",
-                     *           "areaCode": "WELD",
-                     *           "areaName": "焊接区"
-                     *         },
-                     *         "destinationVersion": 1,
-                     *         "boxes": [
-                     *           {
-                     *             "boxCode": "BOX-001",
-                     *             "version": 1,
-                     *             "orderNo": "MO-001",
-                     *             "origin": {
-                     *               "locationCode": "SLOT-001",
-                     *               "locationName": "线边库库位001"
-                     *             },
-                     *             "materialQuantity": 1,
-                     *             "eligibility": {
-                     *               "allowed": true
-                     *             }
-                     *           },
-                     *           {
-                     *             "boxCode": "BOX-002",
-                     *             "version": 1,
-                     *             "orderNo": "MO-001",
-                     *             "origin": {
-                     *               "locationCode": "SLOT-002",
-                     *               "locationName": "线边库库位002"
-                     *             },
-                     *             "materialQuantity": 1,
-                     *             "eligibility": {
-                     *               "allowed": true
-                     *             }
-                     *           }
-                     *         ],
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["OrderCallCandidatesResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariOrderCallsCandidatesQuery_OrderCallCandidatesResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 接收位置不存在；不因该订单没有生产计划或匹配箱返回 404。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "接收位置不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -36900,172 +32345,59 @@ export interface operations {
     nari_logistics_tasks_cancellation_query: {
         parameters: {
             query: {
-                /** @description 取消提交返回或客户端保留的同一次请求标识。 */
                 requestId: string;
             };
             header?: never;
             path: {
-                /** @description 待取消任务标识。 */
                 taskId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "requestId": "47ab7945-b324-4ed4-a10a-af734b83de07",
-                     *         "taskId": "10001",
-                     *         "taskNo": "CODE-001",
-                     *         "cancelStatus": "ACCEPTED",
-                     *         "processedTime": "2026-09-14T02:00:00Z"
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["TaskCancellationStatusResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLogisticsTasksCancellationQuery_TaskCancellationStatusResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 本任务或本次requestId无可见可信结果。不能证明从未发送、已过期或允许新UUID；未决请求须保留。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -37073,7 +32405,6 @@ export interface operations {
     nari_logistics_origins_and_destinations_query: {
         parameters: {
             query: {
-                /** @description 扫描的业务编码；后端在载具、料箱、位置范围内识别对象，前端无需提交 scanType。 */
                 scanCode: string;
             };
             header?: never;
@@ -37082,182 +32413,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "object": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "origin": {
-                     *           "locationCode": "CODE-001",
-                     *           "locationName": "一层接驳台"
-                     *         },
-                     *         "vendor": "STANDARD",
-                     *         "taskType": "GENERAL",
-                     *         "destinations": [
-                     *           {
-                     *             "location": {
-                     *               "locationCode": "CODE-001",
-                     *               "locationName": "一层接驳台",
-                     *               "floorCode": "CODE-001",
-                     *               "floorName": "一层",
-                     *               "areaCode": "CODE-001",
-                     *               "areaName": "库房接驳区"
-                     *             },
-                     *             "recommended": true
-                     *           }
-                     *         ],
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["LogisticsOptionsResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLogisticsOriginsAndDestinationsQuery_LogisticsOptionsResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -37265,19 +32463,9 @@ export interface operations {
     nari_logistics_cancellable_tasks_query: {
         parameters: {
             query?: {
-                /** @description 容器码、AGV 编号或名称模糊搜索。 */
                 keyword?: string;
-                /**
-                 * @description AGV 品牌编码为候选映射，需对照后端实际字典。
-                 *
-                 *     枚举值说明：
-                 *     STANDARD：斯坦德（当前候选品牌编码，正式接入时需与后端实际字典核对）。
-                 *     HIKVISION：海康（当前候选品牌编码）。
-                 */
-                vendor?: "STANDARD" | "HIKVISION";
-                /** @description 页码，从 1 开始。 */
+                vendor?: string;
                 page?: number;
-                /** @description 每页条数；候选上限 200，属于接口批次限制，不是容器容量。 */
                 size?: number;
             };
             header?: never;
@@ -37286,185 +32474,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "records": [
-                     *           {
-                     *             "taskId": "10001",
-                     *             "taskNo": "CODE-001",
-                     *             "version": 1,
-                     *             "vendor": "STANDARD",
-                     *             "taskType": "GENERAL",
-                     *             "container": {
-                     *               "containerType": "VEHICLE",
-                     *               "containerCode": "CODE-001",
-                     *               "version": 1
-                     *             },
-                     *             "origin": {
-                     *               "locationCode": "CODE-001",
-                     *               "locationName": "一层接驳台"
-                     *             },
-                     *             "destination": {
-                     *               "locationCode": "CODE-001",
-                     *               "locationName": "一层接驳台"
-                     *             },
-                     *             "status": "QUEUED",
-                     *             "statusName": "已创建",
-                     *             "triggerMode": "MANUAL",
-                     *             "createdTime": "2026-09-14T02:00:00Z"
-                     *           }
-                     *         ],
-                     *         "total": 1,
-                     *         "size": 20,
-                     *         "current": 1,
-                     *         "pages": 1
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["LogisticsTaskPage"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLogisticsCancellableTasksQuery_LogisticsTaskPage"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -37472,7 +32524,6 @@ export interface operations {
     nari_locations_containers_query: {
         parameters: {
             query: {
-                /** @description 位置码。 */
                 locationCode: string;
             };
             header?: never;
@@ -37481,145 +32532,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["LocationContainersResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLocationsContainersQuery_LocationContainersResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -37627,7 +32582,6 @@ export interface operations {
     nari_locations_container_candidates_query: {
         parameters: {
             query: {
-                /** @description 本次扫描的载具或料箱编码；前端无需判断或提交类型，后端按编码识别实际容器。 */
                 scanCode: string;
             };
             header?: never;
@@ -37636,163 +32590,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "container": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["ContainerCandidateResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLocationsContainerCandidatesQuery_ContainerCandidateResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -37800,7 +32640,6 @@ export interface operations {
     nari_loading_boxes_query: {
         parameters: {
             query: {
-                /** @description 箱码。 */
                 boxCode: string;
             };
             header?: never;
@@ -37809,163 +32648,107 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "box": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "eligibility": {
-                     *           "allowed": true
-                     *         }
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["LoadingBoxResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariLoadingBoxesQuery_LoadingBoxResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    nari_line_side_inbound_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultNariLineSideInboundDetail"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -37982,55 +32765,56 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 业务结果；扫码拒绝/报警也以data.status=REJECTED返回，须检查业务字段 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["ExtEvent"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
+                    "*/*": components["schemas"]["ApiResultListMapStringObject"];
                 };
             };
-            /** @description 输入无效 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 无有效凭据 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 凭据不允许访问该接口 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
-            /** @description 版本或配置冲突 */
-            409: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
             };
         };
     };
     nari_empty_vehicles_origins_query: {
         parameters: {
             query: {
-                /** @description 扫描的目标空位置；员工选择起始位置呼叫空载具。 */
                 destinationLocationCode: string;
             };
             header?: never;
@@ -38039,176 +32823,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "destination": {
-                     *           "locationCode": "CODE-001",
-                     *           "locationName": "一层接驳台"
-                     *         },
-                     *         "origins": [
-                     *           {
-                     *             "origin": {
-                     *               "locationCode": "CODE-001",
-                     *               "locationName": "一层接驳台",
-                     *               "floorCode": "CODE-001",
-                     *               "floorName": "一层",
-                     *               "areaCode": "CODE-001",
-                     *               "areaName": "库房接驳区"
-                     *             },
-                     *             "vehicle": {
-                     *               "containerType": "VEHICLE",
-                     *               "containerCode": "CODE-001",
-                     *               "version": 1
-                     *             }
-                     *           }
-                     *         ]
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["EmptyVehicleOptionsResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariEmptyVehiclesOriginsQuery_EmptyVehicleOptionsResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -38216,19 +32873,8 @@ export interface operations {
     nari_boxes_materials_query: {
         parameters: {
             query: {
-                /** @description 箱码。 */
                 boxCode: string;
-                /**
-                 * @description 用途决定数据来源，前端不得自行指定数据库。
-                 *
-                 *     枚举值说明：
-                 *     WAREHOUSE_APPLICATION：缴库申请场景。
-                 *     RECEIVING：物料接收场景。
-                 *     SHIPPING：成品发货场景。
-                 *     WAREHOUSE_LOGISTICS：缴库物流发起场景。
-                 *     该值表示页面业务用途，不是数据库名称；各场景到 LES/WMS 的具体读取映射仍需业务确认。
-                 */
-                context: "WAREHOUSE_APPLICATION" | "RECEIVING" | "SHIPPING" | "WAREHOUSE_LOGISTICS";
+                context: string;
             };
             header?: never;
             path?: never;
@@ -38236,191 +32882,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "message": "ok",
-                     *       "data": {
-                     *         "box": {
-                     *           "containerType": "VEHICLE",
-                     *           "containerCode": "CODE-001",
-                     *           "version": 1
-                     *         },
-                     *         "sourceSystem": "LES",
-                     *         "materials": [
-                     *           {
-                     *             "panelCode": "PANEL-001",
-                     *             "orderNo": "CODE-001",
-                     *             "materialCode": "CODE-001",
-                     *             "materialName": "成品板件",
-                     *             "quantity": 1,
-                     *             "unit": "件",
-                     *             "lineType": "PANEL"
-                     *           }
-                     *         ],
-                     *         "totalQuantity": 1
-                     *       },
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["BoxMaterialsResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariBoxesMaterialsQuery_BoxMaterialsResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 当前外部协议分支未接入，返回 HTTP 503；统一失败体 code=500，data=null，不表示业务成功。原因见 message。 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "外部协议待接入；具体原因以服务端返回为准。",
-                     *       "data": null,
-                     *       "timestamp": "2026-10-15T06:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -38428,7 +32932,6 @@ export interface operations {
     nari_boxes_bindings_query: {
         parameters: {
             query: {
-                /** @description 箱码。 */
                 boxCode: string;
             };
             header?: never;
@@ -38437,145 +32940,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 本接口动作成功；见 data 明确语义，不代表后续物流执行完成。 */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /**
-                         * Format: int32
-                         * @description 基座业务码，0 表示成功。
-                         * @example 0
-                         */
-                        code: number;
-                        /**
-                         * @description 可直接展示的处理信息。
-                         * @example ok
-                         */
-                        message: string;
-                        data: components["schemas"]["BoxBindingsResponse"];
-                        /**
-                         * Format: date-time
-                         * @description ISO 8601 UTC 时间；客户端按本地时区展示。
-                         * @example 2026-09-14T02:00:00Z
-                         */
-                        timestamp: string;
-                        /**
-                         * @description 服务端链路标识，供问题定位。
-                         * @example trace-example
-                         */
-                        traceId: string | null;
-                    };
+                    "*/*": components["schemas"]["ApiResultNariBoxesBindingsQuery_BoxBindingsResponse"];
                 };
             };
-            /** @description 参数无效 400/40001；业务不满足 40000。 */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 40001,
-                     *       "message": "参数无效 400/40001；业务不满足 40000。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 未登录 401、Token 无效 40102 或过期 40103。 */
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 401,
-                     *       "message": "未登录 401、Token 无效 40102 或过期 40103。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 历史兼容响应保留；当前运行接口不因缺少角色／页面／对象权限字符串而返回 403。 */
+            /** @description Forbidden */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 403,
-                     *       "message": "历史兼容错误示例；当前不执行接口权限标识检查。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
-            /** @description 目标资源不存在。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 404,
-                     *       "message": "目标资源不存在。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 资源版本冲突 40900 或唯一键冲突 40002。 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 40900,
-                     *       "message": "数据已被其他操作修改或删除，请刷新后重试",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
-                };
-            };
-            /** @description 服务端错误；外部结果可能未知，不可据此自动创建新业务请求。 */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "code": 500,
-                     *       "message": "服务端错误；外部结果可能未知，不可据此自动创建新业务请求。",
-                     *       "data": null,
-                     *       "timestamp": "2026-09-14T02:00:00Z",
-                     *       "traceId": "trace-example"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiError"];
+                    "*/*": components["schemas"]["ApiResultVoid"];
                 };
             };
         };
@@ -38861,7 +33268,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description 厂商业务回执，结构待正式文档比对 */
+            /** @description 斯坦德取消回执：code=0表示取消完成，无另行取消结果回调；非成功码不推测外部效果，不自动重发。 */
             200: {
                 headers: {
                     [name: string]: unknown;

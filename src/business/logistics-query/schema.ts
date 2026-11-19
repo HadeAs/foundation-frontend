@@ -74,6 +74,7 @@ const labels: Record<string, string> = {
   remark: '备注',
   dispatchRequestSnapshot: '调度请求快照',
   warehouseBoxSnapshot: '缴库箱快照',
+  lineSideInboundSnapshot: '线边库入库快照',
   beforeState: '操作前状态',
   afterState: '操作后状态',
   resultSnapshot: '操作结果快照',
@@ -237,7 +238,7 @@ export const queryObjects: Record<QueryType, QueryConfig> = {
       ...times,
     ],
     technical: ['activeCancelRequestId', 'createRequestId', 'intentKey'],
-    snapshots: ['dispatchRequestSnapshot', 'warehouseBoxSnapshot'],
+    snapshots: ['dispatchRequestSnapshot', 'warehouseBoxSnapshot', 'lineSideInboundSnapshot'],
     sort: [...times, 'queueNo'],
   },
   operation: {

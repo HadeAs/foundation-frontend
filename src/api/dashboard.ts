@@ -8,7 +8,7 @@ export type RuntimeConnection = components['schemas']['RuntimeConnectionStatus']
 export type RuntimeConnectionsOverview = components['schemas']['RuntimeConnectionsOverview']
 
 export async function getRuntimeConnections(signal?: AbortSignal) {
-  const response = await apiClient.get<components['schemas']['RuntimeConnectionsResult']>(
+  const response = await apiClient.get<components['schemas']['ApiResultRuntimeConnectionsOverview']>(
     '/api/v1/dashboard/connections',
     { signal, headers: { 'Cache-Control': 'no-cache' } },
   )

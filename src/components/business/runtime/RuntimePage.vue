@@ -125,7 +125,10 @@ async function load() {
       return
     }
     loading.value = false
-    const names = await resolveReferenceFields(config.value.fields, rows.value)
+    const names = await resolveReferenceFields(
+      config.value.fields.filter((field) => config.value.columns.includes(field.key)),
+      rows.value,
+    )
     if (current === epoch) relations.value = names
   } catch (cause) {
     if (current === epoch) {

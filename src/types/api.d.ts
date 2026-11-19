@@ -80,6 +80,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/long-tokens/{scopeCode}/{tokenId}/authorization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 修改长期Token允许调用的接口
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        put: operations["system_long_token_authorization_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/jobs/{jobId}": {
         parameters: {
             query?: never;
@@ -288,6 +308,50 @@ export interface paths {
         put?: never;
         /** 批量删除菜单子树 */
         post: operations["batchDelete_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/long-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 分页查询长期Token元数据
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        get: operations["system_long_token_page"];
+        put?: never;
+        /**
+         * 创建长期Token（明文仅返回一次）
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        post: operations["system_long_token_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/long-tokens/{scopeCode}/{tokenId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 停用长期Token
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        post: operations["system_long_token_revoke"];
         delete?: never;
         options?: never;
         head?: never;
@@ -851,6 +915,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/long-tokens/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询长期Token接入范围
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        get: operations["system_long_token_scopes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/long-tokens/interfaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询后端声明的可授权接口
+         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
+         */
+        get: operations["system_long_token_interfaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/lifecycle/overview": {
         parameters: {
             query?: never;
@@ -1271,6 +1375,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 读取运行连接状态缓存
+         * @description 只要求有效登录；单项异常仍返回200。读取不触发外部探测。基础服务在前，按id排序。
+         *
+         *     2026-11-17：新增SAP缴库服务nari.sap.warehouse。UP仅指配置中的认证及申请服务端口可达，不代表认证或缴库业务成功；监控不取Token、不发送HTTP或提交申请。通用items字段不变。
+         */
+        get: operations["getRuntimeConnections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/bootstrap/modules": {
         parameters: {
             query?: never;
@@ -1314,130 +1440,6 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["delete_34"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens/scopes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 查询长期Token接入范围
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        get: operations["system_long_token_scopes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 分页查询长期Token元数据
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        get: operations["system_long_token_page"];
-        put?: never;
-        /**
-         * 创建长期Token（明文仅返回一次）
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        post: operations["system_long_token_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens/{scopeCode}/{tokenId}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 停用长期Token
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        post: operations["system_long_token_revoke"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens/interfaces": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 查询后端声明的可授权接口
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        get: operations["system_long_token_interfaces"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/long-tokens/{scopeCode}/{tokenId}/authorization": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 修改长期Token允许调用的接口
-         * @description 仅现有用户登录凭据可管理；第三方长期接入Token不能调用。需求确认，候选未冻结；仅隔离验证，未部署。
-         */
-        put: operations["system_long_token_authorization_update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/connections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 读取运行连接状态缓存
-         * @description 只要求有效登录；单项异常仍返回200。读取不触发外部探测。基础服务在前，按id排序。
-         */
-        get: operations["getRuntimeConnections"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1521,7 +1523,7 @@ export interface components {
             /** Format: date-time */
             updatedTime?: string;
             /** @description 关联部门摘要；未分配部门或历史部门不存在时为 null */
-            department?: components["schemas"]["UserDeptSummary"] | null;
+            department?: components["schemas"]["UserDeptSummary"];
             /** @description 关联角色摘要；没有角色时返回空数组 */
             roles: components["schemas"]["UserRoleSummary"][];
         };
@@ -1640,6 +1642,38 @@ export interface components {
             createdTime?: string;
             /** Format: date-time */
             updatedTime?: string;
+        };
+        Authorization: {
+            apiCodes: string[];
+            /** Format: int32 */
+            authorizationVersion: number;
+            /** Format: int32 */
+            version: number;
+        };
+        ApiResultMetadata: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["Metadata"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        Metadata: {
+            tokenId?: string;
+            name?: string;
+            scopeCode?: string;
+            scopeName?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            version?: number;
+            /** Format: date-time */
+            createdTime?: string;
+            /** Format: date-time */
+            revokedTime?: string;
+            apiCodes?: string[];
+            /** Format: int32 */
+            authorizationVersion?: number;
         };
         JobRequest: {
             jobName: string;
@@ -1976,6 +2010,17 @@ export interface components {
             /** Format: date-time */
             updatedTime?: string;
         };
+        ApiResultMapStringObject: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
         ResetPasswordRequest: {
             newPassword: string;
             /**
@@ -2003,6 +2048,28 @@ export interface components {
              * @example 1
              */
             version: number;
+        };
+        Create: {
+            scopeCode: string;
+            name: string;
+            apiCodes?: string[];
+        };
+        ApiResultCreated: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["Created"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        Created: {
+            metadata?: components["schemas"]["Metadata"];
+            token?: string;
+        };
+        Revoke: {
+            /** Format: int32 */
+            version?: number;
         };
         ApiResultSysAsyncTask: {
             /** Format: int32 */
@@ -2309,6 +2376,56 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["SysMenu"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        ApiResultPageResultMetadata: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResultMetadata"];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        PageResultMetadata: {
+            records?: components["schemas"]["Metadata"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            size?: number;
+            /** Format: int64 */
+            current?: number;
+            /** Format: int64 */
+            pages?: number;
+        };
+        ApiResultListScope: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["Scope"][];
+            /** Format: date-time */
+            timestamp?: string;
+            traceId?: string;
+        };
+        Scope: {
+            scopeCode?: string;
+            name?: string;
+            description?: string;
+        };
+        Api: {
+            apiCode?: string;
+            scopeCode?: string;
+            name?: string;
+            method?: string;
+            path?: string;
+        };
+        ApiResultListApi: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["Api"][];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
@@ -2973,16 +3090,46 @@ export interface components {
             /** Format: int64 */
             pages?: number;
         };
-        ApiResultMapStringObject: {
+        ApiResultRuntimeConnectionsOverview: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: {
-                [key: string]: unknown;
-            };
+            data?: components["schemas"]["RuntimeConnectionsOverview"];
             /** Format: date-time */
             timestamp?: string;
             traceId?: string;
+        };
+        RuntimeConnectionStatus: {
+            id?: string;
+            name?: string;
+            /** @enum {string} */
+            group?: "FOUNDATION" | "INTEGRATION";
+            /** @enum {string} */
+            kind?: "DATABASE" | "HTTP" | "MQTT" | "STORAGE" | "CUSTOM";
+            /** @enum {string} */
+            status?: "UP" | "WARN" | "DOWN" | "UNKNOWN" | "UNCONFIGURED" | "DISABLED";
+            message?: string;
+            /** Format: date-time */
+            checkedAt?: string;
+            /** Format: date-time */
+            lastSuccessAt?: string;
+            /** Format: int32 */
+            staleAfterSeconds?: number;
+            /** Format: int64 */
+            durationMillis?: number;
+            /** Format: int32 */
+            consecutiveFailures?: number;
+            /** Format: date-time */
+            lastCommunicationAt?: string;
+            /** @enum {string} */
+            lastCommunicationStatus?: "SUCCESS" | "FAILURE";
+        };
+        RuntimeConnectionsOverview: {
+            /** Format: date-time */
+            generatedAt?: string;
+            /** Format: int32 */
+            refreshAfterSeconds?: number;
+            items?: components["schemas"]["RuntimeConnectionStatus"][];
         };
         ApiResultSessionResponse: {
             /** Format: int32 */
@@ -3001,102 +3148,6 @@ export interface components {
             roles?: components["schemas"]["SysRole"][];
             menus?: components["schemas"]["SysMenu"][];
             permissions?: string[];
-        };
-        PlatformLongTokenScope: {
-            scopeCode: string;
-            name: string;
-            description: string;
-        };
-        PlatformLongTokenMetadata: {
-            /** @description 接入范围内唯一的凭据编号，按字符串传输 */
-            tokenId?: string;
-            name?: string;
-            scopeCode?: string;
-            scopeName?: string;
-            enabled?: boolean;
-            version?: number;
-            /** Format: date-time */
-            createdTime?: string;
-            /** Format: date-time */
-            revokedTime?: string | null;
-            /** @description 实际授权接口代码；空数组表示无接口权限。声明移除后不再放行 */
-            apiCodes?: string[];
-            /** @description 授权配置版本；旧凭据未配置时为0，与凭据version独立 */
-            authorizationVersion?: number;
-        };
-        PlatformLongTokenCreated: {
-            metadata: components["schemas"]["PlatformLongTokenMetadata"];
-            /** @description 仅本次创建响应包含明文，关闭后不可找回，不得写入浏览器持久存储 */
-            token: string;
-        };
-        PlatformLongTokenCreateRequest: {
-            scopeCode: string;
-            name: string;
-            /** @description 显式授权；空数组无权限；未提供时仅兼容原设备上报两接口，不自动包含未来新增接口 */
-            apiCodes?: string[];
-        };
-        PlatformLongTokenRevokeRequest: {
-            version: number;
-        };
-        PlatformLongTokenPage: {
-            records?: components["schemas"]["PlatformLongTokenMetadata"][];
-            total?: number;
-            size?: number;
-            current?: number;
-            pages?: number;
-        };
-        PlatformLongTokenApi: {
-            apiCode: string;
-            /** @description 接口所属分组；区别于凭据提供者scopeCode，不限制管理员显式跨分组授权 */
-            scopeCode: string;
-            name: string;
-            method: string;
-            path: string;
-        };
-        PlatformLongTokenAuthorizationRequest: {
-            /** @description 显式授权；空数组无权限；未提供时仅兼容原设备上报两接口，不自动包含未来新增接口 */
-            apiCodes: string[];
-            authorizationVersion: number;
-            /** @description 凭据版本，防止与停用并发冲突 */
-            version: number;
-        };
-        RuntimeConnectionStatus: {
-            id: string;
-            name: string;
-            /** @enum {string} */
-            group: "FOUNDATION" | "INTEGRATION";
-            /** @enum {string} */
-            kind: "DATABASE" | "HTTP" | "MQTT" | "STORAGE" | "CUSTOM";
-            /** @enum {string} */
-            status: "UP" | "WARN" | "DOWN" | "UNKNOWN" | "UNCONFIGURED" | "DISABLED";
-            message: string;
-            staleAfterSeconds: number;
-            /** Format: int64 */
-            durationMillis: number | null;
-            consecutiveFailures: number;
-            /** @enum {string|null} */
-            lastCommunicationStatus: "SUCCESS" | "FAILURE" | null;
-            /** Format: date-time */
-            checkedAt: string | null;
-            /** Format: date-time */
-            lastSuccessAt: string | null;
-            /** Format: date-time */
-            lastCommunicationAt: string | null;
-        };
-        RuntimeConnectionsOverview: {
-            /** Format: date-time */
-            generatedAt: string;
-            /** @example 15 */
-            refreshAfterSeconds: number;
-            items: components["schemas"]["RuntimeConnectionStatus"][];
-        };
-        RuntimeConnectionsResult: {
-            code: number;
-            message: string;
-            data: components["schemas"]["RuntimeConnectionsOverview"];
-            /** Format: date-time */
-            timestamp: string;
-            traceId: string | null;
         };
     };
     responses: never;
@@ -3789,6 +3840,69 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    system_long_token_authorization_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scopeCode: string;
+                tokenId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Authorization"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultMetadata"];
                 };
             };
             /** @description Bad Request */
@@ -5403,6 +5517,191 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BatchVersionedIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    system_long_token_page: {
+        parameters: {
+            query: {
+                scopeCode: string;
+                page?: number;
+                size?: number;
+                keyword?: string;
+                enabled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultPageResultMetadata"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    system_long_token_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Create"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultCreated"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    system_long_token_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scopeCode: string;
+                tokenId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Revoke"];
             };
         };
         responses: {
@@ -7972,6 +8271,118 @@ export interface operations {
             };
         };
     };
+    system_long_token_scopes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultListScope"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
+    system_long_token_interfaces: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultListApi"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
     overview: {
         parameters: {
             query?: never;
@@ -8283,7 +8694,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
                 };
             };
             /** @description Bad Request */
@@ -8439,13 +8849,6 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
                 };
-            };
-            /** @description 任务不存在或无结果文件；治具初始化SUCCESS且resultFileId=null时也返回404，不等于导入失败。先查询任务状态及resultFileId。 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Internal Server Error */
             500: {
@@ -9517,6 +9920,62 @@ export interface operations {
             };
         };
     };
+    getRuntimeConnections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultRuntimeConnectionsOverview"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResultVoid"];
+                };
+            };
+        };
+    };
     modules: {
         parameters: {
             query?: never;
@@ -9684,397 +10143,6 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResultVoid"];
                 };
-            };
-        };
-    };
-    system_long_token_scopes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenScope"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_page: {
-        parameters: {
-            query: {
-                scopeCode: string;
-                page?: number;
-                size?: number;
-                keyword?: string;
-                enabled?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenPage"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformLongTokenCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenCreated"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_revoke: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scopeCode: string;
-                tokenId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformLongTokenRevokeRequest"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: unknown;
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_interfaces: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenApi"][];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    system_long_token_authorization_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scopeCode: string;
-                tokenId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformLongTokenAuthorizationRequest"];
-            };
-        };
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        code?: number;
-                        message?: string;
-                        data?: components["schemas"]["PlatformLongTokenMetadata"];
-                        timestamp?: string;
-                        traceId?: string;
-                    };
-                };
-            };
-            /** @description 范围/参数无效 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 未登录 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 接入Token无后台访问权限 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 凭据版本已变化，刷新后核对，不自动重发 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getRuntimeConnections: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 状态缓存；Cache-Control: no-store */
-            200: {
-                headers: {
-                    /** @example no-store */
-                    "Cache-Control"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RuntimeConnectionsResult"];
-                };
-            };
-            /** @description 认证失效；由统一登录流程处理 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 沿用既有匿名/拒绝访问行为；显示访问被拒绝及其他连接未知 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 状态服务异常；保留旧数据并标记未知 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

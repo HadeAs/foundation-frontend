@@ -52,16 +52,14 @@ describe('平台长期 Token 请求', () => {
     ])
   })
   it('分页保留 false 与字符串 ID，仅提交声明的筛选条件并剔除响应密钥', async () => {
-    const get = vi
-      .spyOn(apiClient, 'get')
-      .mockResolvedValue({
+    const get = vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
         data: {
-          data: {
-            records: [{ ...row, token: 'not-for-list', tokenHash: 'not-for-list' }],
-            total: 1,
-          },
+          records: [{ ...row, token: 'not-for-list', tokenHash: 'not-for-list' }],
+          total: 1,
         },
-      })
+      },
+    })
     const result = await pageLongTokens({
       scopeCode: row.scopeCode,
       page: 2,
@@ -154,18 +152,25 @@ describe('平台长期 Token 请求', () => {
       path.startsWith('/api/v1/system/long-tokens'),
     )
     expect(paths.reduce((sum, [, operations]) => sum + Object.keys(operations).length, 0)).toBe(6)
-    const schemas = contract.components.schemas
-    expect(Object.keys(schemas.PlatformLongTokenCreateRequest.properties).sort()).toEqual([
-      'apiCodes',
-      'name',
-      'scopeCode',
-    ])
-    expect(schemas.PlatformLongTokenCreateRequest.properties.apiCodes.maxItems).toBe(100)
-    expect(schemas.PlatformLongTokenAuthorizationRequest.required.sort()).toEqual([
-      'apiCodes',
-      'authorizationVersion',
-      'version',
-    ])
+    const requestSchema = (body: {
+      content: { 'application/json': { schema: { $ref: string } } }
+    }) =>
+      Object.entries(contract.components.schemas).find(
+        ([name]) => `#/components/schemas/${name}` === body.content['application/json'].schema.$ref,
+      )?.[1]
+    const create = requestSchema(contract.paths['/api/v1/system/long-tokens'].post.requestBody)
+    expect(create).toHaveProperty('properties', {
+      apiCodes: expect.objectContaining({ maxItems: 100 }),
+      name: expect.any(Object),
+      scopeCode: expect.any(Object),
+    })
+    const authorization = requestSchema(
+      contract.paths['/api/v1/system/long-tokens/{scopeCode}/{tokenId}/authorization'].put
+        .requestBody,
+    )
+    expect(
+      authorization && 'required' in authorization && [...authorization.required].sort(),
+    ).toEqual(['apiCodes', 'authorizationVersion', 'version'])
     expect(
       contract.paths['/api/v1/system/long-tokens'].get.parameters.map(
         (parameter) => parameter.name,
